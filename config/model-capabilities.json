@@ -1,0 +1,128 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Model Capability Matrix (spec §15.1) — PERISHABLE data, refreshed via the ingestion pipeline (T5.x), never hardcoded into logic. Cost tiers are relative buckets (1=cheapest … 5=priciest), not live prices; latency likewise relative. Used by RecommendationService (TA.2) to rank models/platforms per task with visible trade-offs (§15.2). last_verified marks staleness.",
+  "last_verified": "2026-07-07",
+  "models": [
+    {
+      "model_id": "llama-3.1-8b-instant",
+      "display_name": "Llama 3.1 8B Instant (Groq)",
+      "provider": "groq",
+      "modalities": ["text", "code"],
+      "context_window": 131072,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["classification", "extraction", "short-form", "high-throughput"],
+      "notes": "Very fast and cheap; great for routing, classification, and preview steps. Weaker at deep reasoning."
+    },
+    {
+      "model_id": "llama-3.3-70b-versatile",
+      "display_name": "Llama 3.3 70B Versatile (Groq)",
+      "provider": "groq",
+      "modalities": ["text", "code"],
+      "context_window": 131072,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["reasoning", "drafting", "code", "general"],
+      "notes": "Strong open-weight generalist at very low latency on Groq; the default large-tier drafting/critique model."
+    },
+    {
+      "model_id": "gpt-oss-120b",
+      "display_name": "GPT-OSS 120B (Cerebras)",
+      "provider": "cerebras",
+      "modalities": ["text", "code"],
+      "context_window": 128000,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["reasoning", "general"],
+      "notes": "Fast wafer-scale inference; free-tier context capped at ~8k tokens, so best for shorter tasks."
+    },
+    {
+      "model_id": "claude-opus",
+      "display_name": "Claude Opus (Anthropic)",
+      "provider": "anthropic",
+      "modalities": ["text", "code"],
+      "context_window": 200000,
+      "cost_tier": 5,
+      "latency_tier": 3,
+      "strengths": ["reasoning", "long-context", "code", "writing", "nuance"],
+      "notes": "Top-tier quality and long context; higher cost/latency. Best when quality dominates budget."
+    },
+    {
+      "model_id": "claude-sonnet",
+      "display_name": "Claude Sonnet (Anthropic)",
+      "provider": "anthropic",
+      "modalities": ["text", "code"],
+      "context_window": 200000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "writing", "balanced"],
+      "notes": "Strong balance of quality, speed, and cost for most production text/code work."
+    },
+    {
+      "model_id": "gpt-5",
+      "display_name": "GPT-5 (OpenAI)",
+      "provider": "openai",
+      "modalities": ["text", "code", "image"],
+      "context_window": 400000,
+      "cost_tier": 4,
+      "latency_tier": 3,
+      "strengths": ["reasoning", "general", "multimodal", "writing"],
+      "notes": "High-quality multimodal generalist; premium cost/latency."
+    },
+    {
+      "model_id": "gemini-flash",
+      "display_name": "Gemini Flash (Google)",
+      "provider": "google",
+      "modalities": ["text", "code", "image"],
+      "context_window": 1000000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["long-context", "multimodal", "high-throughput", "cheap"],
+      "notes": "Very large context at low cost/latency; strong default for cheap multimodal and long-document tasks."
+    },
+    {
+      "model_id": "gemini-pro",
+      "display_name": "Gemini Pro (Google)",
+      "provider": "google",
+      "modalities": ["text", "code", "image", "video"],
+      "context_window": 1000000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "long-context", "multimodal", "video"],
+      "notes": "Higher-quality Gemini with video understanding and a very large context window."
+    },
+    {
+      "model_id": "midjourney-v6",
+      "display_name": "Midjourney v6",
+      "provider": "midjourney",
+      "modalities": ["image"],
+      "context_window": 0,
+      "cost_tier": 3,
+      "latency_tier": 3,
+      "strengths": ["image-aesthetics", "stylization", "photorealism"],
+      "notes": "Best-in-class aesthetic image generation; keyword-tag prompting, no chat/context window."
+    },
+    {
+      "model_id": "stable-diffusion-xl",
+      "display_name": "Stable Diffusion XL",
+      "provider": "stability",
+      "modalities": ["image"],
+      "context_window": 0,
+      "cost_tier": 1,
+      "latency_tier": 2,
+      "strengths": ["image", "controllability", "open-weight", "cheap"],
+      "notes": "Open-weight image model; strong control (negative prompts, weights, ControlNet), cheap to run."
+    },
+    {
+      "model_id": "veo-video",
+      "display_name": "Veo (Google, video)",
+      "provider": "google",
+      "modalities": ["video"],
+      "context_window": 0,
+      "cost_tier": 5,
+      "latency_tier": 5,
+      "strengths": ["video-generation", "camera-control"],
+      "notes": "Text-to-video generation; high cost/latency, single-scene clips."
+    }
+  ]
+}

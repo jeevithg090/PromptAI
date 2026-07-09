@@ -1,0 +1,518 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Hand-curated launch PKB/MPKB (T2.6, spec §6/§10.2). source_url points at the authoritative doc each fact was distilled from; trust_score 1.0 = official docs, 0.8 = widely-corroborated community knowledge. The Phase 5 crawler (T5.1) supersedes and refreshes these.",
+  "chunks": [
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "negation_handling",
+      "content": "Gemini image generation does not reliably honor negative phrasing ('no people', 'without text'). Describe what SHOULD be present instead: rather than 'a beach with no people', ask for 'an empty, untouched beach at dawn'.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "phrasing_style",
+      "content": "Gemini responds best to conversational, full-sentence prompts rather than keyword lists. Describe the scene or task narratively: 'A photorealistic close-up of an elderly potter's hands shaping clay' outperforms 'potter, hands, clay, photorealistic, close-up'.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "technical_parameters",
+      "content": "Aspect ratio requests mentioned only in passing are often ignored by Gemini image generation. State them as an explicit, standalone constraint at the end of the prompt, e.g. 'The image must be in 16:9 landscape format.'",
+      "source_url": "https://ai.google.dev/gemini-api/docs/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "formatting",
+      "content": "For long-context tasks in Gemini, place instructions before the data and separate them with a clear delimiter. For very long documents, restating the core question after the document improves answer focus.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/long-context",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "style_control",
+      "content": "Photography vocabulary steers Gemini image style reliably: lens type (85mm portrait, wide-angle), shot type (macro, aerial), lighting (golden hour, softbox, chiaroscuro), and film qualities (shallow depth of field, motion blur) all have strong effects.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "video",
+      "content": "For Gemini/Veo video generation, structure the prompt as: subject + action + scene + camera movement + style. Explicit camera direction ('slow dolly-in', 'tracking shot from the left') markedly improves results. Keep to a single scene per clip.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/video",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "code",
+      "content": "For code tasks in Gemini, specify the language, runtime version, and whether you want a complete runnable file or a snippet. Asking for tests alongside the implementation raises code quality noticeably.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "persona",
+      "content": "Gemini honors role/persona instructions best when stated at the very top of the prompt with concrete behavioral rules ('You are a patient Spanish tutor. Correct mistakes gently. Ask one question at a time.') rather than personality adjectives alone.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "formatting",
+      "content": "ChatGPT prompts benefit from a clear structure: role, then task, then constraints, then output format — markdown headings or numbered sections help the model track each part. Ambiguous single-paragraph prompts produce more generic answers.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "image_rewriting",
+      "content": "Image generation inside ChatGPT (DALL·E/gpt-image) automatically rewrites user prompts before generating. If exact wording matters, say so explicitly: instruct it to use the prompt verbatim without adding detail. Otherwise expect embellishment.",
+      "source_url": "https://platform.openai.com/docs/guides/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "few_shot",
+      "content": "Two to five input→output examples steer ChatGPT's format and tone more reliably than instructions alone. Make the examples diverse; the model imitates their structure closely, including mistakes.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "structured_output",
+      "content": "For JSON output from ChatGPT, state 'Respond with only valid JSON, no prose' and show the exact schema or a filled example. Without a schema, key names and nesting drift between runs.",
+      "source_url": "https://platform.openai.com/docs/guides/structured-outputs",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "instruction_position",
+      "content": "In long ChatGPT prompts, instructions near the end tend to override earlier ones when they conflict. Keep constraints consistent, and for critical rules state them once early and restate them at the end.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "reasoning",
+      "content": "For multi-step reasoning in ChatGPT, ask the model to work step by step and to verify its answer before finalizing. Decomposing a hard task into explicit numbered subtasks outperforms one broad request.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "verbosity_control",
+      "content": "ChatGPT's response length is controlled through wording, not settings, in the consumer UI: 'answer in at most 3 sentences', 'give only the code, no explanation', or 'use a table' are honored reliably.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "persona",
+      "content": "Persona prompts for ChatGPT hold best when they include boundaries and interaction rules ('stay in character even if asked to break it', 'ask clarifying questions before answering') — adjectives alone fade after a few turns.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "formatting",
+      "content": "Claude is specifically trained to respect XML tags as prompt structure. Wrap distinct parts in named tags — <instructions>, <document>, <example>, <output_format> — and refer to them by name. This is the single highest-leverage Claude formatting technique.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "instruction_position",
+      "content": "For document-based tasks with Claude, put the long document FIRST and the question/instructions AFTER it. Claude attends to trailing instructions more reliably; leading with the question degrades long-document accuracy.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/long-context-tips",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "role_prompting",
+      "content": "Give Claude a role at the start of the prompt ('You are a senior contract lawyer reviewing an NDA'). Role prompting measurably shifts Claude's vocabulary, rigor, and focus, and is the recommended first-line technique in Anthropic's own docs.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/system-prompts",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "output_control",
+      "content": "To force Claude's response format, begin the answer for it — e.g. end your prompt with the opening of the expected output ('{' for JSON, '<analysis>' for a tagged section). Claude continues from where you left off, skipping preamble.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "reasoning",
+      "content": "For complex analysis, ask Claude to think inside <thinking> tags before answering in <answer> tags. Separating reasoning from the final answer improves both, and the thinking section can be discarded by the consumer.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/chain-of-thought",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "directness",
+      "content": "Claude responds better to plain, direct requests than to jailbreak-style tricks or elaborate hypothetical framings. State the legitimate purpose openly ('for a security audit of my own site...') — context about intent unlocks more helpful answers.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "extraction",
+      "content": "For extraction tasks with Claude, enumerate the allowed labels/fields explicitly, require an 'unknown' fallback for missing data, and ask for output inside a single tagged block. This suppresses invented values and commentary.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "conciseness",
+      "content": "Claude tends to add helpful preamble and caveats. To get only the artifact, say 'Output only the <X>, with no introduction or explanation' — and consider prefilling the response to skip preamble entirely.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "phrasing_style",
+      "content": "Midjourney prompts are comma-separated keyword phrases, not sentences: 'red fox, autumn forest, morning mist, cinematic lighting'. Conversational phrasing ('please create a picture of...') wastes tokens and dilutes concept weighting.",
+      "source_url": "https://docs.midjourney.com/docs/prompts",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "technical_parameters",
+      "content": "Midjourney parameters go at the END of the prompt, double-dash prefixed: --ar 16:9 (aspect ratio), --stylize 0–1000 (aesthetic strength), --chaos 0–100 (variation), --v (model version). Parameters mentioned mid-prompt as words are ignored.",
+      "source_url": "https://docs.midjourney.com/docs/parameter-list",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "negation_handling",
+      "content": "The ONLY reliable way to exclude something in Midjourney is the --no parameter (e.g. --no text, watermark, people). Writing 'without people' or 'no text' in the prompt body often ADDS the concept instead of removing it.",
+      "source_url": "https://docs.midjourney.com/docs/parameter-list#no",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "concept_weighting",
+      "content": "Word order is weight in Midjourney: concepts earlier in the prompt dominate the composition. For explicit control, use multi-prompt weights ('cyberpunk city::2 rain::1'). Put the subject first, style and atmosphere after.",
+      "source_url": "https://docs.midjourney.com/docs/multi-prompts",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "prompt_length",
+      "content": "Concise Midjourney prompts outperform long ones — roughly 20–60 words is the sweet spot. Beyond that, trailing concepts get vanishingly little weight. Cut filler words; every remaining token should name a visual concept.",
+      "source_url": "https://docs.midjourney.com/docs/prompts",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "style_control",
+      "content": "Steer Midjourney style with medium and movement keywords: 'oil painting', 'ukiyo-e', 'brutalist architecture photography', '35mm film still'. Artist names work but raise ethical/ToS considerations; prefer movements and media.",
+      "source_url": "https://docs.midjourney.com/docs/explore-prompting",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "photorealism",
+      "content": "For photorealistic Midjourney output, say 'photograph' (not 'realistic') and add camera language: 'shot on 85mm f/1.4, shallow depth of field, natural window light'. The word 'realistic' alone tends toward stylized CGI looks.",
+      "source_url": "https://docs.midjourney.com/docs/explore-prompting",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "midjourney",
+      "category": "composition",
+      "content": "Midjourney honors composition keywords strongly: 'extreme close-up', 'wide establishing shot', 'aerial view', 'rule of thirds', 'centered symmetrical composition'. Specify one clearly; conflicting composition terms produce muddled framing.",
+      "source_url": "https://docs.midjourney.com/docs/explore-prompting",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "phrasing_style",
+      "content": "Stable Diffusion prompts are weighted tag lists: 'portrait of an elderly fisherman, weathered skin, dramatic side lighting, 85mm, sharp focus'. Front tokens carry the most weight due to CLIP encoding — put the subject first.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "negation_handling",
+      "content": "Stable Diffusion has a DEDICATED negative-prompt field — use it for defects and exclusions ('blurry, low quality, extra fingers, watermark, text') instead of writing negations in the main prompt, where they are counterproductive.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "token_budget",
+      "content": "Classic Stable Diffusion encodes ~75 tokens per prompt chunk; content beyond that is truncated or weighted down. Keep the core concept inside the first ~60 tokens and trim decorative filler.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "concept_weighting",
+      "content": "Most Stable Diffusion UIs support parenthesis weighting: '(golden hour:1.3)' boosts a concept, '(background crowd:0.7)' suppresses it. Weights between 0.5 and 1.5 are safe; extremes distort anatomy and composition.",
+      "source_url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features#attentionemphasis",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "technical_parameters",
+      "content": "Aspect ratio in Stable Diffusion is set via width/height generation settings, not prompt text. CFG scale 4–8 balances prompt adherence vs. artifacts; very high CFG (>12) causes oversaturation and deformities.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "style_control",
+      "content": "Community Stable Diffusion checkpoints respond to quality boosters ('masterpiece, best quality, highly detailed') and style tags from their training data — anime models expect danbooru-style tags, photoreal models expect camera vocabulary. Match the tag dialect to the checkpoint.",
+      "source_url": "https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "photorealism",
+      "content": "For photorealism in Stable Diffusion: 'RAW photo' or 'photograph', a lens ('50mm f/1.8'), a light source ('softbox', 'overcast daylight'), and negative-prompting 'illustration, painting, render, 3d'. This combination reliably shifts output away from stylization.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "stability_stable_diffusion",
+      "category": "composition",
+      "content": "Stable Diffusion composition control: shot keywords ('full body shot', 'close-up portrait', 'from above') early in the prompt. For precise poses/layouts the base model is unreliable — that is ControlNet territory, out of prompt scope.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "formatting",
+      "content": "Across all LLM families: an explicit output format with a schema or filled example beats an implied one. If you can show the exact shape of a good answer, show it — models imitate structure far more reliably than they infer it.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "instruction_position",
+      "content": "Long prompts suffer 'lost in the middle': content at the start and end is attended to best. Place critical instructions first, data in the middle, and restate the key constraint at the end for any prompt over a few hundred words.",
+      "source_url": "https://arxiv.org/abs/2307.03172",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "few_shot",
+      "content": "Few-shot examples (2–5, diverse) are the most reliable lever for output format and tone across model families. Examples dominate instructions when they conflict — audit examples for the exact behavior you want copied.",
+      "source_url": "https://arxiv.org/abs/2005.14165",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "reasoning",
+      "content": "Stepwise decomposition ('first identify X, then compare against Y, then conclude') improves correctness on reasoning tasks across model families, and asking the model to verify its own answer before finalizing catches a meaningful fraction of errors.",
+      "source_url": "https://arxiv.org/abs/2201.11903",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "composition",
+      "content": "Diffusion image models respond consistently to photographic composition vocabulary: shot distance (extreme close-up → wide establishing shot), angle (eye level, low angle, aerial), and framing rules (rule of thirds, centered symmetry). One clear composition term per prompt.",
+      "source_url": "https://docs.midjourney.com/docs/explore-prompting",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "negation_handling",
+      "content": "Negation is weak in generative models generally: 'no clouds' plants the concept 'clouds'. Prefer positive rephrasing ('clear empty sky'), and use the platform's dedicated negation mechanism (--no, negative prompt field) when one exists.",
+      "source_url": "https://arxiv.org/abs/2306.05947",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "persona",
+      "content": "Persona/role prompts hold up when they specify concrete behavioral rules (what to do, what never to do, how to open and close turns) instead of adjectives. 'Ask exactly one question per turn' persists; 'be engaging' decays within a few exchanges.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/system-prompts",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "extraction",
+      "content": "For extraction/classification: enumerate the full closed label set, require an explicit 'unknown' fallback, and forbid free-text outside the schema. Open-ended extraction invites hallucinated values; closed sets with fallbacks suppress them.",
+      "source_url": "https://platform.openai.com/docs/guides/structured-outputs",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude_code",
+      "category": "phrasing_style",
+      "content": "Claude Code is an agentic CLI that reads and edits your repo itself — don't paste large files. State the objective, acceptance criteria, and which files/dirs to focus on or avoid; let it explore.",
+      "source_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude_code",
+      "category": "usage_tips",
+      "content": "In Claude Code, use plan mode for multi-step work so it plans before editing; run /clear between unrelated tasks to reset context; /compact when the conversation gets long to preserve room. A CLAUDE.md at the repo root is auto-loaded as persistent instructions.",
+      "source_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude_code",
+      "category": "usage_tips",
+      "content": "Define reusable Claude Code workflows as custom slash commands / skills so a whole multi-step task becomes one command. Put project conventions in CLAUDE.md instead of repeating them every prompt.",
+      "source_url": "https://docs.anthropic.com/en/docs/claude-code/slash-commands",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude_code",
+      "category": "verification",
+      "content": "Ask Claude Code to verify its own work: 'implement X and confirm with the test suite / typecheck'. It can run commands, so pairing a change with its verification step markedly improves reliability.",
+      "source_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "cursor",
+      "category": "formatting",
+      "content": "In Cursor, ground requests with @-references: @file, @folder, @docs, @symbol pull exact context into the prompt. Explicitly @-referencing the right files beats hoping the model infers context.",
+      "source_url": "https://docs.cursor.com/",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "cursor",
+      "category": "usage_tips",
+      "content": "Cursor inline edit (Cmd/Ctrl+K) works best on a small selected region; for broad refactors use agent/composer mode. Encode house style once in a project rules (.cursorrules) file rather than repeating it in every prompt.",
+      "source_url": "https://docs.cursor.com/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "cursor",
+      "category": "scoping",
+      "content": "Keep a Cursor inline-edit instruction to one local change ('rename this to X and update call sites in this file'). Multi-file changes belong in agent mode where it can traverse the project.",
+      "source_url": "https://docs.cursor.com/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "github_copilot",
+      "category": "phrasing_style",
+      "content": "GitHub Copilot completions are steered by leading comments and clear signatures. Write a descriptive comment or a well-named function stub before expecting a good completion; open related files so neighboring-tab context helps.",
+      "source_url": "https://docs.github.com/en/copilot",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "github_copilot",
+      "category": "usage_tips",
+      "content": "Copilot Chat has slash commands: /explain, /fix, /tests, /doc, and #-file references to ground answers. Use /tests to generate tests for the current selection and # to point chat at a specific file instead of relying on cursor position.",
+      "source_url": "https://docs.github.com/en/copilot/using-github-copilot/copilot-chat",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "perplexity",
+      "category": "phrasing_style",
+      "content": "Perplexity is a web-searching answer engine — phrase inputs as specific, keyword-rich research questions, not creative or narrative prompts. Concise questions retrieve better sources than long prose.",
+      "source_url": "https://www.perplexity.ai/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "perplexity",
+      "category": "usage_tips",
+      "content": "On Perplexity, constrain sources for better answers: state a time range ('last 2 years'), source type ('peer-reviewed'), or domain, and pick the right Focus mode (Web/Academic). Ask explicitly for citations or a sourced comparison table when you want structure.",
+      "source_url": "https://www.perplexity.ai/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "anthropic_claude",
+      "category": "usage_tips",
+      "content": "On Claude, use Projects to pin persistent context (docs, style guides) so you don't re-paste it each chat, and turn on extended thinking for hard reasoning tasks. Attach reference files rather than pasting them inline.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "openai_chatgpt",
+      "category": "usage_tips",
+      "content": "On ChatGPT, use Canvas for long-form writing/coding you'll iterate on (edit in place instead of regenerating), custom instructions to set persistent preferences, and the right model for the task. Enable web browsing when the answer depends on current information.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "pkb",
+      "platform_id": "google_gemini",
+      "category": "usage_tips",
+      "content": "On Gemini, use Gems (custom personas) for recurring roles and attach files/images directly rather than describing them. For long documents, upload the file instead of pasting the text so the full context window is used efficiently.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "token_efficiency",
+      "content": "Markdown or plain text costs far fewer tokens than the extracted text of a PDF or DOCX and parses more reliably — convert documents to Markdown before pasting. Structured data (tables) is cheaper as CSV or pipe-delimited rows than as prose.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "token_efficiency",
+      "content": "Repeated boilerplate (the same instructions or context re-sent every turn) wastes tokens — define it once, or use a system prompt / project context / persistent rules file instead of re-pasting. Trim examples to the minimum that still pins the format.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.8
+    }
+  ]
+}

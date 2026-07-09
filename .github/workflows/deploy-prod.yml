@@ -1,0 +1,67 @@
+name: Deploy Prod (promote)
+
+# spec §31.4 Step 26 / §27.3. Manual one-command production promotion.
+# Publishes an immutable Lambda version from the current $LATEST (whatever
+# staging last deployed) and points the `prod` alias at it. Rollback is a
+# separate workflow (rollback-prod.yml) that just repoints the alias.
+#
+# NOTE: API Gateway currently targets $LATEST, not the prod alias. Wiring it to
+# the alias is a one-time manual step documented in backend/README.md (## Deploys).
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy-prod" to confirm promotion of current $LATEST to prod'
+        required: true
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  promote:
+    if: ${{ github.event.inputs.confirm == 'deploy-prod' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Publish version and repoint prod alias
+        run: |
+          set -euo pipefail
+          FN=PromptAI
+          REGION=us-east-1
+
+          # Capture the current rollback target (prod's existing version), if any.
+          PREV="$(aws lambda get-alias --function-name "$FN" --name prod --region "$REGION" \
+                    --query FunctionVersion --output text 2>/dev/null || echo 'none')"
+
+          # Publish an immutable version from $LATEST.
+          NEW="$(aws lambda publish-version --function-name "$FN" --region "$REGION" \
+                    --query Version --output text)"
+          echo "Published version: $NEW"
+
+          # Create the alias on first run, otherwise repoint it.
+          if aws lambda get-alias --function-name "$FN" --name prod --region "$REGION" >/dev/null 2>&1; then
+            aws lambda update-alias --function-name "$FN" --name prod \
+              --function-version "$NEW" --region "$REGION"
+          else
+            aws lambda create-alias --function-name "$FN" --name prod \
+              --function-version "$NEW" --region "$REGION"
+          fi
+
+          {
+            echo "### Prod promotion complete"
+            echo ""
+            echo "| | Version |"
+            echo "|---|---|"
+            echo "| Now live on \`prod\` | $NEW |"
+            echo "| Previous (rollback target) | $PREV |"
+            echo ""
+            echo "To roll back: run the **Rollback Prod** workflow with \`version: $PREV\`."
+          } >> "$GITHUB_STEP_SUMMARY"

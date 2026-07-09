@@ -1,0 +1,14 @@
+version: 2
+# spec §27.3 (Secure Development Lifecycle) / T3.6. Weekly dependency updates.
+updates:
+  - package-ecosystem: npm
+    directory: /backend
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

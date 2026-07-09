@@ -1,0 +1,277 @@
+{
+  "schema_version": "1.1.0",
+  "last_verified": "2026-07-07",
+  "note": "Launch registry (§5.1). This file is the seed for the `platforms` table; served to clients at runtime from the server/edge cache — never hardcoded into client bundles. Selector fields are placeholders until extension work (Phase 5) verifies them against live DOMs. All capability data is perishable: re-verify via the PKB ingestion pipeline (§6.3).",
+  "platforms": [
+    {
+      "platform_id": "google_gemini",
+      "display_name": "Google Gemini",
+      "modalities": [
+        "text",
+        "image",
+        "video",
+        "code"
+      ],
+      "url_patterns": [
+        "https://gemini.google.com/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "rich-textarea",
+        "[data-test-id='input-area']"
+      ],
+      "input_selector_candidates": [
+        "rich-textarea div[contenteditable='true']"
+      ],
+      "docs_url": "https://ai.google.dev/gemini-api/docs",
+      "quirks": [
+        "Negative prompts are unreliable for image generation — phrase exclusions positively (describe what SHOULD be present)",
+        "Responds well to conversational, full-sentence phrasing rather than keyword lists",
+        "Aspect-ratio requests mentioned only in passing are often ignored — state them as an explicit constraint"
+      ],
+      "syntax_rules": [
+        "Plain natural language; no special parameter flags in the consumer web app",
+        "For image tasks, lead with subject and action, then style and mood in the same sentence or a short follow-on sentence"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "openai_chatgpt",
+      "display_name": "ChatGPT (OpenAI)",
+      "modalities": [
+        "text",
+        "image",
+        "code"
+      ],
+      "url_patterns": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "#prompt-textarea",
+        "form[data-type='unified-composer']"
+      ],
+      "input_selector_candidates": [
+        "#prompt-textarea"
+      ],
+      "docs_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "quirks": [
+        "Strong system/persona adherence when the role is stated up front in the first message",
+        "Verbose by default — explicit length constraints materially change output",
+        "Image generation via integrated tooling responds to full descriptive sentences, not tag lists"
+      ],
+      "syntax_rules": [
+        "Markdown structure (headings, numbered steps) improves multi-part instruction following",
+        "State role/persona first, task second, constraints third, output format last"
+      ],
+      "max_prompt_tokens": 8000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "anthropic_claude",
+      "display_name": "Claude (Anthropic)",
+      "modalities": [
+        "text",
+        "code"
+      ],
+      "url_patterns": [
+        "https://claude.ai/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "div[contenteditable='true'].ProseMirror",
+        "fieldset"
+      ],
+      "input_selector_candidates": [
+        "div[contenteditable='true'].ProseMirror"
+      ],
+      "docs_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+      "quirks": [
+        "Documented to respond well to XML-style tags for separating instruction sections (<instructions>, <example>, <data>)",
+        "Benefits measurably from explicit step-by-step reasoning requests on complex tasks",
+        "Follows positive instructions more reliably than negations"
+      ],
+      "syntax_rules": [
+        "Use tagged sections for multi-part prompts",
+        "Put long reference/context material before the question or instruction",
+        "Request output format explicitly, ideally with a short example"
+      ],
+      "max_prompt_tokens": 8000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "midjourney",
+      "display_name": "Midjourney",
+      "modalities": [
+        "image"
+      ],
+      "url_patterns": [
+        "https://www.midjourney.com/*",
+        "https://discord.com/channels/662267976984297473/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "#imagine-bar",
+        "div[data-slate-editor='true']"
+      ],
+      "input_selector_candidates": [
+        "#imagine-bar input",
+        "div[data-slate-editor='true']"
+      ],
+      "docs_url": "https://docs.midjourney.com/hc/en-us",
+      "quirks": [
+        "Comma-separated dense descriptor phrases outperform full sentences",
+        "Word order matters: earlier tokens carry more weight",
+        "Supports explicit parameter flags (--ar, --v, --style, --no) appended at the end",
+        "The --no parameter is the supported negative-prompt mechanism; in-text negation ('without X') is unreliable"
+      ],
+      "syntax_rules": [
+        "Structure: subject descriptors, scene/setting, style/medium, lighting, composition, then parameter flags",
+        "Parameters go last: e.g. `--ar 16:9 --style raw`",
+        "Avoid filler words ('a picture of', 'please')"
+      ],
+      "max_prompt_tokens": 350,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "stability_stable_diffusion",
+      "display_name": "Stable Diffusion (DreamStudio / SD WebUIs)",
+      "modalities": [
+        "image"
+      ],
+      "url_patterns": [
+        "https://dreamstudio.ai/*",
+        "https://beta.dreamstudio.ai/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea[placeholder*='prompt']"
+      ],
+      "input_selector_candidates": [
+        "textarea[placeholder*='prompt']"
+      ],
+      "docs_url": "https://platform.stability.ai/docs/getting-started",
+      "quirks": [
+        "Dedicated negative-prompt field — exclusions belong there, not in the main prompt",
+        "Supports attention weighting syntax in most UIs: (word:1.3)",
+        "Tag-style comma-separated descriptors outperform prose; quality tags (e.g. 'highly detailed', 'sharp focus') have documented effect"
+      ],
+      "syntax_rules": [
+        "Main prompt: comma-separated descriptors ordered subject → style → quality tags",
+        "Negative prompt: comma-separated exclusion list (e.g. 'blurry, extra limbs, watermark, text')",
+        "Keep individual descriptor phrases short; prefer many precise tags over one long sentence"
+      ],
+      "max_prompt_tokens": 300,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "anthropic_claude_code",
+      "display_name": "Claude Code (Anthropic CLI)",
+      "modalities": [
+        "text",
+        "code"
+      ],
+      "url_patterns": [
+        "https://docs.anthropic.com/en/docs/claude-code/*"
+      ],
+      "dom_fingerprint_selectors": [],
+      "input_selector_candidates": [],
+      "docs_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "quirks": [
+        "Agentic CLI coding tool — reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
+        "Slash commands (e.g. /init, /clear, /compact, custom skills) change behavior; plan mode separates planning from editing",
+        "Responds best to a clear objective plus constraints; it will explore the codebase itself rather than needing files pasted in",
+        "CLAUDE.md files in the repo are auto-loaded as persistent instructions"
+      ],
+      "syntax_rules": [
+        "State the goal, the acceptance criteria, and any files/dirs to focus on or avoid",
+        "Prefer 'do X and verify with the test suite' over pasting large code blocks",
+        "Reference existing conventions instead of re-specifying them; the tool reads the repo"
+      ],
+      "max_prompt_tokens": 200000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "cursor",
+      "display_name": "Cursor (AI Code Editor)",
+      "modalities": [
+        "code",
+        "text"
+      ],
+      "url_patterns": [
+        "https://cursor.com/*",
+        "https://docs.cursor.com/*"
+      ],
+      "dom_fingerprint_selectors": [],
+      "input_selector_candidates": [],
+      "docs_url": "https://docs.cursor.com/",
+      "quirks": [
+        "IDE with inline edit (Cmd/Ctrl+K), chat, and an agent mode; @-symbols pull files/docs/symbols into context",
+        ".cursorrules / project rules files set persistent coding conventions",
+        "Inline edits work best scoped to a selection; broad refactors belong in agent/composer mode",
+        "Explicitly @-referencing the right files beats hoping it infers context"
+      ],
+      "syntax_rules": [
+        "Use @file / @folder / @docs to ground the request in specific context",
+        "Keep inline-edit instructions to a single, local change",
+        "Encode house style in a rules file rather than repeating it each prompt"
+      ],
+      "max_prompt_tokens": 20000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "github_copilot",
+      "display_name": "GitHub Copilot",
+      "modalities": [
+        "code"
+      ],
+      "url_patterns": [
+        "https://github.com/features/copilot*",
+        "https://docs.github.com/en/copilot/*"
+      ],
+      "dom_fingerprint_selectors": [],
+      "input_selector_candidates": [],
+      "docs_url": "https://docs.github.com/en/copilot",
+      "quirks": [
+        "Completion + chat; chat supports slash commands (/explain, /fix, /tests, /doc) and #-file / @-participant references",
+        "Leading comments and clear function/variable names strongly steer completions",
+        "Open relevant files in the editor — Copilot uses neighboring tabs as context",
+        "For chat, name the file/symbol explicitly rather than relying on cursor position"
+      ],
+      "syntax_rules": [
+        "Write a descriptive comment or signature before expecting a good completion",
+        "Use chat slash commands for structured tasks (/tests, /fix)",
+        "Reference files with # in chat to ground answers"
+      ],
+      "max_prompt_tokens": 8000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "perplexity",
+      "display_name": "Perplexity",
+      "modalities": [
+        "text"
+      ],
+      "url_patterns": [
+        "https://www.perplexity.ai/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea[placeholder]"
+      ],
+      "input_selector_candidates": [
+        "textarea"
+      ],
+      "docs_url": "https://www.perplexity.ai/",
+      "quirks": [
+        "Answer engine that searches the live web and cites sources — treat it like a research query, not a creative prompt",
+        "Focus modes (Web, Academic, etc.) and source constraints change results; specifying recency/domain helps",
+        "Concise, keyword-rich questions retrieve better than long narrative prompts",
+        "Ask for citations/comparisons explicitly to get structured, sourced answers"
+      ],
+      "syntax_rules": [
+        "Phrase as a specific researchable question",
+        "State time range, domains, or source type when it matters (e.g. 'peer-reviewed, last 2 years')",
+        "Ask for a sourced comparison/table when you want structure"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+name: CI
+
+# spec §27.3 (Secure Development Lifecycle) + §31.4 Step 26 (T3.6 CI/CD).
+# PR / push gate: install -> typecheck -> secret-scan -> dependency-audit -> test.
+# On push to main (only): build an artifact, run migrations, deploy to the
+# staging Lambda ($LATEST), and smoke-test /health.
+# Production is a manual promotion (deploy-prod.yml); rollback is rollback-prod.yml.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---- PR / push gate -------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks needs full history
+
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Dependency audit (fails on high+)
+        run: npm audit --audit-level=high
+
+      - name: Test
+        run: npm test
+
+  # ---- build the deployable artifact ---------------------------------------
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload build artifact (dist + config)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-build
+          # config/ lives at the repo root, one level above backend/
+          path: |
+            backend/dist
+            config
+          if-no-files-found: error
+
+  # ---- staging deploy: main pushes only ------------------------------------
+  deploy-staging:
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-staging
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install (full, for build + migrate)
+        working-directory: backend
+        run: npm ci
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+      # Migrations run BEFORE the code deploy and must stay backward-compatible
+      # with the still-running old code (expand/contract). See backend/README.md.
+      - name: Run migrations
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npm run migrate
+
+      - name: Prune to production dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      # Zip layout is load-bearing: the Lambda handler is `backend/dist/index.handler`
+      # and reads the registry at /var/task/config/... so config/ sits at the zip ROOT
+      # while dist/ + node_modules/ stay under backend/. Mirrors the manual deploy cmd.
+      - name: Package Lambda zip
+        run: zip -r lambda.zip backend/dist backend/node_modules config -x '*.map'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy code to Lambda ($LATEST)
+        run: |
+          aws lambda update-function-code \
+            --function-name PromptAI \
+            --zip-file fileb://lambda.zip \
+            --region us-east-1
+          aws lambda wait function-updated \
+            --function-name PromptAI \
+            --region us-east-1
+
+      - name: Smoke test /health
+        run: |
+          set -euo pipefail
+          url="https://qsfu5lcqt2.execute-api.us-east-1.amazonaws.com/health"
+          body="$(curl -fsS --retry 3 --retry-delay 3 "$url")"
+          echo "health response: $body"
+          echo "$body" | grep -q '"ok":true'

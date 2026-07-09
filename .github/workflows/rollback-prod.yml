@@ -1,0 +1,46 @@
+name: Rollback Prod
+
+# spec §31.4 Step 26 / §27.3. Instant rollback = repointing the `prod` alias at a
+# previously published Lambda version. Sub-second: no rebuild, no redeploy, the
+# version's code+config are already immutable in Lambda. Get the target version
+# number from a prior Deploy Prod run's job summary (its "rollback target").
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Published Lambda version number to roll prod back to (e.g. 3)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Repoint prod alias
+        run: |
+          set -euo pipefail
+          FN=PromptAI
+          REGION=us-east-1
+          VERSION='${{ github.event.inputs.version }}'
+
+          PREV="$(aws lambda get-alias --function-name "$FN" --name prod --region "$REGION" \
+                    --query FunctionVersion --output text 2>/dev/null || echo 'none')"
+
+          aws lambda update-alias --function-name "$FN" --name prod \
+            --function-version "$VERSION" --region "$REGION"
+
+          {
+            echo "### Prod rolled back"
+            echo ""
+            echo "\`prod\` alias repointed from version **$PREV** to version **$VERSION**."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.2",
+  "_note": "Switched 2026-07-07 (user decision) from OpenCode Zen/DeepSeek-free to Groq — DeepSeek is a reasoning model whose hidden reasoning tokens caused unpredictable ~20-30s/call latency and truncation. Groq hosts non-reasoning open-weight Llama models at 500+ tok/s, free tier, no card; live-verified ~0.2-0.3s round-trip on both models. small=llama-3.1-8b-instant, large=llama-3.3-70b-versatile. Cerebras is registered as an even-faster alternate (provider:'cerebras') — live-verified model available on this key is 'gpt-oss-120b' (~50ms round-trip on wafer-scale hardware, even though it IS a reasoning model — the hardware makes the reasoning tax negligible; Cerebras's own model lineup changes over time, check /v1/models before assuming an id). Free tier caps context at 8192 tokens so it suits small/fast steps better than long PKB-grounded drafting prompts. OpenCode Zen remains registered (provider:'opencode_zen') if paid-tier billing is ever added.",
+  "default": { "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+  "routes": [
+    { "pipeline_step": "intent_classification", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+    { "pipeline_step": "clarifying_questions", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+    { "pipeline_step": "drafting", "complexity": "large", "provider": "groq", "model_id": "llama-3.3-70b-versatile" },
+    { "pipeline_step": "critic", "complexity": "large", "provider": "groq", "model_id": "llama-3.3-70b-versatile" },
+    { "pipeline_step": "alternatives", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+    { "pipeline_step": "memory_extraction", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" }
+  ]
+}

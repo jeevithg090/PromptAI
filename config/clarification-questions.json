@@ -1,0 +1,49 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Machine-readable form of docs/clarification-taxonomy.md (T0.3). The Clarifying Question Agent selects from these deterministically: skip questions pre-answered by intent entities (answered_by_entities, ANY-match), ask in priority order (P1→P3), stop at the cap or when no P1/P2 remain. maps_to_node values are the §13.1 node taxonomy. Editing questions = config change, no deploy of logic.",
+  "task_types": {
+    "text_to_image": [
+      { "id": "subject", "text": "What's the main subject?", "type": "free_text", "allow_other": true, "maps_to_node": "subject", "priority": 1, "answered_by_entities": ["subject"] },
+      { "id": "style", "text": "Visual style?", "type": "mcq", "options": ["photorealistic", "illustration", "3D render", "anime", "watercolor", "oil painting", "pixel art"], "allow_other": true, "maps_to_node": "style_aesthetic", "priority": 1, "answered_by_entities": ["style"] },
+      { "id": "setting", "text": "Setting or environment?", "type": "free_text", "allow_other": true, "maps_to_node": "setting_context", "priority": 2, "answered_by_entities": ["setting", "environment", "location"] },
+      { "id": "composition", "text": "Composition / framing?", "type": "mcq", "options": ["close-up", "medium shot", "wide shot", "overhead", "low angle"], "allow_other": true, "maps_to_node": "composition_camera", "priority": 2, "answered_by_entities": ["composition", "framing", "shot"] },
+      { "id": "lighting", "text": "Lighting / mood?", "type": "mcq", "options": ["golden hour", "soft studio", "dramatic/high-contrast", "neon", "overcast", "night"], "allow_other": true, "maps_to_node": "lighting_mood", "priority": 2, "answered_by_entities": ["lighting", "mood"] },
+      { "id": "aspect_ratio", "text": "Aspect ratio?", "type": "mcq", "options": ["square 1:1", "landscape 16:9", "portrait 9:16", "classic 4:3"], "allow_other": true, "maps_to_node": "technical_parameters", "priority": 3, "answered_by_entities": ["aspect_ratio", "ratio"] },
+      { "id": "avoid", "text": "Anything to explicitly avoid?", "type": "free_text", "allow_other": true, "maps_to_node": "negative_prompt", "priority": 3, "answered_by_entities": ["avoid", "negative", "exclude"] }
+    ],
+    "text_to_video": [
+      { "id": "subject_action", "text": "What's the main subject and what happens?", "type": "free_text", "allow_other": true, "maps_to_node": "action_behavior", "priority": 1, "answered_by_entities": ["action"] },
+      { "id": "style", "text": "Visual style?", "type": "mcq", "options": ["cinematic/live-action", "3D animation", "2D animation", "stop-motion", "documentary"], "allow_other": true, "maps_to_node": "style_aesthetic", "priority": 1, "answered_by_entities": ["style"] },
+      { "id": "camera", "text": "Camera movement?", "type": "mcq", "options": ["static", "slow pan", "tracking/follow", "drone/aerial", "zoom in"], "allow_other": true, "maps_to_node": "composition_camera", "priority": 2, "answered_by_entities": ["camera", "composition"] },
+      { "id": "pacing", "text": "Duration/pacing intent?", "type": "mcq", "options": ["single continuous shot", "quick cuts", "slow and atmospheric"], "allow_other": true, "maps_to_node": "technical_parameters", "priority": 2, "answered_by_entities": ["pacing", "duration"] },
+      { "id": "lighting", "text": "Lighting / mood?", "type": "mcq", "options": ["golden hour", "soft studio", "dramatic/high-contrast", "neon", "overcast", "night"], "allow_other": true, "maps_to_node": "lighting_mood", "priority": 3, "answered_by_entities": ["lighting", "mood"] }
+    ],
+    "chat_persona": [
+      { "id": "role", "text": "Who or what should the AI act as?", "type": "free_text", "allow_other": true, "maps_to_node": "persona_role", "priority": 1, "answered_by_entities": ["role", "persona", "subject"] },
+      { "id": "tone", "text": "Tone / register?", "type": "mcq", "options": ["professional", "friendly/casual", "encouraging", "concise/direct", "playful", "academic"], "allow_other": true, "maps_to_node": "style_aesthetic", "priority": 1, "answered_by_entities": ["tone", "style"] },
+      { "id": "audience", "text": "Who is the audience?", "type": "mcq", "options": ["general public", "beginners", "experts", "children", "internal team"], "allow_other": true, "maps_to_node": "setting_context", "priority": 2, "answered_by_entities": ["audience"] },
+      { "id": "boundaries", "text": "What should it NEVER do?", "type": "free_text", "allow_other": true, "maps_to_node": "constraints_rules", "priority": 2, "answered_by_entities": ["boundaries", "constraints", "avoid"] },
+      { "id": "interaction", "text": "Should it ask questions back or just answer?", "type": "mcq", "options": ["ask clarifying questions", "answer directly", "one question max, then answer"], "allow_other": true, "maps_to_node": "output_format", "priority": 3, "answered_by_entities": ["interaction"] }
+    ],
+    "reasoning_code": [
+      { "id": "goal", "text": "What should the code/solution do?", "type": "free_text", "allow_other": true, "maps_to_node": "action_behavior", "priority": 1, "answered_by_entities": ["action", "goal", "task"] },
+      { "id": "language", "text": "Language / framework / version constraints?", "type": "free_text", "allow_other": true, "maps_to_node": "technical_parameters", "priority": 1, "answered_by_entities": ["language", "framework"] },
+      { "id": "output_format", "text": "Output format?", "type": "mcq", "options": ["code only", "code + explanation", "step-by-step walkthrough", "diff/patch"], "allow_other": true, "maps_to_node": "output_format", "priority": 2, "answered_by_entities": ["format", "output"] },
+      { "id": "constraints", "text": "Constraints (performance, style, dependencies)?", "type": "free_text", "allow_other": true, "maps_to_node": "constraints_rules", "priority": 2, "answered_by_entities": ["constraints", "performance"] },
+      { "id": "verify", "text": "Should it verify/test its answer?", "type": "mcq", "options": ["yes — self-check and tests", "self-check only", "no"], "allow_other": true, "maps_to_node": "technical_parameters", "priority": 3, "answered_by_entities": ["tests", "verify"] }
+    ],
+    "extraction_classification": [
+      { "id": "what_from", "text": "What are you extracting or classifying, from what input?", "type": "free_text", "allow_other": true, "maps_to_node": "subject", "priority": 1, "answered_by_entities": ["subject", "input"] },
+      { "id": "schema", "text": "Output schema?", "type": "mcq", "options": ["JSON object", "CSV rows", "bulleted list", "table"], "allow_other": true, "maps_to_node": "output_format", "priority": 1, "answered_by_entities": ["format", "schema", "output"] },
+      { "id": "examples", "text": "Can you give 1–2 example inputs with their correct outputs?", "type": "free_text", "allow_other": true, "maps_to_node": "setting_context", "priority": 2, "answered_by_entities": ["examples"] },
+      { "id": "ambiguous", "text": "How should ambiguous or missing values be handled?", "type": "mcq", "options": ["leave null", "best guess, flagged", "skip the item"], "allow_other": true, "maps_to_node": "constraints_rules", "priority": 3, "answered_by_entities": ["missing", "ambiguous", "fallback"] }
+    ],
+    "long_form_writing": [
+      { "id": "piece_purpose", "text": "What is the piece, and what should it achieve?", "type": "free_text", "allow_other": true, "maps_to_node": "subject", "priority": 1, "answered_by_entities": ["subject", "purpose", "topic"] },
+      { "id": "audience", "text": "Who is the audience?", "type": "mcq", "options": ["general public", "beginners", "experts", "children", "internal team"], "allow_other": true, "maps_to_node": "setting_context", "priority": 1, "answered_by_entities": ["audience"] },
+      { "id": "tone", "text": "Tone / voice?", "type": "mcq", "options": ["professional", "friendly/casual", "encouraging", "concise/direct", "playful", "academic"], "allow_other": true, "maps_to_node": "style_aesthetic", "priority": 2, "answered_by_entities": ["tone", "style", "voice"] },
+      { "id": "structure", "text": "Structure?", "type": "mcq", "options": ["sections with headings", "narrative flow", "listicle", "executive summary + detail"], "allow_other": true, "maps_to_node": "output_format", "priority": 2, "answered_by_entities": ["structure", "format"] },
+      { "id": "length", "text": "Length target?", "type": "mcq", "options": ["short (<300 words)", "medium (300–800)", "long (800–2000)", "very long (2000+)"], "allow_other": true, "maps_to_node": "technical_parameters", "priority": 3, "answered_by_entities": ["length", "word_count"] }
+    ]
+  }
+}

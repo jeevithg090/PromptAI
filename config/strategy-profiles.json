@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0.0",
+  "note": "Task-type drafting strategies (spec §10.3) — versioned config, not code. required_nodes drive node order and the drafting template; guidance is injected into the drafting system prompt; temperature/max_tokens tune the large-tier call per task shape. Tuning a strategy = editing this file, no deploy.",
+  "profiles": {
+    "text_to_image": {
+      "version": 1,
+      "temperature": 0.7,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "subject",
+        "action_behavior",
+        "setting_context",
+        "style_aesthetic",
+        "composition_camera",
+        "lighting_mood",
+        "technical_parameters",
+        "negative_prompt"
+      ],
+      "guidance": "Generative-visual strategy: concrete visual nouns and modifiers, one clear composition, one lighting direction. Respect the platform's phrasing dialect (conversational sentences vs keyword tags) and its negation mechanism — if the platform handles negation poorly, fold exclusions into positive phrasing and leave negative_prompt empty."
+    },
+    "text_to_video": {
+      "version": 1,
+      "temperature": 0.7,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "subject",
+        "action_behavior",
+        "setting_context",
+        "style_aesthetic",
+        "composition_camera",
+        "lighting_mood",
+        "technical_parameters"
+      ],
+      "guidance": "Generative-visual (motion) strategy: subject + a single continuous action, explicit camera movement in composition_camera, one scene only — no cuts unless asked. Keep the clip concept achievable in seconds-long output."
+    },
+    "chat_persona": {
+      "version": 1,
+      "temperature": 0.5,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "persona_role",
+        "setting_context",
+        "style_aesthetic",
+        "constraints_rules",
+        "output_format"
+      ],
+      "guidance": "Persona strategy: concrete behavioral rules over adjectives ('ask one question per turn' beats 'be engaging'). persona_role states who the AI is and its expertise; constraints_rules lists hard boundaries incl. staying in character; output_format defines turn shape (length, question policy)."
+    },
+    "reasoning_code": {
+      "version": 1,
+      "temperature": 0.3,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "subject",
+        "action_behavior",
+        "technical_parameters",
+        "constraints_rules",
+        "output_format"
+      ],
+      "guidance": "Reasoning/code strategy: precise task statement, explicit language/framework/version in technical_parameters, stepwise decomposition for hard problems, and a self-verification instruction when correctness matters. output_format pins code-only vs code+explanation."
+    },
+    "extraction_classification": {
+      "version": 1,
+      "temperature": 0.2,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "subject",
+        "action_behavior",
+        "constraints_rules",
+        "output_format"
+      ],
+      "guidance": "Extraction strategy: closed label sets enumerated in full, an explicit 'unknown' fallback for missing values, schema-first output_format (show the exact JSON/CSV shape), and few-shot examples inside setting_context when the user supplied any."
+    },
+    "long_form_writing": {
+      "version": 1,
+      "temperature": 0.6,
+      "max_tokens": 4000,
+      "required_nodes": [
+        "subject",
+        "setting_context",
+        "style_aesthetic",
+        "constraints_rules",
+        "output_format"
+      ],
+      "guidance": "Long-form strategy: purpose and audience up front (subject/setting_context), tone anchors in style_aesthetic, structure and length target in output_format, factual boundaries in constraints_rules."
+    }
+  }
+}
