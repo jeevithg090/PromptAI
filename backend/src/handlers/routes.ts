@@ -1,5 +1,7 @@
 import { Hono, type Context } from 'hono';
 import { cors } from 'hono/cors';
+import { secureHeaders } from 'hono/secure-headers';
+import { bodyLimit } from 'hono/body-limit';
 import { authMiddleware } from '../middleware/auth';
 import { rateLimitMiddleware } from '../middleware/rateLimit';
 import { requestLogger } from '../middleware/logging';
@@ -37,7 +39,7 @@ import {
   AlternativesAgent,
 } from '../agents';
 import type { PipelineContext } from '../types/Agent';
-import type { AppEnv } from '../types/Http';
+import { type AppEnv, draftBodySchema, clarifyBodySchema } from '../types/Http';
 
 /**
  * All API routes — spec §31.2 Step 9. HTTP entry points only; business logic
@@ -51,7 +53,18 @@ export function buildApp(): Hono<AppEnv> {
 
   app.onError(onError);
   app.use('*', requestLogger);
-  // CORS — spec §23.4 (custom plumbing #3). Origins tighten when web/extension deploy (T4.1/T5.4).
+  // Security response headers (§27, T3.8) — HSTS, X-Content-Type-Options,
+  // frame-deny, referrer policy, etc. Cheap defense-in-depth for an API.
+  app.use('*', secureHeaders());
+  // Body-size cap (§27 DoS, T3.8) — reject bodies over 100KB with 413 before
+  // parsing. Our largest legitimate body (draft idea) is ~10KB.
+  app.use(
+    '*',
+    bodyLimit({ maxSize: 100 * 1024, onError: (c) => c.json({ error: 'request body too large (max 100KB)' }, 413) })
+  );
+  // CORS — spec §23.4 (custom plumbing #3). Currently reflects any origin.
+  // SECURITY TODO (T4.1/T5.4): tighten `origin` to the web + extension origins
+  // once they deploy — reflecting any origin is acceptable pre-launch only.
   app.use('*', cors({ origin: (origin) => origin, allowHeaders: ['Authorization', 'Content-Type'] }));
 
   // ---- Public ----
@@ -276,9 +289,15 @@ export function buildApp(): Hono<AppEnv> {
 
     const result = await supervisor.run(context);
 
-    // Persist metadata + meter tokens regardless of outcome (best-effort, no content).
-    await persistSessionMetadata(result.context, result.finalState);
-    await meterUsage(result.context, result.trace);
+    // Persist metadata + meter tokens regardless of outcome (best-effort, no
+    // content). Run them concurrently (§23.4, T3.7 tuning): each is already
+    // fail-soft internally, so allSettled never rejects — this replaces two
+    // serial DB round-trips with one, while still completing before the Lambda
+    // execution environment can freeze (so writes aren't lost).
+    await Promise.allSettled([
+      persistSessionMetadata(result.context, result.finalState),
+      meterUsage(result.context, result.trace),
+    ]);
 
     if (result.finalState === 'blocked_by_safety') {
       return c.json(
@@ -331,10 +350,11 @@ export function buildApp(): Hono<AppEnv> {
    * clarification and whether the user asked to "just generate now".
    */
   authed.post('/draft', async (c) => {
-    const body = await c.req.json<{ platform_id?: string; idea?: string; just_generate?: boolean }>();
-    if (!body.platform_id || !body.idea) {
-      return c.json({ error: 'platform_id and idea are required' }, 400);
+    const parsed = draftBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'platform_id and idea are required', issues: parsed.error.issues }, 400);
     }
+    const body = parsed.data;
     const platform = getPlatform(body.platform_id);
     if (!platform) {
       return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);
@@ -358,15 +378,11 @@ export function buildApp(): Hono<AppEnv> {
    */
   authed.post('/draft/:sessionId/clarify', async (c) => {
     const sessionId = c.req.param('sessionId');
-    const body = await c.req.json<{
-      platform_id?: string;
-      idea?: string;
-      clarifications?: Record<string, string>;
-      just_generate?: boolean;
-    }>();
-    if (!body.platform_id || !body.idea) {
-      return c.json({ error: 'platform_id and idea are required (client-supplied while server is content-stateless, pre-E2EE)' }, 400);
+    const parsed = clarifyBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'platform_id and idea are required (client-supplied while server is content-stateless, pre-E2EE)', issues: parsed.error.issues }, 400);
     }
+    const body = parsed.data;
     const platform = getPlatform(body.platform_id);
     if (!platform) {
       return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);

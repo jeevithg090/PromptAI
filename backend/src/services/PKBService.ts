@@ -34,6 +34,12 @@ export class PKBService {
     const [queryVector] = await this.embedder.embed([query], 'query');
     if (!queryVector) throw new Error('embedding provider returned no vector');
 
+    // Defense-in-depth (§27, T3.8): the vector is bound as a parameter ($2), so
+    // this isn't SQL injection, but a non-finite element (NaN/Infinity from a
+    // misbehaving embedder) would build a malformed literal — reject it early.
+    if (!queryVector.every((n) => Number.isFinite(n))) {
+      throw new Error('embedding vector contains non-finite values');
+    }
     const vectorLiteral = `[${queryVector.join(',')}]`;
     const { rows } = await getPool().query<ChunkRow>(
       `select id, kind, platform_id, model_family, content, source_url, trust_score, ingested_at

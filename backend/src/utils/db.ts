@@ -17,7 +17,9 @@ export function getPool(): Pool {
     pool = new Pool({
       connectionString: config.DATABASE_URL,
       ssl: { rejectUnauthorized: false },
-      max: 3, // Lambdalith: one concurrent request per instance; keep it tiny
+      // Configurable (§32.3): default 10 for a long-lived server; a Lambdalith
+      // sets DB_POOL_MAX=3 (one concurrent request per instance). See env.ts.
+      max: config.DB_POOL_MAX,
       idleTimeoutMillis: 30_000,
     });
   }

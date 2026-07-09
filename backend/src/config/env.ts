@@ -79,6 +79,16 @@ const envSchema = z.object({
   RATE_LIMIT_REQUESTS_PER_MINUTE: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(30)),
   BUDGET_ENFORCEMENT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
 
+  // Postgres pool size (§23.4). Default 10 suits a long-lived local/server
+  // process fielding many concurrent requests; a Lambdalith should override to
+  // a small value (e.g. DB_POOL_MAX=3 — one concurrent request per instance).
+  DB_POOL_MAX: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(10)),
+
+  // Load-testing seam (T3.7): force every generate() to the deterministic mock
+  // adapter so load tests measure OUR system, not the provider's free-tier rate
+  // limits. NEVER allowed in production — refused at startup below.
+  PROVIDER_FORCE_MOCK: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
+
   // Local dev
   PORT: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(3001)),
   DEV_AUTH_BYPASS: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
@@ -95,4 +105,10 @@ export const config: Env = envSchema.parse(process.env);
 // DEV_AUTH_BYPASS must never survive into production (§19, §27.2).
 if (config.NODE_ENV === 'production' && config.DEV_AUTH_BYPASS) {
   throw new Error('DEV_AUTH_BYPASS=true is refused in production');
+}
+
+// PROVIDER_FORCE_MOCK is a load-testing seam only — it must never serve real
+// traffic (it returns canned drafts). Fail closed in production (T3.7).
+if (config.NODE_ENV === 'production' && config.PROVIDER_FORCE_MOCK) {
+  throw new Error('PROVIDER_FORCE_MOCK=true is refused in production');
 }

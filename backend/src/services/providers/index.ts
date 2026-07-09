@@ -1,6 +1,7 @@
 import { resolveRoute } from '../ModelRouter';
 import { getProvider } from './ProviderRegistry';
 import { logger } from '../../utils/logger';
+import { config } from '../../config/env';
 import type { ModelComplexity, ProviderGenerateRequest, ProviderGenerateResponse } from '../../types/Provider';
 
 /**
@@ -22,7 +23,10 @@ export async function generate(
   request: Omit<ProviderGenerateRequest, 'model'>
 ): Promise<ProviderGenerateResponse> {
   const route = resolveRoute(pipelineStep, complexity);
-  const provider = getProvider(route.provider);
+  // Load-testing seam (T3.7): force the deterministic mock adapter so a load
+  // test measures our orchestration, not a provider's free-tier rate limits.
+  // env.ts refuses PROVIDER_FORCE_MOCK in production, so this can't serve real traffic.
+  const provider = config.PROVIDER_FORCE_MOCK ? getProvider('mock') : getProvider(route.provider);
 
   const first = await provider.generate({ ...request, model: route.model_id });
   if (first.finishReason !== 'length') return first;

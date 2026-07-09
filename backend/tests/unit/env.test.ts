@@ -38,4 +38,21 @@ describe('env config (§32.3)', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     expect(() => require('../../src/config/env')).toThrow();
   });
+
+  // T3.7: the load-testing mock seam must never serve real traffic.
+  it('refuses PROVIDER_FORCE_MOCK=true in production', () => {
+    process.env.NODE_ENV = 'production';
+    process.env.DEV_AUTH_BYPASS = 'false'; // test setup sets this true; the DEV_AUTH_BYPASS guard would fire first
+    process.env.PROVIDER_FORCE_MOCK = 'true';
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    expect(() => require('../../src/config/env')).toThrow(/PROVIDER_FORCE_MOCK.*production/);
+  });
+
+  it('allows PROVIDER_FORCE_MOCK=true outside production', () => {
+    process.env.NODE_ENV = 'development';
+    process.env.PROVIDER_FORCE_MOCK = 'true';
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { config } = require('../../src/config/env');
+    expect(config.PROVIDER_FORCE_MOCK).toBe(true);
+  });
 });

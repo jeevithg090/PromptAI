@@ -36,11 +36,13 @@ export async function authMiddleware(c: Context<AppEnv>, next: Next) {
 
   try {
     if (config.SUPABASE_JWKS_URL) {
-      const { payload } = await jwtVerify(token, getJwks()!);
+      // Pin the algorithm (§27, T3.8) — Supabase signs with ES256; pinning
+      // blocks algorithm-confusion / `alg:none` downgrade attacks.
+      const { payload } = await jwtVerify(token, getJwks()!, { algorithms: ['ES256'] });
       c.set('userId', String(payload.sub));
     } else if (config.SUPABASE_JWT_SECRET) {
       const secret = new TextEncoder().encode(config.SUPABASE_JWT_SECRET);
-      const { payload } = await jwtVerify(token, secret);
+      const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
       c.set('userId', String(payload.sub));
     } else {
       logger.error({ type: 'auth:not_configured' });
