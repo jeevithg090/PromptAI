@@ -1,0 +1,10 @@
+name = "promptforge-web"
+compatibility_date = "2026-07-09"
+
+pages_build_output_dir = ".vercel/output/static"
+
+[env.staging]
+vars = { NEXT_PUBLIC_API_URL = "https://qsfu5lcqt2.execute-api.us-east-1.amazonaws.com" }
+
+[env.production]
+vars = { NEXT_PUBLIC_API_URL = "https://qsfu5lcqt2.execute-api.us-east-1.amazonaws.com" }

@@ -1,0 +1,114 @@
+[
+  {
+    "id": "photo-realistic-portrait",
+    "title": "Photorealistic portrait",
+    "description": "A detailed portrait prompt for Midjourney with lighting, composition, and style specs.",
+    "platform_id": "midjourney",
+    "idea": "A striking photorealistic portrait of a woman with freckles, warm golden hour lighting, shallow depth of field",
+    "modality": "image"
+  },
+  {
+    "id": "fantasy-landscape",
+    "title": "Fantasy landscape scene",
+    "description": "Epic fantasy landscape with dramatic lighting and atmospheric effects.",
+    "platform_id": "midjourney",
+    "idea": "A fantasy landscape with floating islands, waterfalls cascading into clouds, bioluminescent flora, dramatic sunset lighting",
+    "modality": "image"
+  },
+  {
+    "id": "product-photo",
+    "title": "Product photography",
+    "description": "Clean product shot with professional studio lighting for Stable Diffusion.",
+    "platform_id": "stability_stable_diffusion",
+    "idea": "A minimalist product photo of a perfume bottle on a marble surface, soft studio lighting, clean background, reflections",
+    "modality": "image"
+  },
+  {
+    "id": "cyberpunk-city",
+    "title": "Cyberpunk city scene",
+    "description": "Vibrant cyberpunk cityscape with neon lights and rain-soaked streets.",
+    "platform_id": "stability_stable_diffusion",
+    "idea": "A cyberpunk city at night, neon signs reflecting on wet pavement, flying cars, rain, high contrast, detailed architecture",
+    "modality": "image"
+  },
+  {
+    "id": "animation-video",
+    "title": "Animated explainer video",
+    "description": "Short animated video description with camera motion and pacing for text-to-video.",
+    "platform_id": "runway",
+    "idea": "A 15-second animated explainer showing how solar panels work, top-down view zooming into a panel, cross-section animation of photons hitting silicon cells, electrons flowing, pulsing energy glow",
+    "modality": "video"
+  },
+  {
+    "id": "friendly-tutor",
+    "title": "Friendly coding tutor",
+    "description": "A patient, encouraging ChatGPT persona for teaching beginners to code.",
+    "platform_id": "chatgpt",
+    "idea": "A friendly coding tutor that explains concepts simply, uses analogies, never judges, and asks guiding questions instead of giving answers",
+    "modality": "chat"
+  },
+  {
+    "id": "professional-email",
+    "title": "Professional email writer",
+    "description": "Helps draft professional emails in any tone — formal, persuasive, or friendly.",
+    "platform_id": "chatgpt",
+    "idea": "A professional email writing assistant that adapts tone based on the recipient and purpose, offers multiple versions, and keeps a consistent professional voice",
+    "modality": "chat"
+  },
+  {
+    "id": "claude-analyst",
+    "title": "Data analyst assistant",
+    "description": "A Claude persona for analyzing data, spotting trends, and explaining findings.",
+    "platform_id": "claude",
+    "idea": "A data analyst assistant that examines tables and charts, identifies trends and outliers, explains statistical significance in plain language, and suggests visualizations",
+    "modality": "chat"
+  },
+  {
+    "id": "python-script",
+    "title": "Python automation script",
+    "description": "Generate a Python script that processes CSV files with error handling.",
+    "platform_id": "chatgpt",
+    "idea": "Write a Python script that reads a CSV file, validates each row, transforms date formats, filters rows by criteria, and writes a clean output CSV with error logging",
+    "modality": "code"
+  },
+  {
+    "id": "react-component",
+    "title": "React component generator",
+    "description": "Generate a reusable React component with TypeScript and Tailwind CSS.",
+    "platform_id": "claude",
+    "idea": "Create a TypeScript React component for a searchable dropdown with keyboard navigation, async option loading, multi-select support, and Tailwind styling",
+    "modality": "code"
+  },
+  {
+    "id": "api-docs",
+    "title": "API documentation writer",
+    "description": "Generate clear API documentation with examples and curl snippets.",
+    "platform_id": "chatgpt",
+    "idea": "Write API documentation for a RESTful endpoint that accepts POST requests with JSON body, validates input, and returns structured responses with proper status codes and error messages",
+    "modality": "code"
+  },
+  {
+    "id": "legal-summary",
+    "title": "Legal document summarizer",
+    "description": "Extract key clauses and obligations from legal text.",
+    "platform_id": "claude",
+    "idea": "Summarize this legal document: extract all defined terms, key obligations for each party, termination conditions, liability caps, and dispute resolution procedures in a structured format",
+    "modality": "text"
+  },
+  {
+    "id": "blog-post",
+    "title": "Blog post outline",
+    "description": "Generate a well-structured blog post outline with SEO keywords.",
+    "platform_id": "gemini",
+    "idea": "Write a 1500-word blog post outline about the benefits of renewable energy, targeting homeowners considering solar panels, include SEO keywords, subheadings, and key statistics",
+    "modality": "text"
+  },
+  {
+    "id": "recipe-card",
+    "title": "Recipe card generator",
+    "description": "Generate a formatted recipe with ingredients and step-by-step instructions.",
+    "platform_id": "gemini",
+    "idea": "Create a detailed recipe for homemade sourdough bread including ingredient list with weights, step-by-step instructions with timestamps, troubleshooting tips, and storage recommendations",
+    "modality": "text"
+  }
+]

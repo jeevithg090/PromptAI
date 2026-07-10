@@ -24,6 +24,7 @@ export async function authMiddleware(c: Context<AppEnv>, next: Next) {
   // Local development escape hatch only — refused in production (config/env.ts).
   if (config.DEV_AUTH_BYPASS) {
     c.set('userId', 'dev-user-000');
+    c.set('email', null);
     return next();
   }
 
@@ -40,10 +41,12 @@ export async function authMiddleware(c: Context<AppEnv>, next: Next) {
       // blocks algorithm-confusion / `alg:none` downgrade attacks.
       const { payload } = await jwtVerify(token, getJwks()!, { algorithms: ['ES256'] });
       c.set('userId', String(payload.sub));
+      c.set('email', typeof payload.email === 'string' ? payload.email : null);
     } else if (config.SUPABASE_JWT_SECRET) {
       const secret = new TextEncoder().encode(config.SUPABASE_JWT_SECRET);
       const { payload } = await jwtVerify(token, secret, { algorithms: ['HS256'] });
       c.set('userId', String(payload.sub));
+      c.set('email', typeof payload.email === 'string' ? payload.email : null);
     } else {
       logger.error({ type: 'auth:not_configured' });
       void audit({ actor: 'anonymous', action: 'auth:rejected', status: 'failure', detail: { reason: 'auth not configured on this deployment' } });

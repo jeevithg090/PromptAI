@@ -4,6 +4,8 @@ import { z } from 'zod';
 export interface AppEnv {
   Variables: {
     userId: string;
+    /** Email claim from the JWT (name/email are the only plaintext PII, §19.1); null when absent. */
+    email: string | null;
   };
 }
 
@@ -33,3 +35,29 @@ export const clarifyBodySchema = z.object({
   just_generate: z.boolean().optional(),
 });
 export type ClarifyBody = z.infer<typeof clarifyBodySchema>;
+
+/** POST /demo/draft */
+export const demoDraftBodySchema = z.object({
+  example_id: z.string().min(1).max(100),
+});
+
+/** POST /serialize */
+export const serializeBodySchema = z.object({
+  platform_id: z.string().min(1).max(100),
+  nodes: z.array(z.any()).min(1),
+});
+
+/** POST /redraft-node */
+export const redraftNodeBodySchema = z.object({
+  platform_id: z.string().min(1).max(100),
+  task_type: z.string().min(1).max(50),
+  nodes: z.array(z.any()).min(1),
+  target_node_type: z.string().min(1).max(50),
+  instruction: z.string().max(1000).optional(),
+});
+
+/** POST /fanout */
+export const fanoutBodySchema = z.object({
+  nodes: z.array(z.any()).min(1),
+  platform_ids: z.array(z.string().min(1).max(100)).min(2).max(5),
+});

@@ -24,6 +24,8 @@ import {
 } from '../services/PromptService';
 import { recommend } from '../services/RecommendationService';
 import { analyzeTokenUsage } from '../services/TokenOptimizationAdvisor';
+import { redraftNode, NodeLocked, NodeNotFound } from '../services/NodeRedraftService';
+import { getDemoExample, listDemoExamples } from '../services/DemoService';
 import { getPool } from '../utils/db';
 import { logger } from '../utils/logger';
 import { config } from '../config/env';
@@ -39,7 +41,7 @@ import {
   AlternativesAgent,
 } from '../agents';
 import type { PipelineContext } from '../types/Agent';
-import { type AppEnv, draftBodySchema, clarifyBodySchema } from '../types/Http';
+import { type AppEnv, draftBodySchema, clarifyBodySchema, serializeBodySchema, redraftNodeBodySchema, fanoutBodySchema, demoDraftBodySchema } from '../types/Http';
 
 /**
  * All API routes — spec §31.2 Step 9. HTTP entry points only; business logic
@@ -62,10 +64,19 @@ export function buildApp(): Hono<AppEnv> {
     '*',
     bodyLimit({ maxSize: 100 * 1024, onError: (c) => c.json({ error: 'request body too large (max 100KB)' }, 413) })
   );
-  // CORS — spec §23.4 (custom plumbing #3). Currently reflects any origin.
-  // SECURITY TODO (T4.1/T5.4): tighten `origin` to the web + extension origins
-  // once they deploy — reflecting any origin is acceptable pre-launch only.
-  app.use('*', cors({ origin: (origin) => origin, allowHeaders: ['Authorization', 'Content-Type'] }));
+  // CORS — spec §23.4, T4.1/T5.4. Allowlisted origins or reflect matching ones.
+  const allowedOrigins = config.ALLOWED_ORIGINS.split(',').map((s) => s.trim());
+  app.use(
+    '*',
+    cors({
+      origin: (origin) => {
+        if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return origin;
+        // Allow health and platforms from any origin (public endpoints).
+        return undefined;
+      },
+      allowHeaders: ['Authorization', 'Content-Type'],
+    })
+  );
 
   // ---- Public ----
   app.get('/health', (c) => c.json({ ok: true, service: 'pf-backend' }));
@@ -85,7 +96,12 @@ export function buildApp(): Hono<AppEnv> {
 
   authed.get('/projects', (c) => c.json({ status: 'not_implemented_yet', task: 'T1.4/T7.4', projects: [] }, 200));
   authed.post('/projects', (c) => c.json({ status: 'not_implemented_yet', task: 'T1.4/T7.4' }, 501));
-  authed.get('/library', (c) => c.json({ status: 'not_implemented_yet', task: 'T4.7', entries: [] }, 200));
+  // NOTE (T4 review): the MVP library is served CLIENT-SIDE from
+  // web/src/data/library-seeds.json — the web app never calls a backend library
+  // route. The DB-backed library (library_entries table already exists in
+  // migration 003; seed + GET /library + GET /library/:id + POST /library/:id/remix
+  // with remix counts + moderation) is deferred until it earns its keep. Until
+  // then there is deliberately no /library endpoint (a 501 stub only misleads).
   /**
    * Prompt-performance feedback (§29.2, §10.7, T3.5).
    * Anonymized, aggregate-only: NO user_id or session_id written to the row.
@@ -439,6 +455,210 @@ export function buildApp(): Hono<AppEnv> {
     }
   });
 
+  // ---- Demo (public) — T4.3 ----
+  // In-memory IP rate limit map for demo (per-day, simple counter).
+  const demoRateMap = new Map<string, { count: number; date: string }>();
+  const DEMO_DAILY_LIMIT = config.DEMO_REQUESTS_PER_DAY;
+
+  const demo = new Hono<AppEnv>();
+  /** GET /demo/examples — list available demo examples (from config, §32.3). */
+  demo.get('/demo/examples', (c) => {
+    return c.json({ examples: listDemoExamples() });
+  });
+  /** POST /demo/draft — run a demo example (public, IP rate-limited). */
+  demo.post('/demo/draft', async (c) => {
+    if (!config.DEMO_ENABLED) {
+      return c.json({ error: 'demo is disabled' }, 404);
+    }
+    const parsed = demoDraftBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'example_id is required' }, 400);
+    }
+    const { example_id } = parsed.data;
+    const example = getDemoExample(example_id);
+    if (!example) {
+      return c.json({ error: `unknown example '${example_id}'` }, 400);
+    }
+    const platform = getPlatform(example.platform_id);
+    if (!platform) {
+      return c.json({ error: `platform '${example.platform_id}' not found` }, 503);
+    }
+    // IP rate limit (simple in-memory per IP/day)
+    const ip = c.req.header('x-forwarded-for') ?? 'local';
+    const today = new Date().toISOString().slice(0, 10);
+    const entry = demoRateMap.get(ip);
+    if (entry && entry.date === today && entry.count >= DEMO_DAILY_LIMIT) {
+      return c.json({
+        status: 'rate_limited',
+        message: 'You have used all your demo tries today. Create a free account for unlimited drafting.',
+      }, 429);
+    }
+    if (!entry || entry.date !== today) {
+      demoRateMap.set(ip, { count: 1, date: today });
+    } else {
+      entry.count++;
+    }
+    // Periodic cleanup to avoid unbounded growth (>50 entries, only on write)
+    if (demoRateMap.size > 50) {
+      const todayKey = today;
+      for (const [k, v] of demoRateMap) {
+        if (v.date !== todayKey) demoRateMap.delete(k);
+      }
+    }
+    const context: PipelineContext = {
+      userId: 'demo-user',
+      sessionId: crypto.randomUUID(),
+      platform,
+      userIdea: example.idea,
+      justGenerate: true,
+    };
+    return runPipeline(c, context);
+  });
+
+  // ---- Web app helper routes ----
+
+  /** Serialize nodes to a platform string (§13.3, T4.5). Pure/deterministic — no LLM. */
+  authed.post('/serialize', async (c) => {
+    const parsed = serializeBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'platform_id and nodes are required', issues: parsed.error.issues }, 400);
+    }
+    const { platform_id, nodes } = parsed.data;
+    const platform = getPlatform(platform_id);
+    if (!platform) return c.json({ error: `unknown platform '${platform_id}'` }, 404);
+    try {
+      const { serializeNodes } = await import('../services/PromptSerializer');
+      const assembled = serializeNodes(nodes as any, platform);
+      return c.json({ assembled });
+    } catch (error) {
+      logger.warn({ type: 'serialize:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'serialization error' }, 500);
+    }
+  });
+
+  /** Redraft a single node (§10.6, T4.5) — small-tier regenerate for one node type. */
+  authed.post('/redraft-node', async (c) => {
+    const parsed = redraftNodeBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'invalid request', issues: parsed.error.issues }, 400);
+    }
+    const { platform_id, task_type, nodes, target_node_type, instruction } = parsed.data;
+    const platform = getPlatform(platform_id);
+    if (!platform) return c.json({ error: `unknown platform '${platform_id}'` }, 404);
+    try {
+      const result = await redraftNode({
+        platform,
+        taskType: task_type,
+        nodes: nodes as Array<{ type: string; value: string; locked?: boolean }>,
+        targetNodeType: target_node_type,
+        instruction,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      if (error instanceof NodeLocked) return c.json({ error: 'that node is locked — unlock it to regenerate' }, 400);
+      if (error instanceof NodeNotFound) return c.json({ error: error.message }, 400);
+      logger.warn({ type: 'redraft:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'regeneration unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Bootstrap the caller's app_users row (idempotent). */
+  authed.post('/me/bootstrap', async (c) => {
+    const userId = c.get('userId');
+    // Real email/name come from the JWT claims (name/email are the only plaintext
+    // PII we store, §19.1); null when absent (e.g. dev-bypass) → columns stay null.
+    const email = c.get('email') ?? null;
+    try {
+      const pool = getPool();
+      await pool.query(
+        `insert into app_users (id, email, display_name) values ($1, $2, $3) on conflict (id) do nothing`,
+        [userId, email, null]
+      );
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'bootstrap:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ status: 'ok' }); // idempotent — no error to the client
+    }
+  });
+
+  /** List the caller's sessions (metadata only). */
+  authed.get('/sessions', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, platform_id, final_state, strength_score, created_at
+         from sessions where user_id = $1 order by created_at desc limit 50`,
+        [userId]
+      );
+      return c.json({ status: 'ok', sessions: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'sessions:list_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'sessions unavailable' }, 503);
+    }
+  });
+
+  /** Export all user data (§29.8, T4.7). */
+  authed.get('/export', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const sessionsRes = await pool.query(
+        `select id, platform_id, final_state, strength_score, rubric_scores, refinement_count, created_at
+         from sessions where user_id = $1 order by created_at`,
+        [userId]
+      );
+      const prompts = await pool.query(
+        `select id, version, task_type, platform_id, strength_score, created_at
+         from prompts where user_id = $1 order by created_at`,
+        [userId]
+      );
+      return c.json({
+        status: 'ok',
+        export: {
+          exported_at: new Date().toISOString(),
+          note: 'Content is stored client-side pre-E2EE (T7.1). Server-side metadata only.',
+          sessions: sessionsRes.rows,
+          prompts: prompts.rows,
+        },
+      });
+    } catch (error) {
+      logger.warn({ type: 'export:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'export unavailable' }, 503);
+    }
+  });
+
+  /** Multi-platform fan-out (§13.3, TA.4). */
+  authed.post('/fanout', async (c) => {
+    const parsed = fanoutBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'nodes and platform_ids are required', issues: parsed.error.issues }, 400);
+    }
+    const { nodes, platform_ids } = parsed.data;
+    const { serializeNodes } = await import('../services/PromptSerializer');
+    const { govern } = await import('../guardrails/TokenGovernor');
+    const results: Array<{ platform_id: string; display_name: string; assembled: string; governor: any }> = [];
+    const skipped: string[] = [];
+    for (const pid of platform_ids) {
+      const platform = getPlatform(pid);
+      if (!platform) { skipped.push(pid); continue; }
+      const assembled = serializeNodes(nodes as any, platform);
+      const governor = govern(assembled, platform);
+      results.push({ platform_id: pid, display_name: platform.display_name, assembled, governor });
+    }
+    return c.json({
+      status: 'ok',
+      results,
+      skipped,
+      note: 'serialized from shared nodes; for platform-optimized re-drafting, draft per platform',
+    });
+  });
+
+  // Mount sub-apps LAST — Hono copies a sub-app's routes into the parent at
+  // app.route() time, so this must run after every demo.*/authed.* route above
+  // is registered (otherwise those routes 404). See T4 review, 2026-07-10.
+  app.route('/', demo);
   app.route('/', authed);
+
   return app;
 }

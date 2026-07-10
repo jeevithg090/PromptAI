@@ -1,0 +1,44 @@
+[
+  {
+    "example_id": "horse-sunset",
+    "platform_id": "midjourney",
+    "idea": "a horse running at sunset, photorealistic, dynamic motion, golden light, dust kicking up",
+    "modality": "image",
+    "just_generate": true
+  },
+  {
+    "example_id": "astronaut-moon",
+    "platform_id": "google_gemini",
+    "idea": "a lone astronaut in a white suit watching earthrise from the moon, desolate lunar surface, earth glowing blue in the distance",
+    "modality": "image",
+    "just_generate": true
+  },
+  {
+    "example_id": "friendly-tutor",
+    "platform_id": "anthropic_claude",
+    "idea": "you are a patient friendly language tutor who helps beginners learn Spanish conversation, corrects mistakes gently, focuses on practical everyday phrases",
+    "modality": "chat",
+    "just_generate": true
+  },
+  {
+    "example_id": "python-script",
+    "platform_id": "openai_chatgpt",
+    "idea": "write a Python script that reads a CSV file of sales data, processes it to calculate monthly totals and growth percentages, then generates charts with matplotlib",
+    "modality": "code",
+    "just_generate": true
+  },
+  {
+    "example_id": "product-email",
+    "platform_id": "openai_chatgpt",
+    "idea": "draft a product launch email for a new SaaS productivity tool targeted at small business owners. The tone should be excited and helpful, highlighting time savings",
+    "modality": "text",
+    "just_generate": true
+  },
+  {
+    "example_id": "recipe-card",
+    "platform_id": "stability_stable_diffusion",
+    "idea": "a clean minimalist recipe card for chocolate chip cookies, top-down flat lay photography, warm lighting, rustic wooden table background, recipe ingredients and instructions visible",
+    "modality": "image",
+    "just_generate": true
+  }
+]

@@ -44,10 +44,17 @@ const CRITIC_JSON = JSON.stringify({
   issues: [],
 });
 
+const REDRAFT_JSON = JSON.stringify({
+  value: 'a refined replacement value',
+  rationale: 'mock single-node redraft',
+  alternatives: [{ value: 'an alternative value', rationale: 'different angle', rank: 1 }],
+});
+
 /** Picks the canned payload for a call from a marker in its system prompt. */
 function cannedFor(systemPrompt: string): string {
   if (systemPrompt.includes('intent classifier')) return INTENT_JSON;
   if (systemPrompt.includes('quality critic')) return CRITIC_JSON;
+  if (systemPrompt.includes('refining ONE node')) return REDRAFT_JSON;
   return DRAFT_JSON;
 }
 

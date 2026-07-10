@@ -96,6 +96,21 @@ const envSchema = z.object({
   CLARIFICATION_QUESTIONS_PATH: optional(z.string()),
   STRATEGY_PROFILES_PATH: optional(z.string()),
   MODEL_CAPABILITIES_PATH: optional(z.string()),
+  DEMO_EXAMPLES_PATH: optional(z.string()),
+
+  // CORS allowlist for web/extension origins — comma-separated (T4.1/T5.4).
+  ALLOWED_ORIGINS: z.preprocess(
+    (v) => (v === '' || v === undefined ? 'http://localhost:3000' : v),
+    z.string()
+  ),
+
+  // Demo/try-it-now flow (T4.3).
+  DEMO_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  DEMO_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(5)),
+
+  // PKB retrieval (T5.2).
+  PKB_MIN_SIMILARITY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(0).max(1).default(0.45)),
+  LIVE_FETCH_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
 });
 
 export type Env = z.infer<typeof envSchema>;
