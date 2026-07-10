@@ -1,7 +1,9 @@
 name = "promptforge-web"
 compatibility_date = "2026-07-09"
 
-pages_build_output_dir = ".vercel/output/static"
+# Static export output (next.config.ts `output: "export"`) — deployed as static
+# assets. We do NOT use @cloudflare/next-on-pages (it doesn't support Next 16).
+pages_build_output_dir = "out"
 
 [env.staging]
 vars = { NEXT_PUBLIC_API_URL = "https://qsfu5lcqt2.execute-api.us-east-1.amazonaws.com" }
