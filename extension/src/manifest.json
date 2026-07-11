@@ -1,0 +1,46 @@
+{
+  "manifest_version": 3,
+  "name": "PromptForge",
+  "version": "0.1.0",
+  "description": "Prompt-AI-powered drafting assistant for text-generation platforms (§20.2)",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://chatgpt.com/*",
+    "https://claude.ai/*",
+    "https://gemini.google.com/*",
+    "https://chat.mistral.ai/*",
+    "https://www.perplexity.ai/*",
+    "https://groq.com/*",
+    "https://www.midjourney.com/*",
+    "https://stability.ai/*",
+    "https://huggingface.co/chat/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://claude.ai/*",
+        "https://gemini.google.com/*",
+        "https://chat.mistral.ai/*",
+        "https://www.perplexity.ai/*",
+        "https://groq.com/*",
+        "https://chatgpt.com/g/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { strings } from '@/lib/strings';
 import { AuthProvider, useAuth } from './AuthProvider';
+import { EncryptionProvider } from './EncryptionProvider';
 
 function NavBar() {
   const { user, signOut } = useAuth();
@@ -57,6 +58,7 @@ function NavBar() {
 export function LayoutClient({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
+      <EncryptionProvider>
       <div className="flex min-h-screen flex-col">
         <NavBar />
         <main className="flex-1">{children}</main>
@@ -64,6 +66,7 @@ export function LayoutClient({ children }: { children: React.ReactNode }) {
           &copy; {new Date().getFullYear()} {strings.appName}
         </footer>
       </div>
+      </EncryptionProvider>
     </AuthProvider>
   );
 }

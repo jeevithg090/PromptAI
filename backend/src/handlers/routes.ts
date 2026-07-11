@@ -22,7 +22,7 @@ import {
   PromptNotFound,
   type SavePromptInput,
 } from '../services/PromptService';
-import { recommend } from '../services/RecommendationService';
+import { recommend, loadCapabilityMatrix } from '../services/RecommendationService';
 import { analyzeTokenUsage } from '../services/TokenOptimizationAdvisor';
 import { redraftNode, NodeLocked, NodeNotFound } from '../services/NodeRedraftService';
 import { getDemoExample, listDemoExamples } from '../services/DemoService';
@@ -32,6 +32,7 @@ import { config } from '../config/env';
 import { MODALITIES, type RecommendationRequest } from '../types/Recommendation';
 import { feedbackSchema, type FeedbackBody } from '../types/Feedback';
 import { underperformingDimensions } from '../services/OutcomeAnalytics';
+import { analyzeImprovements } from '../services/ContinuousImprovement';
 import {
   IntentClassificationAgent,
   DocRetrievalAgent,
@@ -39,9 +40,20 @@ import {
   DraftingAgent,
   CriticAgent,
   AlternativesAgent,
+  MemoryExtractionAgent,
+  IntentClassificationAgentClass,
+  DraftingAgentClass,
+  CriticAgentClass,
+  AlternativesAgentClass,
 } from '../agents';
-import type { PipelineContext } from '../types/Agent';
-import { type AppEnv, draftBodySchema, clarifyBodySchema, serializeBodySchema, redraftNodeBodySchema, fanoutBodySchema, demoDraftBodySchema } from '../types/Http';
+import type { PipelineContext, MemoryEntry } from '../types/Agent';
+import { generate } from '../services/providers';
+import { type AppEnv, draftBodySchema, clarifyBodySchema, againBodySchema, serializeBodySchema, redraftNodeBodySchema, fanoutBodySchema, demoDraftBodySchema, previewBodySchema, previewVisualBodySchema, platformRequestBodySchema, createTeamBodySchema, addTeamMemberBodySchema } from '../types/Http';
+import { generatePreview } from '../services/PreviewService';
+import { GeminiImageAdapter } from '../services/providers/GeminiImageAdapter';
+import { getProvider } from '../services/providers/ProviderRegistry';
+import { storeKey, resolveKey, revokeKey } from '../services/KeyCustody';
+import { getEntitlements, checkGate, getPlanConfig } from '../services/PlanService';
 
 /**
  * All API routes — spec §31.2 Step 9. HTTP entry points only; business logic
@@ -81,8 +93,11 @@ export function buildApp(): Hono<AppEnv> {
   // ---- Public ----
   app.get('/health', (c) => c.json({ ok: true, service: 'pf-backend' }));
 
-  // Platform Registry read path (§5.1) — will move behind KV edge cache (T5.5).
-  app.get('/platforms', (c) => c.json({ platforms: listPlatforms() }));
+  // Platform Registry read path (§5.1, T5.5) — edge-cacheable.
+  app.get('/platforms', (c) => {
+    c.header('Cache-Control', 'public, max-age=3600');
+    return c.json({ platforms: listPlatforms() });
+  });
 
   // Auth endpoints proxy Supabase Auth (§31.2 Step 7) — clients can also call
   // Supabase directly; these exist so the extension never embeds Supabase keys.
@@ -94,8 +109,109 @@ export function buildApp(): Hono<AppEnv> {
   authed.use('*', authMiddleware);
   authed.use('*', rateLimitMiddleware);
 
-  authed.get('/projects', (c) => c.json({ status: 'not_implemented_yet', task: 'T1.4/T7.4', projects: [] }, 200));
-  authed.post('/projects', (c) => c.json({ status: 'not_implemented_yet', task: 'T1.4/T7.4' }, 501));
+  authed.get('/projects', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, name, description, content_ciphertext, default_platform, created_at
+         from projects where user_id = $1 order by created_at desc`,
+        [userId]
+      );
+      return c.json({ status: 'ok', projects: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'projects:list_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'projects unavailable' }, 503);
+    }
+  });
+
+  authed.post('/projects', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json().catch(() => ({}));
+    const { name, description, default_platform, content_ciphertext } = body as Record<string, unknown>;
+    if (!name || typeof name !== 'string') {
+      return c.json({ error: 'name is required (string)' }, 400);
+    }
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `insert into projects (user_id, name, description, default_platform, content_ciphertext)
+         values ($1, $2, $3, $4, $5)
+         returning id, created_at`,
+        [userId, name, description ?? null, default_platform ?? null, content_ciphertext ?? null]
+      );
+      return c.json({ status: 'ok', id: res.rows[0].id, created_at: res.rows[0].created_at });
+    } catch (error) {
+      logger.warn({ type: 'projects:create_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to create project' }, 500);
+    }
+  });
+
+  authed.get('/projects/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, name, description, content_ciphertext, default_platform, created_at
+         from projects where id = $1 and user_id = $2`,
+        [id, userId]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'project not found' }, 404);
+      return c.json({ status: 'ok', project: res.rows[0] });
+    } catch (error) {
+      logger.warn({ type: 'projects:get_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'project unavailable' }, 503);
+    }
+  });
+
+  authed.patch('/projects/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    const body = await c.req.json().catch(() => ({}));
+    const { name, description, default_platform, content_ciphertext } = body as Record<string, unknown>;
+    const updates: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+    if (typeof name === 'string') { updates.push(`name = $${idx++}`); params.push(name); }
+    if (typeof description === 'string') { updates.push(`description = $${idx++}`); params.push(description); }
+    if (typeof default_platform === 'string') { updates.push(`default_platform = $${idx++}`); params.push(default_platform); }
+    if (typeof content_ciphertext === 'string') { updates.push(`content_ciphertext = $${idx++}`); params.push(content_ciphertext); }
+    if (updates.length === 0) return c.json({ error: 'no fields to update' }, 400);
+    params.push(id, userId);
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `update projects set ${updates.join(', ')} where id = $${idx++} and user_id = $${idx}
+         returning id`,
+        params
+      );
+      if (res.rows.length === 0) return c.json({ error: 'project not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'projects:update_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to update project' }, 500);
+    }
+  });
+
+  authed.delete('/projects/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    try {
+      const pool = getPool();
+      // delete project-scoped memory, then the project (sessions' project_id set null via FK)
+      await pool.query(`delete from memory_entries where scope = $1 and user_id = $2`, [id, userId]);
+      const res = await pool.query(
+        `delete from projects where id = $1 and user_id = $2 returning id`,
+        [id, userId]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'project not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'projects:delete_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to delete project' }, 500);
+    }
+  });
   // NOTE (T4 review): the MVP library is served CLIENT-SIDE from
   // web/src/data/library-seeds.json — the web app never calls a backend library
   // route. The DB-backed library (library_entries table already exists in
@@ -142,6 +258,20 @@ export function buildApp(): Hono<AppEnv> {
     } catch (error) {
       logger.warn({ type: 'analytics_error', reason: error instanceof Error ? error.message : String(error) });
       return c.json({ error: 'analytics unavailable' }, 503);
+    }
+  });
+
+  /**
+   * Continuous improvement suggestions (§29.3, T7.9) — aggregate-only query
+   * over outcome_signals returning tuning recommendations.
+   */
+  authed.get('/analytics/improvements', async (c) => {
+    try {
+      const improvements = await analyzeImprovements();
+      return c.json({ status: 'ok', improvements, generated_at: new Date().toISOString() });
+    } catch (error) {
+      logger.warn({ type: 'improvements_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'improvements unavailable' }, 503);
     }
   });
 
@@ -259,6 +389,15 @@ export function buildApp(): Hono<AppEnv> {
   });
 
   /**
+   * Capability matrix (§15.1, T5.7). Returns the full model-capability matrix
+   * plus last_verified for freshness display.
+   */
+  authed.get('/capabilities', async (c) => {
+    const matrix = loadCapabilityMatrix();
+    return c.json({ status: 'ok', capabilities: matrix.models, last_verified: matrix.last_verified });
+  });
+
+  /**
    * Token-reduction advisor (§16, TA.3). Deterministic suggestions for
    * spending fewer tokens for the same result — no LLM.
    */
@@ -273,18 +412,163 @@ export function buildApp(): Hono<AppEnv> {
   });
 
   /**
+   * Per-session preview cap (in-memory, max 30 calls per session, §12.3).
+   */
+  const previewSessionCaps = new Map<string, number>();
+
+  /**
+   * Live textual preview (§12.1, §12.3, T6.1). Generates a 1–2 sentence
+   * "what you'll likely get" description based on current node/answer state.
+   * Non-streaming v1 (API Gateway buffers responses; streaming needs Function
+   * URLs which are org-blocked on this account — see T3.8). Groq 8B is fast
+   * enough (~300ms) that streaming isn't needed.
+   */
+  authed.post('/preview', async (c) => {
+    const parsed = previewBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'invalid preview request', issues: parsed.error.issues }, 400);
+    }
+    const body = parsed.data;
+    const userId = c.get('userId');
+    // Per-session cap (§12.3): max 30 preview calls per session.
+    const capKey = body.session_id ?? `user:${userId}`;
+    if (previewSessionCaps.size > 10_000) previewSessionCaps.clear();
+    const previewCount = previewSessionCaps.get(capKey) ?? 0;
+    if (previewCount >= 30) {
+      return c.json({ error: 'preview cap reached (30 per session)' }, 429);
+    }
+    previewSessionCaps.set(capKey, previewCount + 1);
+
+    try {
+      const result = await generatePreview(
+        { platform_id: body.platform_id, task_type: body.task_type, known: body.known },
+        userId,
+        capKey
+      );
+      return c.json({ preview: result.preview, tokens_used: result.tokensUsed });
+    } catch (error) {
+      logger.warn({
+        type: 'preview:error',
+        reason: error instanceof Error ? error.message : String(error),
+      });
+      return c.json({ preview: null });
+    }
+  });
+
+  /**
+   * Optional visual preview (§12.2, T6.2).
+   * Gated behind VISUAL_PREVIEW_ENABLED env (default false).
+   * Per-session cap 3 (in-memory), per-user 10/day (in-memory map keyed by date).
+   * Only available for image-modality platforms.
+   */
+  const visualPreviewSessionCaps = new Map<string, number>();
+  const visualPreviewUserDailyCaps = new Map<string, { date: string; count: number }>();
+
+  authed.post('/preview/visual', async (c) => {
+    if (!config.VISUAL_PREVIEW_ENABLED) {
+      return c.json({ error: 'visual preview is disabled' }, 404);
+    }
+
+    const parsed = previewVisualBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'platform_id and assembled are required', issues: parsed.error.issues }, 400);
+    }
+    const body = parsed.data;
+    const userId = c.get('userId');
+    const sessionId = c.req.header('x-session-id') ?? userId;
+
+    // Only image-modality platforms
+    const platform = getPlatform(body.platform_id);
+    if (!platform) {
+      return c.json({ error: `unknown platform '${body.platform_id}'` }, 404);
+    }
+    if (!platform.modalities.includes('image')) {
+      return c.json({ error: `visual preview not available for '${platform.display_name}' — non-image platform` }, 400);
+    }
+
+    // Per-session cap (3)
+    const sessionCount = visualPreviewSessionCaps.get(sessionId) ?? 0;
+    if (sessionCount >= 3) {
+      return c.json({ error: 'visual preview limit reached for this session', message: 'Visual preview limited to 3 per session. Regenerate only on node changes.' }, 429);
+    }
+
+    // Per-user daily cap (10) — in-memory keyed by userId+date
+    const today = new Date().toISOString().slice(0, 10);
+    const userKey = `${userId}:${today}`;
+    const userEntry = visualPreviewUserDailyCaps.get(userKey);
+    const userCount = userEntry?.date === today ? userEntry.count : 0;
+    if (userCount >= 10) {
+      return c.json({ error: 'daily visual preview limit reached', message: 'Visual preview limited to 10 per day per user.' }, 429);
+    }
+
+    // Generate
+    const adapter = new GeminiImageAdapter();
+    let imageBase64: string;
+    let mime: string;
+    try {
+      const result = await adapter.generateImage(body.assembled);
+      imageBase64 = result.imageBase64;
+      mime = result.mime;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'unknown error';
+      logger.warn({ type: 'route:visual_preview_error', userId, sessionId, error: msg });
+      return c.json({ error: 'visual preview generation failed', detail: msg }, 503);
+    }
+
+    // Update caps
+    visualPreviewSessionCaps.set(sessionId, sessionCount + 1);
+    visualPreviewUserDailyCaps.set(userKey, { date: today, count: userCount + 1 });
+
+    // Meter usage: visual previews have no token count, record a 0-token event with the
+    // step name so budget tracking can count "calls" if needed. Best-effort (non-blocking).
+    try {
+      const pool = getPool();
+      pool.query(
+        `insert into usage_events (user_id, session_id, pipeline_step, tokens_used) values ($1, $2, $3, 0) on conflict do nothing`,
+        [userId, sessionId, 'visual_preview']
+      ).catch(() => {});
+    } catch {
+      // DB unavailable — skip metering, not fatal
+    }
+
+    const platformDisplay = platform.display_name;
+    return c.json({
+      imageBase64,
+      mime,
+      disclaimer: `Preview rendered by ${adapter.name}, not by ${platformDisplay} — expect differences.`,
+    });
+  });
+
+  /**
    * Runs the pipeline for a context and shapes the HTTP response — shared by
    * POST /draft (new session) and POST /draft/:sessionId/clarify (resume with
    * answers). Persists session metadata + meters usage best-effort (§18, §19.1).
    */
   async function runPipeline(c: Context<AppEnv>, context: PipelineContext) {
+    // BYOK (§9.4, T7.2): resolve connection → API key → bind to agents.
+    let apiKeyOverride: string | undefined;
+    if (context.connectionId) {
+      const pool = getPool();
+      const connRes = await pool.query(
+        `select secret_ref from provider_connections where id = $1 and user_id = $2 and status = 'active'`,
+        [context.connectionId, context.userId]
+      );
+      if (connRes.rows.length > 0) {
+        apiKeyOverride = await resolveKey(connRes.rows[0].secret_ref);
+      }
+    }
+
+    const wrappedGenerate = apiKeyOverride
+      ? ((step: string, complexity: any, req: any) => generate(step, complexity, { ...req, apiKeyOverride })) as typeof generate
+      : generate;
+
     const supervisor = new Supervisor({
-      intent: IntentClassificationAgent,
+      intent: apiKeyOverride ? new IntentClassificationAgentClass(wrappedGenerate) : IntentClassificationAgent,
       docRetrieval: DocRetrievalAgent,
       clarify: ClarifyingQuestionAgent,
-      draft: DraftingAgent,
-      critic: CriticAgent,
-      alternatives: AlternativesAgent,
+      draft: apiKeyOverride ? new DraftingAgentClass(wrappedGenerate) : DraftingAgent,
+      critic: apiKeyOverride ? new CriticAgentClass(wrappedGenerate) : CriticAgent,
+      alternatives: apiKeyOverride ? new AlternativesAgentClass(wrappedGenerate) : AlternativesAgent,
     });
 
     // Pre-flight budget check (§16, §22.4, T3.2) — BEFORE any model call.
@@ -348,6 +632,15 @@ export function buildApp(): Hono<AppEnv> {
       });
     }
 
+    // T7.3: fire-and-forget memory extraction at session end (non-fatal).
+    let memoryProposals: MemoryEntry[] = [];
+    try {
+      const extractionResult = await MemoryExtractionAgent.execute({ context: result.context, params: {} });
+      memoryProposals = (extractionResult.data?.proposals as MemoryEntry[]) ?? [];
+    } catch {
+      // Memory extraction is a background enhancement — never blocks the response.
+    }
+
     return c.json({
       status: 'ok',
       session_id: context.sessionId,
@@ -357,6 +650,7 @@ export function buildApp(): Hono<AppEnv> {
       // Raw draft retained for clients that want the unshaped structure.
       draft: result.context.finalDraft ?? null,
       pipeline_trace: result.trace,
+      memory_proposals: memoryProposals,
     });
   }
 
@@ -376,12 +670,26 @@ export function buildApp(): Hono<AppEnv> {
       return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);
     }
 
+    // T7.7 plan gating: check platform entitlement before running the pipeline.
+    const ent = await getEntitlements(c.get('userId'));
+    if (!ent.platformAllowed(body.platform_id)) {
+      return c.json({
+        status: 'upgrade_required',
+        feature: 'platform',
+        plan: ent.planId,
+        message: `Platform '${body.platform_id}' requires a paid plan. Upgrade at /account.`,
+      }, 402);
+    }
+
     const context: PipelineContext = {
       userId: c.get('userId'),
       sessionId: crypto.randomUUID(),
       platform,
       userIdea: body.idea,
       justGenerate: body.just_generate ?? false,
+      connectionId: body.connection_id,
+      projectId: body.project_id,
+      memories: body.memories,
     };
     return runPipeline(c, context);
   });
@@ -411,10 +719,200 @@ export function buildApp(): Hono<AppEnv> {
       userIdea: body.idea,
       clarifications: body.clarifications ?? {},
       justGenerate: body.just_generate ?? false,
+      connectionId: body.connection_id,
+      projectId: body.project_id,
+      memories: body.memories,
     };
     return runPipeline(c, context);
   });
   authed.post('/appeal', (c) => c.json({ status: 'not_implemented_yet', task: 'T2.2/T7.5 (appeals queue)' }, 501));
+
+  /**
+   * Community library routes (§14.2, T7.6).
+   * Public listing available without auth; submission requires auth.
+   */
+  app.get('/library', async (c) => {
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select l.id, l.title, l.description, l.modality, l.platform_tags, l.template,
+                l.popularity, l.remix_count, l.version, l.created_at,
+                au.email as attributed_email
+         from library_entries l
+         left join app_users au on au.id = l.attributed_user_id
+         where l.moderation_status = 'approved'
+         order by l.popularity desc, l.created_at desc`
+      );
+      return c.json({ status: 'ok', entries: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'library:list_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'library unavailable' }, 503);
+    }
+  });
+
+  /**
+   * Admin moderation queue (§14.2, T7.6 / T7.5). Physically separate admin
+   * deployable authenticates with ADMIN_API_KEY via the x-admin-key header.
+   * By construction this service holds NO decryption path for user content or
+   * BYOK keys — it only flips moderation_status and records the reviewer.
+   */
+  const requireAdmin = (c: Context): { ok: true } | { ok: false; res: Response } => {
+    if (!config.ADMIN_API_KEY) {
+      return { ok: false, res: c.json({ error: 'admin disabled' }, 503) };
+    }
+    const provided = c.req.header('x-admin-key');
+    if (!provided || provided !== config.ADMIN_API_KEY) {
+      return { ok: false, res: c.json({ error: 'unauthorized' }, 401) };
+    }
+    return { ok: true };
+  };
+
+  app.get('/library/pending', async (c) => {
+    const auth = requireAdmin(c);
+    if (!auth.ok) return auth.res;
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select l.id, l.user_id, l.title, l.description, l.modality, l.platform_tags,
+                l.template, l.popularity, l.remix_count, l.version, l.created_at,
+                au.email as submitted_email
+         from library_entries l
+         left join app_users au on au.id = l.user_id
+         where l.moderation_status = 'pending'
+         order by l.created_at asc`
+      );
+      return c.json({ status: 'ok', entries: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'library:pending_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'queue unavailable' }, 503);
+    }
+  });
+
+  app.patch('/library/:id/moderate', async (c) => {
+    const auth = requireAdmin(c);
+    if (!auth.ok) return auth.res;
+    const id = c.req.param('id');
+    const body = await c.req.json().catch(() => ({}));
+    const { decision, note } = body as { decision?: string; note?: string };
+    if (decision !== 'approve' && decision !== 'reject') {
+      return c.json({ error: "decision must be 'approve' or 'reject'" }, 400);
+    }
+    try {
+      const pool = getPool();
+      const status = decision === 'approve' ? 'approved' : 'rejected';
+      const res = await pool.query(
+        `update library_entries
+         set moderation_status = $1, reviewed_at = now(), review_note = $2
+         where id = $3 and moderation_status = 'pending'
+         returning id, moderation_status`,
+        [status, note ?? null, id]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'entry not found or not pending' }, 404);
+      logger.info({ type: 'library:moderated', entryId: id, decision });
+      return c.json({ status: 'ok', id, moderation_status: status });
+    } catch (error) {
+      logger.warn({ type: 'library:moderate_error', entryId: id, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'moderation failed' }, 500);
+    }
+  });
+
+  app.get('/library/:id', async (c) => {
+    const id = c.req.param('id');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select l.*, au.email as attributed_email
+         from library_entries l
+         left join app_users au on au.id = l.attributed_user_id
+         where l.id = $1 and l.moderation_status = 'approved'`,
+        [id]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'entry not found' }, 404);
+      return c.json({ status: 'ok', entry: res.rows[0] });
+    } catch (error) {
+      logger.warn({ type: 'library:get_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'entry unavailable' }, 503);
+    }
+  });
+
+  authed.post('/library/submit', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json().catch(() => ({}));
+    const { title, description, modality, platform_tags, template, credit } = body as Record<string, unknown>;
+    if (!title || typeof title !== 'string' || !description || typeof description !== 'string') {
+      return c.json({ error: 'title and description are required (strings)' }, 400);
+    }
+    if (!modality || typeof modality !== 'string') {
+      return c.json({ error: 'modality is required (string)' }, 400);
+    }
+    if (!template || typeof template !== 'object') {
+      return c.json({ error: 'template is required (object)' }, 400);
+    }
+    try {
+      const { screenSubmission } = await import('../services/LibraryScreening');
+      const assembledTemplate = JSON.stringify(template);
+      const screening = await screenSubmission(title, description, assembledTemplate);
+      const pool = getPool();
+      const res = await pool.query(
+        `insert into library_entries (user_id, attributed_user_id, source, title, description, modality, platform_tags, template, moderation_status)
+         values ($1, $2, 'human_submitted', $3, $4, $5, $6, $7, $8)
+         returning id, created_at, moderation_status`,
+        [
+          userId,
+          credit ? userId : null,
+          title,
+          description,
+          modality,
+          platform_tags ?? [],
+          template,
+          screening.moderationStatus,
+        ]
+      );
+      logger.info({ type: 'library:submitted', userId, entryId: res.rows[0].id, status: screening.moderationStatus });
+      return c.json({
+        status: 'ok',
+        id: res.rows[0].id,
+        moderation_status: screening.moderationStatus,
+        reason: screening.reason,
+      });
+    } catch (error) {
+      logger.warn({ type: 'library:submit_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'submission failed' }, 500);
+    }
+  });
+
+
+  /**
+   * Session-level memory application (§17.4, T6.4) — "draft another with
+   * the same style" within the same session. Seeds the new pipeline context
+   * with carried_preferences as clarifications so the clarify agent skips
+   * those questions and the drafting prompt receives them.
+   */
+  authed.post('/draft/:sessionId/again', async (c) => {
+    const sessionId = c.req.param('sessionId');
+    const parsed = againBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'platform_id and idea are required', issues: parsed.error.issues }, 400);
+    }
+    const body = parsed.data;
+    const platform = getPlatform(body.platform_id);
+    if (!platform) {
+      return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);
+    }
+
+    const context: PipelineContext = {
+      userId: c.get('userId'),
+      sessionId, // reuse the same session id so metadata updates in place
+      platform,
+      userIdea: body.idea,
+      clarifications: body.carried_preferences, // seed clarifications = carried preferences
+      // Build a justGenerate context hint for the clarify agent to skip answered questions.
+      // The carried preferences are treated as already-answered — the clarify agent checks
+      // context.clarifications for answered questions via its built-in skip logic.
+      connectionId: body.connection_id,
+    };
+    return runPipeline(c, context);
+  });
 
   /**
    * Per-session observability — reconstruct any session end-to-end from
@@ -515,6 +1013,49 @@ export function buildApp(): Hono<AppEnv> {
     return runPipeline(c, context);
   });
 
+  /**
+   * Platform request submission (§5.4, T5.5). Public, IP rate-limited
+   * (same pattern as demo: in-memory map, 5/day per IP).
+   */
+  const platformRequestRateMap = new Map<string, { count: number; date: string }>();
+  app.post('/platform-requests', async (c) => {
+    const parsed = platformRequestBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'origin is required', issues: parsed.error.issues }, 400);
+    }
+    const { origin, note } = parsed.data;
+    const ip = c.req.header('x-forwarded-for') ?? 'local';
+    const today = new Date().toISOString().slice(0, 10);
+    const entry = platformRequestRateMap.get(ip);
+    if (entry && entry.date === today && entry.count >= 5) {
+      return c.json({
+        status: 'rate_limited',
+        message: 'You have used all your platform request tries today. Try again tomorrow.',
+      }, 429);
+    }
+    if (!entry || entry.date !== today) {
+      platformRequestRateMap.set(ip, { count: 1, date: today });
+    } else {
+      entry.count++;
+    }
+    if (platformRequestRateMap.size > 50) {
+      for (const [k, v] of platformRequestRateMap) {
+        if (v.date !== today) platformRequestRateMap.delete(k);
+      }
+    }
+    try {
+      const pool = getPool();
+      await pool.query(
+        `insert into platform_requests (origin, note) values ($1, $2)`,
+        [origin, note ?? null]
+      );
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'platform_request:save_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to submit request' }, 503);
+    }
+  });
+
   // ---- Web app helper routes ----
 
   /** Serialize nodes to a platform string (§13.3, T4.5). Pure/deterministic — no LLM. */
@@ -578,6 +1119,314 @@ export function buildApp(): Hono<AppEnv> {
     } catch (error) {
       logger.warn({ type: 'bootstrap:error', reason: error instanceof Error ? error.message : String(error) });
       return c.json({ status: 'ok' }); // idempotent — no error to the client
+    }
+  });
+
+  /**
+   * E2EE key routes (§19.2, T7.1). Server stores WRAPPED keys only — never
+   * accepts or returns a raw DEK/KEK. The client performs all crypto.
+   */
+  authed.put('/keys', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json().catch(() => ({}));
+    const { wrapped_dek_pass, wrapped_dek_recovery, kdf_salt, kdf_iterations } = body as Record<string, unknown>;
+    if (!wrapped_dek_pass || !wrapped_dek_recovery || !kdf_salt || !kdf_iterations) {
+      return c.json({ error: 'wrapped_dek_pass, wrapped_dek_recovery, kdf_salt, and kdf_iterations are required' }, 400);
+    }
+    if (typeof wrapped_dek_pass !== 'string' || typeof wrapped_dek_recovery !== 'string' || typeof kdf_salt !== 'string') {
+      return c.json({ error: 'wrapped keys and salt must be strings' }, 400);
+    }
+    try {
+      const pool = getPool();
+      await pool.query(
+        `insert into user_keys (user_id, wrapped_dek_pass, wrapped_dek_recovery, kdf_salt, kdf_iterations)
+         values ($1, $2, $3, $4, $5)
+         on conflict (user_id) do update set
+           wrapped_dek_pass = excluded.wrapped_dek_pass,
+           wrapped_dek_recovery = excluded.wrapped_dek_recovery,
+           kdf_salt = excluded.kdf_salt,
+           kdf_iterations = excluded.kdf_iterations,
+           updated_at = now()`,
+        [userId, wrapped_dek_pass, wrapped_dek_recovery, kdf_salt, kdf_iterations]
+      );
+      logger.info({ type: 'keys:stored', userId });
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'keys:store_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to store keys' }, 500);
+    }
+  });
+
+  authed.get('/keys', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select wrapped_dek_pass, wrapped_dek_recovery, kdf_salt, kdf_iterations from user_keys where user_id = $1`,
+        [userId]
+      );
+      if (res.rows.length === 0) return c.json({ status: 'not_found' }, 404);
+      return c.json({ status: 'ok', ...res.rows[0] });
+    } catch (error) {
+      logger.warn({ type: 'keys:read_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to read keys' }, 500);
+    }
+  });
+
+  /**
+   * Cross-session memory routes (§17.1–17.5, T7.3).
+   * The client manages encryption/decryption — the server sees only ciphertext.
+   * Task_type is plaintext metadata [P] for client-side relevance filtering.
+   */
+  authed.get('/memory', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, scope, source, status, statement_ciphertext, task_type, created_at
+         from memory_entries where user_id = $1 order by created_at desc`,
+        [userId]
+      );
+      return c.json({ status: 'ok', entries: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'memory:list_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'memory unavailable' }, 503);
+    }
+  });
+
+  authed.post('/memory', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json().catch(() => ({}));
+    const { scope, statement_ciphertext, source, status, task_type } = body as Record<string, unknown>;
+    if (!statement_ciphertext || typeof statement_ciphertext !== 'string') {
+      return c.json({ error: 'statement_ciphertext is required (string)' }, 400);
+    }
+    if (source && !['user_added', 'agent_proposed'].includes(source as string)) {
+      return c.json({ error: 'source must be user_added or agent_proposed' }, 400);
+    }
+    if (status && !['pending_confirmation', 'active'].includes(status as string)) {
+      return c.json({ error: 'status must be pending_confirmation or active' }, 400);
+    }
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `insert into memory_entries (user_id, scope, statement_ciphertext, source, status, task_type)
+         values ($1, $2, $3, $4, $5, $6)
+         returning id, created_at`,
+        [
+          userId,
+          scope ?? 'global',
+          statement_ciphertext,
+          source ?? 'user_added',
+          status ?? 'active',
+          task_type ?? null,
+        ]
+      );
+      return c.json({ status: 'ok', id: res.rows[0].id, created_at: res.rows[0].created_at });
+    } catch (error) {
+      logger.warn({ type: 'memory:create_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to create memory entry' }, 500);
+    }
+  });
+
+  authed.patch('/memory/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    const body = await c.req.json().catch(() => ({}));
+    const { statement_ciphertext, status, task_type } = body as Record<string, unknown>;
+    const updates: string[] = [];
+    const params: unknown[] = [];
+    let idx = 1;
+    if (typeof statement_ciphertext === 'string') {
+      updates.push(`statement_ciphertext = $${idx++}`);
+      params.push(statement_ciphertext);
+    }
+    if (typeof status === 'string') {
+      updates.push(`status = $${idx++}`);
+      params.push(status);
+    }
+    if (typeof task_type === 'string') {
+      updates.push(`task_type = $${idx++}`);
+      params.push(task_type);
+    }
+    if (updates.length === 0) return c.json({ error: 'no fields to update' }, 400);
+    params.push(id, userId);
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `update memory_entries set ${updates.join(', ')} where id = $${idx++} and user_id = $${idx}
+         returning id`,
+        params
+      );
+      if (res.rows.length === 0) return c.json({ error: 'memory entry not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'memory:update_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to update memory entry' }, 500);
+    }
+  });
+
+  authed.delete('/memory/:id', async (c) => {
+    const userId = c.get('userId');
+    const id = c.req.param('id');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `delete from memory_entries where id = $1 and user_id = $2 returning id`,
+        [id, userId]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'memory entry not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'memory:delete_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to delete memory entry' }, 500);
+    }
+  });
+
+  authed.delete('/memory', async (c) => {
+    const userId = c.get('userId');
+    const confirmReset = c.req.header('x-confirm-reset');
+    if (confirmReset !== 'true') {
+      return c.json({ error: 'header x-confirm-reset: true required for global reset' }, 400);
+    }
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `delete from memory_entries where user_id = $1`,
+        [userId]
+      );
+      return c.json({ status: 'ok', deleted: res.rowCount ?? 0 });
+    } catch (error) {
+      logger.warn({ type: 'memory:reset_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to reset memory' }, 500);
+    }
+  });
+
+  /**
+   * BYOK provider connection routes (§9.4, T7.2).
+   * The API key is written directly to SSM and never stored in the DB;
+   * the DB record holds only the SSM path reference (`secret_ref`).
+   */
+  authed.post('/connections', async (c) => {
+    const userId = c.get('userId');
+    const body = await c.req.json().catch(() => ({}));
+    const { provider, api_key } = body as Record<string, string>;
+    if (!provider || !api_key || typeof provider !== 'string' || typeof api_key !== 'string') {
+      return c.json({ error: 'provider and api_key are required (strings)' }, 400);
+    }
+    const supported = ['openai', 'google'];
+    if (!supported.includes(provider)) {
+      return c.json({ error: `unsupported provider; supported: ${supported.join(', ')}` }, 400);
+    }
+    try {
+      const pool = getPool();
+      const connId = crypto.randomUUID();
+      const secretRef = await storeKey(userId, provider, connId, api_key);
+      await pool.query(
+        `insert into provider_connections (id, user_id, provider, secret_ref)
+         values ($1, $2, $3, $4)`,
+        [connId, userId, provider, secretRef]
+      );
+      logger.info({ type: 'byok:connection_created', userId, provider });
+      return c.json({ status: 'ok', id: connId, provider });
+    } catch (error) {
+      logger.warn({ type: 'byok:connection_error', userId, provider, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to create connection' }, 500);
+    }
+  });
+
+  authed.get('/connections', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, provider, status, created_at from provider_connections
+         where user_id = $1 order by created_at desc`,
+        [userId]
+      );
+      return c.json({ status: 'ok', connections: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'byok:list_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'connections unavailable' }, 503);
+    }
+  });
+
+  authed.delete('/connections/:id', async (c) => {
+    const userId = c.get('userId');
+    const connId = c.req.param('id');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select secret_ref from provider_connections where id = $1 and user_id = $2 and status = 'active'`,
+        [connId, userId]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'connection not found' }, 404);
+      const secretRef = res.rows[0].secret_ref;
+      await revokeKey(secretRef);
+      await pool.query(
+        `update provider_connections set status = 'revoked' where id = $1`,
+        [connId]
+      );
+      logger.info({ type: 'byok:connection_revoked', userId, connId });
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'byok:revoke_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to revoke connection' }, 500);
+    }
+  });
+
+  /**
+   * Store encrypted session content (§19.2, T7.1). Client-initiated after
+   * a draft completes: the client encrypts idea + clarification history and
+   * patches the session row. Purely best-effort — no content, no draft-block.
+   */
+  authed.patch('/sessions/:sessionId/content', async (c) => {
+    const userId = c.get('userId');
+    const sessionId = c.req.param('sessionId');
+    const body = await c.req.json().catch(() => ({}));
+    const { content_ciphertext } = body as Record<string, unknown>;
+    if (!content_ciphertext || typeof content_ciphertext !== 'string') {
+      return c.json({ error: 'content_ciphertext is required (string)' }, 400);
+    }
+    try {
+      const pool = getPool();
+      await pool.query(
+        `update sessions set content_ciphertext = $1 where id = $2 and user_id = $3`,
+        [content_ciphertext, sessionId, userId]
+      );
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'session:content_store_error', sessionId, userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to store content' }, 500);
+    }
+  });
+
+  /**
+   * Delete the caller's account and all associated data (§19.6, T7.1).
+   * Deletes user_keys, sessions, prompts (+ versions via FK cascade),
+   * memory_entries, and projects. Anonymized outcome_signals are kept
+   * (no user linkage exists). Ciphertext without keys is dead data —
+   * deleting keys satisfies erasure.
+   */
+  authed.delete('/me', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      // Delete in dependency order to respect FK constraints.
+      // prompt_versions cascade from prompts; prompts cascade from sessions.
+      await pool.query(`delete from user_keys where user_id = $1`, [userId]);
+      await pool.query(`delete from memory_entries where user_id = $1`, [userId]);
+      await pool.query(`delete from projects where user_id = $1`, [userId]);
+      await pool.query(`delete from prompts where user_id = $1`, [userId]);
+      await pool.query(`delete from sessions where user_id = $1`, [userId]);
+      // Delete the app_users row last — this cascades to fewer tables.
+      await pool.query(`delete from provider_connections where user_id = $1`, [userId]);
+      await pool.query(`delete from app_users where id = $1`, [userId]);
+      logger.info({ type: 'account:deleted', userId });
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'account:delete_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'account deletion failed' }, 500);
     }
   });
 
@@ -652,6 +1501,243 @@ export function buildApp(): Hono<AppEnv> {
       skipped,
       note: 'serialized from shared nodes; for platform-optimized re-drafting, draft per platform',
     });
+  });
+
+  /**
+   * Teams routes (§14.4, T8.4).
+   */
+  authed.post('/teams', async (c) => {
+    const userId = c.get('userId');
+    const parsed = createTeamBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'name is required (string, max 200)', issues: parsed.error.issues }, 400);
+    }
+    const { name } = parsed.data;
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `insert into teams (name, owner_id) values ($1, $2) returning id, created_at`,
+        [name, userId]
+      );
+      // Add owner as team member with owner role
+      await pool.query(
+        `insert into team_members (team_id, user_id, role) values ($1, $2, 'owner')`,
+        [res.rows[0].id, userId]
+      );
+      return c.json({ status: 'ok', id: res.rows[0].id, created_at: res.rows[0].created_at });
+    } catch (error) {
+      logger.warn({ type: 'teams:create_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to create team' }, 500);
+    }
+  });
+
+  authed.get('/teams', async (c) => {
+    const userId = c.get('userId');
+    try {
+      const pool = getPool();
+      const res = await pool.query(
+        `select id, name, owner_id, created_at from teams
+         where owner_id = $1
+         or id in (select team_id from team_members where user_id = $1)
+         order by created_at desc`,
+        [userId]
+      );
+      return c.json({ status: 'ok', teams: res.rows });
+    } catch (error) {
+      logger.warn({ type: 'teams:list_error', userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'teams unavailable' }, 503);
+    }
+  });
+
+  authed.post('/teams/:id/members', async (c) => {
+    const userId = c.get('userId');
+    const teamId = c.req.param('id');
+    const parsed = addTeamMemberBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'user_id is required', issues: parsed.error.issues }, 400);
+    }
+    const { user_id, role } = parsed.data;
+    try {
+      const pool = getPool();
+      // Verify caller is owner
+      const teamRes = await pool.query(
+        `select owner_id from teams where id = $1`,
+        [teamId]
+      );
+      if (teamRes.rows.length === 0) return c.json({ error: 'team not found' }, 404);
+      if (teamRes.rows[0].owner_id !== userId) {
+        return c.json({ error: 'only the team owner can add members' }, 403);
+      }
+      await pool.query(
+        `insert into team_members (team_id, user_id, role) values ($1, $2, $3)
+         on conflict (team_id, user_id) do update set role = excluded.role`,
+        [teamId, user_id, role]
+      );
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'teams:add_member_error', teamId, userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to add member' }, 500);
+    }
+  });
+
+  authed.delete('/teams/:id/members/:userId', async (c) => {
+    const userId = c.get('userId');
+    const teamId = c.req.param('id');
+    const targetUserId = c.req.param('userId');
+    try {
+      const pool = getPool();
+      // Verify caller is owner
+      const teamRes = await pool.query(
+        `select owner_id from teams where id = $1`,
+        [teamId]
+      );
+      if (teamRes.rows.length === 0) return c.json({ error: 'team not found' }, 404);
+      if (teamRes.rows[0].owner_id !== userId) {
+        return c.json({ error: 'only the team owner can remove members' }, 403);
+      }
+      // Cannot remove the owner
+      if (targetUserId === teamRes.rows[0].owner_id) {
+        return c.json({ error: 'cannot remove the team owner' }, 400);
+      }
+      const res = await pool.query(
+        `delete from team_members where team_id = $1 and user_id = $2 returning user_id`,
+        [teamId, targetUserId]
+      );
+      if (res.rows.length === 0) return c.json({ error: 'member not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'teams:remove_member_error', teamId, userId, reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'failed to remove member' }, 500);
+    }
+  });
+
+  /**
+   * Usage & billing routes (§28.2, T7.7).
+   * GET /me/usage — current plan + usage vs budget.
+   * POST /billing/checkout — create Stripe Checkout Session.
+   * POST /billing/webhook — Stripe webhook (PUBLIC, no auth — signature-verified).
+   */
+  authed.get('/me/usage', async (c) => {
+    const userId = c.get('userId');
+    const ent = await getEntitlements(userId);
+    const pool = getPool();
+    const month = new Date().toISOString().slice(0, 7); // "2026-07"
+    const res = await pool.query(
+      `select coalesce(sum(input_tokens + output_tokens), 0) as used
+       from usage_events where user_id = $1 and created_at >= $2`,
+      [userId, `${month}-01T00:00:00Z`]
+    );
+    const used = Number(res.rows[0]?.used ?? 0);
+    return c.json({
+      status: 'ok',
+      plan: ent.planId,
+      used,
+      budget: ent.monthlyTokenBudget,
+      byok: ent.byok,
+      projectsAllowed: ent.projectsAllowed,
+      visualPreview: ent.visualPreview,
+    });
+  });
+
+  /**
+   * User-visible progress (§28.5, T7.9).
+   * Computes avg strength this month vs last, draft count, best dimension improvement.
+   */
+  authed.get('/me/progress', async (c) => {
+    const userId = c.get('userId');
+    const pool = getPool();
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+
+    const [thisRes, lastRes, countRes] = await Promise.all([
+      pool.query(
+        `select avg(strength_score) as avg_strength, count(*) as cnt
+         from sessions where user_id = $1 and created_at >= $2`,
+        [userId, thisMonth]
+      ),
+      pool.query(
+        `select avg(strength_score) as avg_strength
+         from sessions where user_id = $1 and created_at >= $2 and created_at < $3`,
+        [userId, lastMonth, thisMonth]
+      ),
+      pool.query(
+        `select count(*) as total from sessions where user_id = $1`,
+        [userId]
+      ),
+    ]);
+
+    const thisAvg = Number(thisRes.rows[0]?.avg_strength ?? 0);
+    const lastAvg = Number(lastRes.rows[0]?.avg_strength ?? 0);
+    const thisCount = Number(thisRes.rows[0]?.cnt ?? 0);
+    const totalDrafts = Number(countRes.rows[0]?.total ?? 0);
+
+    const delta = thisCount >= 5 && lastAvg > 0 ? thisAvg - lastAvg : null;
+
+    return c.json({
+      status: 'ok',
+      this_month: { avg_strength: thisAvg, drafts: thisCount },
+      last_month: { avg_strength: lastAvg },
+      total_drafts: totalDrafts,
+      delta_points: delta,
+    });
+  });
+
+  authed.post('/billing/checkout', async (c) => {
+    const userId = c.get('userId');
+    if (!config.STRIPE_SECRET_KEY) return c.json({ error: 'Stripe not configured' }, 501);
+    // Lazy import so the Stripe dependency is optional at the type level.
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(config.STRIPE_SECRET_KEY);
+    const priceId = config.STRIPE_PRICE_PRO;
+    if (!priceId) return c.json({ error: 'No Stripe price configured' }, 500);
+    const session = await stripe.checkout.sessions.create({
+      mode: 'subscription',
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: config.STRIPE_SUCCESS_URL ?? 'http://localhost:3000/account?upgraded=true',
+      cancel_url: config.STRIPE_CANCEL_URL ?? 'http://localhost:3000/account?cancelled=true',
+      client_reference_id: userId,
+      metadata: { user_id: userId },
+    });
+    return c.json({ status: 'ok', checkout_url: session.url });
+  });
+
+  // Stripe webhook (PUBLIC — no auth middleware; Stripe signature verification is the auth).
+  app.post('/billing/webhook', async (c) => {
+    if (!config.STRIPE_WEBHOOK_SECRET) return c.json({ error: 'Stripe webhook not configured' }, 501);
+    const body = await c.req.text();
+    const sig = c.req.header('stripe-signature');
+    if (!sig) return c.json({ error: 'Missing stripe-signature header' }, 400);
+    const StripeMod = (await import('stripe')).default;
+    const stripe = new StripeMod(config.STRIPE_SECRET_KEY!);
+    let event: { id: string; type: string; data: { object: Record<string, unknown> } };
+    try {
+      event = stripe.webhooks.constructEvent(body, sig, config.STRIPE_WEBHOOK_SECRET) as unknown as typeof event;
+    } catch {
+      return c.json({ error: 'Invalid signature' }, 400);
+    }
+    // Idempotent: check if already processed.
+    const pool = getPool();
+    const existing = await pool.query('select event_id from billing_events where event_id = $1', [event.id]);
+    if (existing.rows.length > 0) return c.json({ status: 'ok' });
+    // Process event.
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as { client_reference_id?: string };
+      const userId = session.client_reference_id;
+      if (userId) {
+        await pool.query(`update app_users set plan = 'pro' where id = $1`, [userId]);
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object as { customer: string };
+      const customer = sub.customer;
+      await pool.query(`update app_users set plan = 'free' where stripe_customer_id = $1`, [customer]);
+    }
+    // Record event for idempotency.
+    await pool.query(
+      `insert into billing_events (event_id, type, payload) values ($1, $2, $3) on conflict do nothing`,
+      [event.id, event.type, JSON.stringify(event.data.object)]
+    );
+    return c.json({ status: 'ok' });
   });
 
   // Mount sub-apps LAST — Hono copies a sub-app's routes into the parent at

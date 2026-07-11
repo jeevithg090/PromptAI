@@ -1,0 +1,24 @@
+{
+  "schema_version": "1",
+  "plans": {
+    "free": {
+      "monthly_token_budget": 50000,
+      "platforms": "core",
+      "byok": false,
+      "projects": 1,
+      "visual_preview": false,
+      "memory_entries": 10,
+      "library_submits_per_day": 5
+    },
+    "pro": {
+      "monthly_token_budget": 2000000,
+      "platforms": "all",
+      "byok": true,
+      "projects": -1,
+      "visual_preview": true,
+      "memory_entries": -1,
+      "library_submits_per_day": 20,
+      "stripe_price_id": "price_pro_monthly_placeholder"
+    }
+  }
+}

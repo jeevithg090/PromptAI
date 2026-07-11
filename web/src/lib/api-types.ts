@@ -114,6 +114,7 @@ export interface DraftResponseOk {
   response: DesignedResponse;
   draft: unknown;
   pipeline_trace: unknown[];
+  memory_proposals?: Array<{ id: string; scope: string; statement: string; source: string; status: string }>;
 }
 
 export interface DraftResponseClarifying {
@@ -160,6 +161,36 @@ export interface SessionSummary {
   final_state: string;
   strength_score: number | null;
   created_at: string;
+}
+
+export interface AgainBody {
+  platform_id: string;
+  idea: string;
+  carried_preferences: Record<string, string>;
+  connection_id?: string;
+}
+
+export interface PreviewResponse {
+  preview: string | null;
+  tokens_used?: number;
+}
+
+export interface PreviewBody {
+  platform_id: string;
+  task_type: string;
+  known: Record<string, string>;
+  session_id?: string;
+}
+
+export interface VisualPreviewBody {
+  platform_id: string;
+  assembled: string;
+}
+
+export interface VisualPreviewResponse {
+  imageBase64: string;
+  mime: string;
+  disclaimer: string;
 }
 
 export interface LibrarySeedItem {

@@ -8,6 +8,8 @@
     { "pipeline_step": "drafting", "complexity": "large", "provider": "groq", "model_id": "llama-3.3-70b-versatile" },
     { "pipeline_step": "critic", "complexity": "large", "provider": "groq", "model_id": "llama-3.3-70b-versatile" },
     { "pipeline_step": "alternatives", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
-    { "pipeline_step": "memory_extraction", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" }
+    { "pipeline_step": "memory_extraction", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+    { "pipeline_step": "preview", "complexity": "small", "provider": "groq", "model_id": "llama-3.1-8b-instant" },
+    { "pipeline_step": "image_preview", "complexity": "small", "provider": "gemini_image", "model_id": "imagen-3.0-generate-001" }
   ]
 }

@@ -26,7 +26,7 @@ export async function generate(
   // Load-testing seam (T3.7): force the deterministic mock adapter so a load
   // test measures our orchestration, not a provider's free-tier rate limits.
   // env.ts refuses PROVIDER_FORCE_MOCK in production, so this can't serve real traffic.
-  const provider = config.PROVIDER_FORCE_MOCK ? getProvider('mock') : getProvider(route.provider);
+  const provider = await (config.PROVIDER_FORCE_MOCK ? getProvider('mock') : getProvider(route.provider));
 
   const first = await provider.generate({ ...request, model: route.model_id });
   if (first.finishReason !== 'length') return first;

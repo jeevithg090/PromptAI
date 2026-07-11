@@ -50,6 +50,21 @@ export interface PipelineContext {
   safety?: SafetyDecision;
   /** User pressed "just generate now" — Supervisor short-circuits clarification (§11.2). */
   justGenerate?: boolean;
+  /** BYOK connection id (§9.4, T7.2) — resolved to an API key server-side. */
+  connectionId?: string;
+  /** Plaintext memory statements carried into drafting (§17.4, T7.3). Max 5, 500 chars each. */
+  memories?: string[];
+  /** User has opted into anonymous curation (T8.2, §14.4). */
+  optedIn?: boolean;
+}
+
+/** Curation candidate proposed by the CurationAgent (§14.4, T8.2). */
+export interface CurationCandidate {
+  title: string;
+  description: string;
+  template: string;
+  taskType: TaskType;
+  platformId: string;
 }
 
 /** PKB / MPKB retrieval unit — spec §6, §10.2, §18. */
@@ -62,6 +77,8 @@ export interface KnowledgeChunk {
   sourceUrl: string;
   ingestedAt: string;
   trustScore: number;
+  /** Cosine similarity vs. query vector (0–1). Only populated when returned from retrieve(). */
+  similarity?: number;
 }
 
 /** A single human-readable preference statement — spec §17.1. */

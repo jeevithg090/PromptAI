@@ -13,6 +13,7 @@ export const platformSchema = z.object({
   syntax_rules: z.array(z.string()),
   max_prompt_tokens: z.number().int().positive(),
   tos_reviewed: z.boolean(),
+  model_family: z.string().optional(),
 });
 export type Platform = z.infer<typeof platformSchema>;
 

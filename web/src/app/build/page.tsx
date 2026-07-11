@@ -10,6 +10,9 @@ import QuestionCard from '@/components/QuestionCard';
 import NodeEditor from '@/components/NodeEditor';
 import StrengthPanel from '@/components/StrengthPanel';
 import FeedbackDialog from '@/components/FeedbackDialog';
+import PreviewLine from '@/components/PreviewLine';
+import { VisualPreview } from '@/components/VisualPreview';
+import RecommendationPanel from '@/components/RecommendationPanel';
 
 type Phase = 'input' | 'clarifying' | 'generating' | 'result' | 'error';
 
@@ -28,6 +31,7 @@ function BuildContent() {
   const [result, setResult] = useState<DraftResponse | null>(null);
   const [designedResponse, setDesignedResponse] = useState<DesignedResponse | null>(null);
   const [error, setError] = useState('');
+  const [carriedPreferences, setCarriedPreferences] = useState<Record<string, string>>({});
 
   useEffect(() => {
     api.platforms().then((res) => setPlatforms(res.platforms)).catch(() => {});
@@ -44,6 +48,7 @@ function BuildContent() {
     if (!selectedPlatform || !idea) return;
     setPhase('generating');
     setError('');
+    setCarriedPreferences({}); // fresh draft cycle
     try {
       const res: DraftResponse = await api.clarify(sessionId, {
         platform_id: selectedPlatform,
@@ -96,17 +101,50 @@ function BuildContent() {
     setPhase('generating');
     setError('');
     try {
-      const res: DraftResponse = await api.draft({
-        platform_id: selectedPlatform,
-        idea,
-        just_generate: justGenerate,
-      });
-      handleDraftResult(res);
+      // If we have an existing session + carried preferences, use /again
+      const hasCarry = Object.keys(carriedPreferences).length > 0;
+      if (sessionId && hasCarry) {
+        const res: DraftResponse = await api.draftAgain(sessionId, {
+          platform_id: selectedPlatform,
+          idea,
+          carried_preferences: carriedPreferences,
+        });
+        setCarriedPreferences({});
+        handleDraftResult(res);
+      } else {
+        const res: DraftResponse = await api.draft({
+          platform_id: selectedPlatform,
+          idea,
+          just_generate: justGenerate,
+        });
+        handleDraftResult(res);
+      }
     } catch (e: unknown) {
       const err = e as { message?: string };
       setError(err.message ?? strings.errorNetwork);
       setPhase('error');
     }
+  };
+
+  const handleDraftAgain = async () => {
+    if (!selectedPlatform || !designedResponse) return;
+    // Collect style-ish preferences: only style/lighting/composition/setting,
+    // never subject/action — selective carry per §17.4.
+    const styleishTypes = ['style_aesthetic', 'lighting_mood', 'composition_camera', 'setting_context'];
+    const carried: Record<string, string> = {};
+    for (const node of designedResponse.nodes) {
+      if (styleishTypes.includes(node.type) && node.value.length > 0) {
+        carried[node.type] = node.value;
+      }
+    }
+    setCarriedPreferences(carried);
+    setPhase('input');
+    setIdea('');
+    setQuestions([]);
+    setAnswers({});
+    setResult(null);
+    setDesignedResponse(null);
+    setError('');
   };
 
   const resetToInput = () => {
@@ -171,22 +209,25 @@ function BuildContent() {
           </div>
 
           {phase === 'input' && (
-            <div className="flex gap-3">
-              <button
-                onClick={() => handleInitialDraft(false)}
-                disabled={!canSubmit}
-                className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
-              >
-                {strings.buildHelpRefine}
-              </button>
-              <button
-                onClick={() => handleInitialDraft(true)}
-                disabled={!canSubmit}
-                className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
-              >
-                {strings.buildJustGenerate}
-              </button>
-            </div>
+            <>
+              <RecommendationPanel idea={idea} platforms={platforms} onSelectPlatform={setSelectedPlatform} />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleInitialDraft(false)}
+                  disabled={!canSubmit}
+                  className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+                >
+                  {strings.buildHelpRefine}
+                </button>
+                <button
+                  onClick={() => handleInitialDraft(true)}
+                  disabled={!canSubmit}
+                  className="rounded-md border border-gray-300 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  {strings.buildJustGenerate}
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -224,6 +265,19 @@ function BuildContent() {
               />
             ))}
           </div>
+
+          <PreviewLine
+            platformId={selectedPlatform}
+            taskType={taskType ?? 'text_to_image'}
+            known={answers}
+            sessionId={sessionId}
+          />
+
+          <VisualPreview
+            platformId={selectedPlatform}
+            assembled={''}
+            sessionId={sessionId}
+          />
 
           <div className="mt-5 flex flex-wrap gap-3">
             <button
@@ -264,8 +318,8 @@ function BuildContent() {
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">Result</h2>
             <button
-              onClick={resetToInput}
-              className="text-sm text-gray-500 hover:text-gray-700"
+              onClick={handleDraftAgain}
+              className="text-sm text-blue-600 hover:text-blue-800"
             >
               {strings.resultDraftAnother}
             </button>
@@ -285,6 +339,24 @@ function BuildContent() {
             response={designedResponse}
             onUpdate={(updated) => setDesignedResponse(updated)}
           />
+
+          <div className="mt-4">
+            <PreviewLine
+              platformId={designedResponse.platformId}
+              taskType={designedResponse.taskType}
+              known={Object.fromEntries(
+                designedResponse.nodes
+                  .filter((n) => !n.defaulted && n.value.length > 0)
+                  .map((n) => [n.type, n.value])
+              )}
+              sessionId={sessionId}
+            />
+            <VisualPreview
+              platformId={designedResponse.platformId}
+              assembled={designedResponse.assembled}
+              sessionId={sessionId}
+            />
+          </div>
 
           <div className="mt-6">
             <FeedbackDialog

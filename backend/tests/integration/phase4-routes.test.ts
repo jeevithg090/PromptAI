@@ -191,3 +191,215 @@ describe('DB-backed web routes with a fake pool (T4.2/T4.7)', () => {
     expect(params[1]).toBeNull(); // email — null under dev-bypass (no hardcoded placeholder)
   });
 });
+
+describe('Preview routes (T6.1)', () => {
+  it('POST /preview returns a preview with mock fetch', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(async () => ({
+      ok: true, status: 200,
+      json: async () => ({
+        choices: [{ message: { content: 'A photorealistic horse running through a sunset-lit field.' }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 50, completion_tokens: 30 },
+      }),
+    }));
+    const res = await app.request('/preview', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', task_type: 'text_to_image', known: { subject: 'horse', style: 'sunset' } }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as { preview: string };
+    expect(body.preview).toBe('A photorealistic horse running through a sunset-lit field.');
+  });
+
+  it('POST /preview returns null preview on provider error gracefully', async () => {
+    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('network error'));
+    const res = await app.request('/preview', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', task_type: 'text_to_image', known: { subject: 'horse' } }),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as { preview: string | null };
+    expect(body.preview).toBeNull();
+  });
+
+  it('POST /preview validates body with 400 on missing required fields', async () => {
+    const res = await app.request('/preview', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney' }), // missing task_type
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /preview session cap is per-session-key (different keys don\'t interfere)', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation(async () => ({
+      ok: true, status: 200,
+      json: async () => ({
+        choices: [{ message: { content: 'preview text' }, finish_reason: 'stop' }],
+        usage: { prompt_tokens: 10, completion_tokens: 10 },
+      }),
+    }));
+    // Two calls with different session_ids should both succeed (independent caps)
+    const res1 = await app.request('/preview', {
+      method: 'POST', headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', task_type: 'text_to_image', known: { s: 'a' }, session_id: 'sess-a' }),
+    });
+    expect(res1.status).toBe(200);
+    const res2 = await app.request('/preview', {
+      method: 'POST', headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', task_type: 'text_to_image', known: { s: 'b' }, session_id: 'sess-b' }),
+    });
+    expect(res2.status).toBe(200);
+  });
+
+  it('POST /preview/visual returns 404 when disabled', async () => {
+    const res = await app.request('/preview/visual', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', assembled: 'some prompt' }),
+    });
+    expect(res.status).toBe(404);
+  });
+
+  describe('POST /draft/:sessionId/again (T6.4 — session memory)', () => {
+    beforeEach(() => {
+      jest.restoreAllMocks();
+      mockProvider();
+    });
+
+    it('returns a draft response (accept ok or clarifying)', async () => {
+      // The pipeline may or may not pause for clarification depending on
+      // whether carried_preferences fully satisfy the clarify agent.
+      const res = await app.request('/draft/sess-1/again', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney', idea: 'a new idea', carried_preferences: { style_aesthetic: 'vintage', lighting_mood: 'warm' } }),
+      });
+      expect(res.status).toBe(200);
+      const json = await res.json() as { status: string };
+      expect(['ok', 'clarifying']).toContain(json.status);
+    });
+
+    it('returns 400 on missing required fields', async () => {
+      const res = await app.request('/draft/sess-1/again', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney' }), // missing idea
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('reuses the same session id (route is mounted)', async () => {
+      const res = await app.request('/draft/sess-mem/again', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney', idea: 'keep session', carried_preferences: { style_aesthetic: 'film' } }),
+      });
+      expect(res.status).toBe(200);
+      const json = await res.json() as { status: string };
+      expect(['ok', 'clarifying']).toContain(json.status);
+    });
+
+    it('accepts empty carried_preferences', async () => {
+      const res = await app.request('/draft/sess-empty/again', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney', idea: 'no carry', carried_preferences: {} }),
+      });
+      expect(res.status).toBe(200);
+      const json = await res.json() as { status: string };
+      expect(['ok', 'clarifying']).toContain(json.status);
+    });
+  });
+
+  describe('POST /preview/visual (T6.2 — optional visual preview)', () => {
+    beforeEach(() => {
+      jest.restoreAllMocks();
+      (config as Record<string, unknown>).VISUAL_PREVIEW_ENABLED = true;
+      (config as Record<string, unknown>).GEMINI_API_KEY = 'test-key';
+    });
+
+    afterAll(() => {
+      (config as Record<string, unknown>).VISUAL_PREVIEW_ENABLED = false;
+    });
+
+    it('returns image data on success', async () => {
+      jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ predictions: [{ bytesBase64Encoded: 'iVBORw0KGgo=', mimeType: 'image/png' }] }),
+        text: async () => JSON.stringify({ predictions: [{ bytesBase64Encoded: 'iVBORw0KGgo=', mimeType: 'image/png' }] }),
+      } as Response);
+      const res = await app.request('/preview/visual', {
+        method: 'POST',
+        headers: { ...authed, 'x-session-id': 'vp-sess-1' },
+        body: JSON.stringify({ platform_id: 'midjourney', assembled: 'a cat' }),
+      });
+      expect(res.status).toBe(200);
+      const body = await res.json() as { imageBase64: string; disclaimer: string };
+      expect(body.imageBase64).toBe('iVBORw0KGgo=');
+      expect(body.disclaimer).toContain('Preview rendered by');
+    });
+
+    it('returns 404 when VISUAL_PREVIEW_ENABLED is false', async () => {
+      (config as Record<string, unknown>).VISUAL_PREVIEW_ENABLED = false;
+      const res = await app.request('/preview/visual', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney', assembled: 'test' }),
+      });
+      expect(res.status).toBe(404);
+      (config as Record<string, unknown>).VISUAL_PREVIEW_ENABLED = true;
+    });
+
+    it('returns 400 for non-image platform', async () => {
+      // anthropic_claude is text-only (not image modality)
+      const res = await app.request('/preview/visual', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'anthropic_claude', assembled: 'test' }),
+      });
+      expect(res.status).toBe(400);
+    });
+
+    it('returns 429 after session cap exceeded (3 calls)', async () => {
+      // Mock fetch for image generation
+      const mockFetch = jest.spyOn(global, 'fetch').mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: async () => ({ predictions: [{ bytesBase64Encoded: 'dGVzdA==', mimeType: 'image/png' }] }),
+        text: async () => JSON.stringify({ predictions: [{ bytesBase64Encoded: 'dGVzdA==', mimeType: 'image/png' }] }),
+      } as Response);
+
+      // Make 3 successful calls
+      for (let i = 0; i < 3; i++) {
+        const res = await app.request('/preview/visual', {
+          method: 'POST',
+          headers: { ...authed, 'x-session-id': 'vp-cap-test' },
+          body: JSON.stringify({ platform_id: 'midjourney', assembled: `cat ${i}` }),
+        });
+        expect(res.status).toBe(200);
+      }
+
+      // 4th call should be rate-limited
+      const res4 = await app.request('/preview/visual', {
+        method: 'POST',
+        headers: { ...authed, 'x-session-id': 'vp-cap-test' },
+        body: JSON.stringify({ platform_id: 'midjourney', assembled: 'cat 4' }),
+      });
+      expect(res4.status).toBe(429);
+
+      mockFetch.mockRestore();
+    });
+
+    it('returns 400 on missing required fields', async () => {
+      const res = await app.request('/preview/visual', {
+        method: 'POST',
+        headers: authed,
+        body: JSON.stringify({ platform_id: 'midjourney' }), // missing assembled
+      });
+      expect(res.status).toBe(400);
+    });
+  });
+});

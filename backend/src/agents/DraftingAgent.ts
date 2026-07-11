@@ -23,6 +23,7 @@ const strategyProfileSchema = z.object({
   max_tokens: z.number().int().positive(),
   required_nodes: z.array(z.enum(NODE_TYPES)).min(1),
   guidance: z.string(),
+  mpkb_refs: z.array(z.string()).optional(),
 });
 type StrategyProfile = z.infer<typeof strategyProfileSchema>;
 
@@ -80,10 +81,17 @@ export class DraftingAgent implements Agent {
 
   private buildSystemPrompt(profile: StrategyProfile, input: AgentInput): string {
     const { platform } = input.context;
-    const chunks = (input.context.pkbChunks ?? []).slice(0, 6);
-    const knowledge = chunks.length
-      ? chunks.map((c, i) => `[${i + 1}] ${c.content}`).join('\n')
-      : '(no platform knowledge retrieved — rely on general best practice)';
+    const chunks = (input.context.pkbChunks ?? []).slice(0, 8);
+    const pkbChunks = chunks.filter((c) => c.kind === 'pkb');
+    const mpkbChunks = chunks.filter((c) => c.kind === 'mpkb');
+
+    const pkbSection = pkbChunks.length
+      ? pkbChunks.map((c, i) => `[P${i + 1}] ${c.content}`).join('\n')
+      : '(no platform-specific knowledge)';
+
+    const mpkbSection = mpkbChunks.length
+      ? mpkbChunks.map((c, i) => `[M${i + 1}] ${c.content}`).join('\n')
+      : '(no model-behavior knowledge)';
 
     return `You are an expert prompt engineer drafting a prompt FOR the "${platform.display_name}" platform (the prompt's audience is that platform's model, not a human).
 
@@ -94,14 +102,17 @@ ${platform.syntax_rules.map((r) => `- ${r}`).join('\n') || '- (none listed)'}
 PLATFORM QUIRKS:
 ${platform.quirks.map((q) => `- ${q}`).join('\n') || '- (none listed)'}
 
-RETRIEVED KNOWLEDGE (ground your choices in these; reference them in rationale as [n]):
-${knowledge}
+PLATFORM KNOWLEDGE (ground syntax and capability choices in these; reference as [P<n>]):
+${pkbSection}
+
+MODEL BEHAVIOR KNOWLEDGE (ground phrasing and technique choices in these; reference as [M<n>]):
+${mpkbSection}
 
 Produce the prompt as typed nodes. Required node types, in order: ${profile.required_nodes.join(', ')}.
 Omit a required node ONLY if truly inapplicable. Never invent user intent — build from what the user gave; fill gaps with sensible, platform-appropriate defaults.
 
 Respond with ONLY a JSON object, no prose. EVERY node MUST include all four keys: "type" (one of: ${NODE_TYPES.join('|')}), "value", "rationale", "alternatives" — never omit "type".
-Schema: {"nodes":[{"type":"<node type>","value":"<text in the platform's dialect>","rationale":"<why, grounded in [n] where possible>","alternatives":[{"value":"<alternative>","rationale":"<why>","rank":1}]}]}
+Schema: {"nodes":[{"type":"<node type>","value":"<text in the platform's dialect>","rationale":"<why, grounded in [P<n>] or [M<n>] where possible>","alternatives":[{"value":"<alternative>","rationale":"<why>","rank":1}]}]}
 
 ${DRAFT_JSON_FEWSHOT}
 
@@ -119,6 +130,9 @@ Give 2–3 ranked alternatives for creative nodes (style, composition, lighting)
     }
     if (context.justGenerate) {
       parts.push('The user chose "just generate now" — fill unanswered aspects with sensible defaults.');
+    }
+    if (context.memories && context.memories.length > 0) {
+      parts.push(`User's saved preferences: ${context.memories.join('; ')}`);
     }
     return parts.join('\n');
   }

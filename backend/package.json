@@ -13,15 +13,20 @@
     "migrate": "node dist/scripts/migrate.js",
     "seed:registry": "node dist/scripts/seed-registry.js",
     "seed:pkb": "npm run build && node dist/scripts/seed-pkb.js",
-    "smoke:intent": "npm run build && node dist/scripts/smoke-intent.js"
+    "smoke:intent": "npm run build && node dist/scripts/smoke-intent.js",
+    "crawl:pkb": "npm run build && node dist/scripts/crawl-pkb.js",
+    "retention": "npm run build && node dist/scripts/retention-sweep.js",
+    "analyze:outcomes": "npm run build && node dist/scripts/improvement-analysis.js"
   },
   "dependencies": {
+    "@aws-sdk/client-ssm": "^3.1084.0",
     "@hono/node-server": "^1.13.0",
     "@supabase/supabase-js": "^2.45.0",
     "hono": "^4.6.0",
     "jose": "^4.15.9",
     "pg": "^8.22.0",
     "pino": "^9.4.0",
+    "stripe": "^22.3.1",
     "zod": "^3.23.0"
   },
   "devDependencies": {

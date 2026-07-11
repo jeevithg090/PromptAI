@@ -78,6 +78,7 @@ const envSchema = z.object({
   CRITIC_MAX_REFINEMENTS: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).max(2).default(2)), // hard cap, §10.4
   RATE_LIMIT_REQUESTS_PER_MINUTE: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(30)),
   BUDGET_ENFORCEMENT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  VISUAL_PREVIEW_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
 
   // Postgres pool size (§23.4). Default 10 suits a long-lived local/server
   // process fielding many concurrent requests; a Lambdalith should override to
@@ -104,6 +105,12 @@ const envSchema = z.object({
     z.string()
   ),
 
+  // Admin Control Plane (§21, T7.5) — shared secret for the physically
+  // separate admin deployable. Sent as the `x-admin-key` header. Absent =
+  // admin endpoints refuse (503). No decryption capability for user content
+  // or BYOK keys exists in the admin service by construction.
+  ADMIN_API_KEY: optional(z.string()),
+
   // Demo/try-it-now flow (T4.3).
   DEMO_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
   DEMO_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(5)),
@@ -111,6 +118,16 @@ const envSchema = z.object({
   // PKB retrieval (T5.2).
   PKB_MIN_SIMILARITY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(0).max(1).default(0.45)),
   LIVE_FETCH_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+
+  // T7.7 — Plan definitions path (§28.2).
+  PLANS_PATH: optional(z.string()),
+
+  // T7.7 — Stripe (§28.2, §19.1 — card data never touches our servers).
+  STRIPE_SECRET_KEY: optional(z.string()),
+  STRIPE_WEBHOOK_SECRET: optional(z.string()),
+  STRIPE_PRICE_PRO: optional(z.string()),
+  STRIPE_SUCCESS_URL: optional(z.string()),
+  STRIPE_CANCEL_URL: optional(z.string()),
 });
 
 export type Env = z.infer<typeof envSchema>;

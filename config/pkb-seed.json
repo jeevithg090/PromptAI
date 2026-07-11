@@ -513,6 +513,206 @@
       "content": "Repeated boilerplate (the same instructions or context re-sent every turn) wastes tokens — define it once, or use a system prompt / project context / persistent rules file instead of re-pasting. Trim examples to the minimum that still pins the format.",
       "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
       "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llama",
+      "category": "formatting",
+      "content": "Llama-family models (including Groq-hosted variants) have a documented tendency to omit JSON keys from structured outputs, especially the 'type' field on objects. Mitigate by: (1) repeating the required key list in both system prompt AND user message, (2) including a filled example, and (3) validating output server-side with a fallback that fills missing keys from context.",
+      "source_url": "https://llama.meta.com/docs/model-cards-and-prompt-formats/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llama",
+      "category": "formatting",
+      "content": "Llama models follow instruction order more strictly than many competitors — instructions listed first have the strongest effect. Place critical format requirements (JSON-only, no preamble) at the very start of the system prompt. Instructions repeated late may create confusion rather than reinforcement.",
+      "source_url": "https://llama.meta.com/docs/model-cards-and-prompt-formats/",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llama",
+      "category": "negation_handling",
+      "content": "Llama models handle negative instructions ('do not include X') less reliably than positive ones. Frame constraints as what TO do: 'include only X, Y, Z' instead of 'do not include A, B, C'. For code tasks, show the expected structure; the model fills it in rather than filtering out undesired elements.",
+      "source_url": "https://llama.meta.com/docs/model-cards-and-prompt-formats/",
+      "trust_score": 0.7
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llama",
+      "category": "few_shot",
+      "content": "Few-shot examples for Llama models work best when they are structurally diverse — vary the input scenario across examples so the model learns a general rule rather than memorizing one pattern. Two examples often suffice; four provide diminishing returns for most tasks.",
+      "source_url": "https://llama.meta.com/docs/model-cards-and-prompt-formats/",
+      "trust_score": 0.7
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gpt",
+      "category": "formatting",
+      "content": "GPT models (including ChatGPT) respect structured output requests with high reliability when the schema is provided in the system prompt or as a JSON Schema in the API call. In consumer ChatGPT, state 'Respond with only valid JSON matching this schema:' followed by the exact schema. Without a schema, output structure drifts between runs.",
+      "source_url": "https://platform.openai.com/docs/guides/structured-outputs",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gpt",
+      "category": "persona",
+      "content": "GPT models maintain system-level instructions across long conversations better than most competitors. Use the first user message (not the system prompt) for role/persona instructions in consumer ChatGPT — in the API, system-prompt adherence is strong for GPT-4+ but weaker for GPT-3.5-tier models.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 0.9
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gpt",
+      "category": "reasoning",
+      "content": "GPT-4 and later models benefit from chain-of-thought prompting on multi-step reasoning tasks. Explicitly ask the model to 'work step by step' or to 'show your reasoning before the final answer'. For code tasks, asking the model to plan before implementing measurably reduces bugs in generated code.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gpt",
+      "category": "instruction_position",
+      "content": "GPT models weight the beginning and end of context windows most heavily ('lost in the middle' effect). Place the most critical instruction at token position 1, the task data or reference material in the middle, and restate the key constraint at the end. This applies to both system and user messages.",
+      "source_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "claude",
+      "category": "formatting",
+      "content": "Claude is specifically trained to recognize and leverage XML tags as prompt structure markers. Wrapping distinct sections in <tags> (e.g. <instructions>, <context>, <example>, <output_format>) and referring to them by name in the instruction produces measurably more reliable outputs than freeform separation.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/use-xml-tags",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "claude",
+      "category": "formatting",
+      "content": "Prefilling Claude's response — ending your prompt with the opening of the expected answer, e.g. '<reply>' or '{' — forces Claude to continue from that exact point, skipping introductory prose. This is the most reliable technique for format control in Claude.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prefill-claudes-response",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "claude",
+      "category": "reasoning",
+      "content": "Claude's extended thinking mode (separate reasoning token budget before the visible response) markedly improves accuracy on math, logic, and multi-step analysis. For complex reasoning, enable thinking and ask Claude to reason in <thinking> tags before providing the final answer. The thinking tags can be discarded by downstream consumers.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "claude",
+      "category": "instruction_position",
+      "content": "For Claude, place long reference documents BEFORE the instruction or question. Claude attends more reliably to instructions that follow data than instructions that precede it — the opposite of GPT ordering. Structure prompts as: context/docs first, then task instruction, then output format.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/long-context-tips",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gemini",
+      "category": "formatting",
+      "content": "Gemini responds best to conversational, full-sentence phrasing. Unlike image-generation platforms where keyword tags are optimal, Gemini prefers reading like natural language instructions. Structure prompts as paragraphs of prose rather than bullet lists of tags — especially for text-generation and code tasks.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gemini",
+      "category": "instruction_position",
+      "content": "Gemini's long-context behavior places strong weight on the very beginning and end of the prompt, similar to GPT. For document analysis with Gemini, place the core instruction first, then the document, then restate the instruction or question at the end for best retrieval accuracy.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/long-context",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gemini",
+      "category": "reasoning",
+      "content": "Gemini benefits from explicit step-by-step reasoning requests on complex tasks. Adding 'Think through this step by step before giving your final answer' measurably improves correctness on multi-step problems. For code tasks, asking for an approach summary before the code reduces architectural errors.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/prompting-strategies",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "gemini",
+      "category": "negation_handling",
+      "content": "Gemini image generation does not reliably handle negative phrasing ('no people', 'without text'). For image tasks, always rephrase exclusions positively — describe the scene you DO want rather than what you want excluded. For text tasks, Gemini handles negation more reliably than for image generation.",
+      "source_url": "https://ai.google.dev/gemini-api/docs/image-generation",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "formatting",
+      "content": "Midjourney and Stable Diffusion use fundamentally different prompt syntax despite both being diffusion image models. Midjourney uses comma-separated keywords + trailing --params; Stable Diffusion uses comma-separated tags with a separate negative-prompt field. The Drafting Agent MUST choose the correct dialect per platform_id, not mix them.",
+      "source_url": "https://docs.midjourney.com/docs/prompts",
+      "trust_score": 1.0
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "formatting",
+      "content": "Diffusion models have a 'token budget' — the CLIP text encoder processes roughly 75 tokens per prompt chunk. Content beyond this is truncated or weakly attended to. The most important visual concepts (subject, style, medium) must appear within the first ~60 tokens. Lesser details (background elements, secondary subjects) should be optional.",
+      "source_url": "https://platform.stability.ai/docs/features/text-to-image",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "composition",
+      "content": "Diffusion image models interpret composition/medium keywords differently depending on training data. Photography keywords (85mm, shallow depth of field, window light) produce photorealistic output; art-movement keywords (ukiyo-e, art nouveau, brutalism) produce stylized results. The model's training distribution determines what 'counts' as a style — prefer medium keywords over artist names when possible.",
+      "source_url": "https://docs.midjourney.com/docs/explore-prompting",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "diffusion_image",
+      "category": "negation_handling",
+      "content": "Negation in diffusion models is fundamentally unreliable — saying 'no trees' plants the concept 'trees' in the model's latent space. Always rephrase exclusions as positive descriptions of what SHOULD be present. Use the platform's dedicated exclusion mechanism (--no for Midjourney, negative prompt field for Stable Diffusion) as the second line of defense.",
+      "source_url": "https://arxiv.org/abs/2306.05947",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "reasoning_models",
+      "category": "token_efficiency",
+      "content": "Reasoning models (DeepSeek R1, OpenAI o-series, Claude extended thinking) consume hidden reasoning tokens that count against the output max_tokens budget. A seemingly short user request may produce 2,000+ hidden reasoning tokens before the visible response begins. Always set max_tokens generously (≥4000 for non-trivial drafting) to avoid truncation of the visible portion.",
+      "source_url": "https://api-docs.deepseek.com/guides/reasoning",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "reasoning_models",
+      "category": "formatting",
+      "content": "Reasoning models sometimes refuse structured JSON output because their reasoning 'mode' conflicts with format constraints. Mitigation: (1) use a non-reasoning model for pure extraction/classification tasks, (2) when a reasoning model is needed for drafting, ask for the reasoning in a separate section and the final answer as JSON, or (3) set a lower temperature to reduce reasoning-mode overhead.",
+      "source_url": "https://api-docs.deepseek.com/guides/reasoning",
+      "trust_score": 0.7
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "reasoning_models",
+      "category": "technique_fit",
+      "content": "Reasoning models excel at tasks requiring multi-step deduction, planning, and analysis. They add unnecessary cost and latency for simple classification, extraction, or rewriting. Route reasoning-model steps to non-reasoning models when: the task is single-step, the output is short-form, or the expected output format is rigid (JSON with known schema).",
+      "source_url": "https://api-docs.deepseek.com/guides/reasoning",
+      "trust_score": 0.8
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "reasoning_models",
+      "category": "negation_handling",
+      "content": "Reasoning models follow negative instructions more reliably than non-reasoning models because their reasoning pass evaluates the instruction before generating. 'Do not include X' is more likely to be followed when the model has explicit reasoning steps. This makes reasoning models better suited for constraint-heavy prompts but at higher token cost.",
+      "source_url": "https://api-docs.deepseek.com/guides/reasoning",
+      "trust_score": 0.7
+    },
+    {
+      "kind": "mpkb",
+      "model_family": "llm_general",
+      "category": "technique_fit",
+      "content": "Prefer direct, honest request framing over hypotheticals or role-playing to achieve a goal. LLMs produce more reliable, factual output when the prompt states the real purpose openly ('for a security audit of my own web app') than when it invents an elaborate framing to 'trick' the model. Direct framing also builds an audit trail consistent with acceptable-use policies.",
+      "source_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/be-clear-and-direct",
+      "trust_score": 1.0
     }
   ]
 }

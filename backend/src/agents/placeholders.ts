@@ -25,5 +25,5 @@ function placeholder(name: string): Agent {
 // ClarifyingQuestionAgent is real now — see ClarifyingQuestionAgent.ts (T2.7 ✅)
 // DraftingAgent is real now — see DraftingAgent.ts (T2.8 ✅)
 // CriticAgent is real now — see CriticAgent.ts (T2.9 ✅)
-export const AlternativesAgent = placeholder('AlternativesAgent'); // → T6.3
+// AlternativesAgent is real now — see AlternativesAgent.ts (T6.3 ✅)
 // MemoryExtractionAgent is real now — see MemoryExtractionAgent.ts (T2.11 ✅)

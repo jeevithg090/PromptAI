@@ -5,7 +5,8 @@
  */
 import type {
   DraftResponse, DesignedResponse, Recommendation, Platform,
-  ClarifyingQuestion,
+  ClarifyingQuestion, PreviewResponse, PreviewBody, AgainBody,
+  VisualPreviewResponse, VisualPreviewBody,
 } from './api-types';
 
 export type ApiError = { status: number; message: string };
@@ -26,10 +27,10 @@ export class ApiClient {
     return this._token;
   }
 
-  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  private async request<T>(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 30_000);
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extraHeaders };
     if (this._token) {
       headers['Authorization'] = `Bearer ${this._token}`;
     }
@@ -64,6 +65,7 @@ export class ApiClient {
     just_generate?: boolean;
     connection_id?: string;
     project_id?: string;
+    memories?: string[];
   }): Promise<DraftResponse> {
     return this.request('POST', '/draft', body);
   }
@@ -75,9 +77,14 @@ export class ApiClient {
       idea: string;
       clarifications: Record<string, string>;
       just_generate?: boolean;
+      connection_id?: string;
     }
   ): Promise<DraftResponse> {
     return this.request('POST', `/draft/${sessionId}/clarify`, body);
+  }
+
+  draftAgain(sessionId: string, body: AgainBody): Promise<DraftResponse> {
+    return this.request('POST', `/draft/${sessionId}/again`, body);
   }
 
   demoDraft(body: { example_id: string }): Promise<DraftResponse> {
@@ -138,8 +145,64 @@ export class ApiClient {
     assembled: string;
     strengthScore?: number;
     rubricScores?: Record<string, number>;
+    contentCiphertext?: string;
   }): Promise<{ status: string; prompt_id: string; version: number }> {
     return this.request('POST', '/prompts', body);
+  }
+
+  updateSessionContent(sessionId: string, contentCiphertext: string): Promise<{ status: string }> {
+    return this.request('PATCH', `/sessions/${sessionId}/content`, { content_ciphertext: contentCiphertext });
+  }
+
+  getKeys(): Promise<{
+    status: string;
+    wrapped_dek_pass?: string;
+    wrapped_dek_recovery?: string;
+    kdf_salt?: string;
+    kdf_iterations?: number;
+  }> {
+    return this.request('GET', '/keys');
+  }
+
+  putKeys(body: {
+    wrapped_dek_pass: string;
+    wrapped_dek_recovery: string;
+    kdf_salt: string;
+    kdf_iterations: number;
+  }): Promise<{ status: string }> {
+    return this.request('PUT', '/keys', body);
+  }
+
+  getConnections(): Promise<{ status: string; connections: Array<{ id: string; provider: string; status: string; created_at: string }> }> {
+    return this.request('GET', '/connections');
+  }
+
+  createConnection(body: { provider: string; api_key: string }): Promise<{ status: string; id: string; provider: string }> {
+    return this.request('POST', '/connections', body);
+  }
+
+  deleteConnection(id: string): Promise<{ status: string }> {
+    return this.request('DELETE', `/connections/${id}`);
+  }
+
+  getMemory(): Promise<{ status: string; entries: Array<{ id: string; scope: string; source: string; status: string; statement_ciphertext: string; task_type: string | null; created_at: string }> }> {
+    return this.request('GET', '/memory');
+  }
+
+  createMemory(body: { scope?: string; statement_ciphertext: string; source?: string; status?: string; task_type?: string }): Promise<{ status: string; id: string; created_at: string }> {
+    return this.request('POST', '/memory', body);
+  }
+
+  updateMemory(id: string, body: { statement_ciphertext?: string; status?: string; task_type?: string }): Promise<{ status: string }> {
+    return this.request('PATCH', `/memory/${id}`, body);
+  }
+
+  deleteMemory(id: string): Promise<{ status: string }> {
+    return this.request('DELETE', `/memory/${id}`);
+  }
+
+  resetMemory(): Promise<{ status: string; deleted: number }> {
+    return this.request('DELETE', '/memory', undefined, { 'x-confirm-reset': 'true' });
   }
 
   promptsList(): Promise<{ status: string; prompts: unknown[] }> {
@@ -174,11 +237,23 @@ export class ApiClient {
     return this.request('POST', '/me/bootstrap');
   }
 
+  deleteAccount(): Promise<{ status: string }> {
+    return this.request('DELETE', '/me');
+  }
+
   fanout(body: {
     nodes: unknown[];
     platform_ids: string[];
   }): Promise<{ status: string; results: Array<{ platform_id: string; assembled: string; governor: unknown }>; skipped: string[] }> {
     return this.request('POST', '/fanout', body);
+  }
+
+  preview(body: PreviewBody): Promise<PreviewResponse> {
+    return this.request('POST', '/preview', body);
+  }
+
+  visualPreview(sessionId: string, body: VisualPreviewBody): Promise<VisualPreviewResponse> {
+    return this.request('POST', '/preview/visual', body, { 'x-session-id': sessionId });
   }
 }
 

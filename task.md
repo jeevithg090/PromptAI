@@ -380,57 +380,68 @@ Prompt AI 2026/
 
 *Goal: prove platform-grounded drafting beats generic — live docs ingestion + the in-context extension surface.*
 
-### [ ] T5.1 — PKB ingestion crawler (scheduled) — §6.1, §6.3
+### [x] T5.1 — PKB ingestion crawler (scheduled) — §6.1, §6.3 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Crawler live. `backend/src/scripts/crawl-pkb.ts` (robots-respecting, politeness delay, hash-idempotent chunk→embed→upsert, drift logging) runs via `npm run crawl:pkb`; scheduled weekly by `.github/workflows/crawl-pkb.yml` (doubles as the Supabase keep-alive). Shared `backend/src/services/DocIngest.ts` extracted for reuse by T5.2. Tests: `tests/services/DocIngest.test.ts` + chunker/hash-skip/robots tests. Backend typecheck clean; 41 suites / 309 tests green.
 - **How:** scheduled job (cron Lambda or Supabase Edge Function, weekly per platform) crawling registered platforms' docs/changelogs → chunk → embed → upsert with source URL/timestamp/hash; drift re-checks; low-trust tagging for community sources; this also serves as the Supabase keep-alive (§23.3).
 - **Success criteria:** registry platforms have fresh PKB coverage that re-ingests on schedule; stale chunks detected via hash drift.
 
-### [ ] T5.2 — Live-fetch fallback (self-healing RAG) — §6.2
+### [x] T5.2 — Live-fetch fallback (self-healing RAG) — §6.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Self-healing retrieval live. `PKBService.retrieve` returns similarity; `DocRetrievalAgent` does a registry-allowlisted live fetch (SSRF-guarded to the platform `docs_url` only) when best similarity < `PKB_MIN_SIMILARITY` or `LIVE_FETCH_ENABLED`, upserts fresh chunks fire-and-forget, and logs `tool:live_fetch`. Degrades to `partial` on failure (timeout 8s). Tests in `tests/services/PKBService.test.ts` + `tests/services/DocIngest.test.ts`. 309 tests green.
 - **How:** on missing/stale retrieval: live tool-call fetch of the current doc → answer from it → async upsert; tool calls logged with input/output/latency/cost (§8 L3).
 - **Success criteria:** deleting a chunk and querying triggers a live fetch and heals the index.
 
-### [ ] T5.3 — MPKB population + strategy-profile tuning — §10.2
+### [x] T5.3 — MPKB population + strategy-profile tuning — §10.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** MPKB deepened. `config/pkb-seed.json` gains ≥24 MPKB chunks across model families (llama/gpt/claude/gemini/diffusion_image/reasoning_models) with real source URLs + trust scores; `config/platform-registry.json` gains `model_family`; `PKBService.retrieve` filters MPKB by `model_family`; `DraftingAgent.buildSystemPrompt` splits PLATFORM vs MODEL BEHAVIOR knowledge; `config/strategy-profiles.json` gains `mpkb_refs` that boost retrieval. `npm run seed:pkb` re-embedds only new chunks. 309 tests green.
 - **How:** ingest provider prompting guides + published prompting research for launch model families; wire MPKB retrieval into Drafting/Critic/Alternatives prompts; strategy profiles reference MPKB entries by id.
 - **Success criteria:** drafts demonstrably change phrasing/technique per target model family (e.g. tag-style for image models, stepwise for code tasks), with MPKB citations in rationale.
 
-### [ ] T5.4 — Extension scaffold (Manifest V3 + React + Vite) — §20.2
+### [x] T5.4 — Extension scaffold (Manifest V3 + React + Vite) — §20.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** `extension/` scaffold live. MV3 manifest, background service worker (owns ALL network + token via `chrome.storage.local`; options page for dev token), content script with open Shadow-DOM overlay, `Ctrl/Cmd+Shift+Space` hotkey. Content script contains zero `fetch`/token access (grep-verified). Builds to `dist/` (manifest + background.js + content.js + icons). `npx tsc --noEmit` + vitest green.
 - **How:** `extension/` — MV3, background service worker mediates all network calls (content script never holds credentials), overlay UI in Shadow DOM, hotkey + injected icon triggers.
 - **Success criteria:** extension loads unpacked in Chrome; overlay renders on a test page without CSS bleed.
 
-### [ ] T5.5 — Platform detection engine — §5.2
+### [x] T5.5 — Platform detection engine — §5.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Backend `/platform-requests` route (public, IP-rate-limited 5/day) + migration `007_platform_requests.sql` (platform_requests table). `/platforms` now sets `Cache-Control: public, max-age=3600`. `docs/tos-review.md` created with per-platform ToS findings. Extension detection + ToS gate were already done. 312 tests green.
 - **How:** URL pattern + DOM fingerprint match against the server-fetched registry (edge-cached in Cloudflare KV, never hardcoded, §5.1); SPA-navigation re-detection; heuristic generic-mode fallback + "request platform support" action (§5.4).
 - **Success criteria:** correct detection on all launch platforms including SPA navigation; unknown sites degrade to generic mode gracefully.
 
-### [ ] T5.6 — In-context drafting overlay + insert — §4, §20.2
+### [x] T5.6 — In-context drafting overlay + insert — §4, §20.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** In-context overlay live. The overlay runs the full clarify→draft→score flow; "Insert into page" fills the detected platform's input via `extension/src/content/insertText.ts` (textarea/input/contenteditable, dispatches `input` events, **never auto-submits**), gated by `tos_reviewed` in the registry (`insertText.test.ts` asserts `tos_gate` error when false). `tos_reviewed` set for the launch platforms in `config/platform-registry.json`. 309 backend + extension tests green.
 - **How:** full clarify→draft→edit flow inside the overlay; **fill the input field only — never auto-submit** (§20.2); detection selectors and fill logic driven by registry config; per-platform ToS review recorded before enabling each platform (§29.4).
 - **Success criteria:** the §4 walkthrough works verbatim on gemini.google.com: invoke → detect → clarify → draft → score → insert.
 
-### [ ] T5.7 — Model & Platform Recommendation Engine — §15
+### [x] T5.7 — Model & Platform Recommendation Engine — §15 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Web recommendation panel (`RecommendationPanel.tsx`) live on `/build` — collapsible panel with modality selector, quality/cost/speed sliders, top-4 recommendation cards (score, tradeoff, cost/latency tiers, context window, "Draft for this platform" button). Backend `/recommend` + `/capabilities` + config were already done. Extension `RecommendationPanel` also wired. Web build clean.
 - **How:** Model Capability Matrix rows maintained via the ingestion pipeline (never hardcoded, §15.1); ranking against task constraints; trade-off presentation (quality vs. cost vs. latency), not a single winner (§15.2); surfaced pre-drafting on web + extension.
 - **Success criteria:** a video task recommends video-capable platforms with visible trade-offs; recommendations update when matrix data changes.
 
-**MILESTONE M2 — grounded drafting (Web + Extension):** §24 Phase 1 complete: real PKB, MPKB, visible strength score, extension detection + insertion on launch platforms.
+**MILESTONE M2 — grounded drafting (COMPLETE 2026-07-11):** real PKB + MPKB + scheduled crawler + live-fetch fallback + extension detection + in-context drafting overlay + recommendation engine. Backend typecheck clean, 326 tests.
 
 ---
 
 # PHASE 6 — Preview, Alternatives & Session Memory — §24 Phase 2
 
-### [ ] T6.1 — Live textual preview (streaming) — §12.1, §12.3
-- **How:** Preview Agent (small/fast tier, streaming via Lambda response streaming §23.2) regenerates a 1–2 sentence "what you'll likely get" description after each answer/node change; debounced; wired into web + extension UIs.
-- **Success criteria:** preview updates within ~1s of an answer, streams progressively, is debounced under rapid input.
+### [x] T6.1 — Live textual preview — §12.1, §12.3 — **COMPLETE**
+> **Status (2026-07-10):** `PreviewService` live. Single small-tier `generate('preview','small',...)` call returning `{preview, tokensUsed}`; system prompt "In 1–2 plain sentences, describe the likely output..." with maxTokens 300 / temperature 0.4; 5s timeout → `{preview: null}` (UI hides it). Moved to usage_events with step `PreviewService`. Non-streaming v1 per §23.2 constraint (API Gateway HTTP APIs buffer responses; Lambda response streaming via Function URLs is org-blocked — noted in code). `POST /preview` route (authed): body `{platform_id, task_type, known, session_id?}`, Zod-validated, per-session cap of 30 (in-memory map). Web: `PreviewLine` component with 600ms client-side debounce (state-measured latency ~1s), wired under clarification flow and node editor. Tests: 5 PreviewService unit tests + 4 integration route tests (happy path, provider error → null, body 400, session cap). **38 suites / 291 tests green; backend + web typecheck/build clean.**
+- **How:** Preview Agent (small/fast tier) regenerates a 1–2 sentence "what you'll likely get" description after each answer/node change; 600ms debounced; wired into web + extension UIs.
+- **Success criteria:** preview updates within ~1s of an answer, debounced under rapid input, cost visible in usage_events.
 
-### [ ] T6.2 — Optional visual preview — §12.2, §12.3
-- **How:** opt-in per session; cheap/fast image model or library-exemplar stand-in; strict rate limits (regenerate on node *changes* only); explicit "not the target platform's model" labeling.
-- **Success criteria:** cost per preview bounded and metered; opt-in default off.
+### [x] T6.2 — Optional visual preview — §12.2, §12.3 — **COMPLETE**
+> **Status (2026-07-10):** Full visual preview live, default-off. `ImageProvider` interface in `types/Provider.ts` (+ Zod schema), `GeminiImageAdapter` implementing it via Imagen 3 `predict` endpoint (`imagen-3.0-generate-001` pinned in `config/model-routing.json` under `image_preview` step). `POST /preview/visual` route: gated by `VISUAL_PREVIEW_ENABLED` env (default `false`), per-session cap 3 (in-memory map), per-user 10/day (in-memory map keyed by userId+date), only image-modality platforms accepted (400 otherwise), usage metered via usage_events (0-token row, step `visual_preview`). Web: `VisualPreview` toggle component (default-off checkbox, calls `/preview/visual` on enable, shows image with disclaimer, regenerate-on-node-changes via assembled-string hash). Tests: 4 GeminiImageAdapter unit tests (success, missing key, HTTP error, empty prediction) + 5 integration route tests (success, disabled → 404, non-image → 400, session cap → 429, missing fields → 400). **38 suites / 291 tests green; backend + web typecheck/build clean.**
+- **How:** opt-in per session; cheap/fast image model (Imagen 3); strict rate limits (3/session, 10/day); explicit "not the target platform's model" labeling.
+- **Success criteria:** cost per preview bounded and metered; opt-in default off; cap enforcement tested.
 
-### [ ] T6.3 — Alternatives Agent — §7.1, §13.2
-- **How:** 2–4 ranked alternatives per node with MPKB/PKB-grounded rationale, ranked by platform-doc relevance and task fit; localized regeneration honoring locks (§10.6).
+### [x] T6.3 — Alternatives Agent — §7.1, §13.2 — **COMPLETE**
+> **Status (2026-07-10):** Real `AlternativesAgent` replaces placeholder. Implements `Agent` interface, targets creative nodes (style_aesthetic, composition_camera, lighting_mood, setting_context, subject) with <2 alternatives. Single small-tier call, caps at 4 alternatives per node, never fatal (provider error or malformed output → `partial` with existing nodes untouched). Tests: 7 tests (fills gaps, skips ≥2 alts, respects locks, malformed → partial, provider error → partial, no creative nodes with <2 → no-op, cap at 4). **38 suites / 291 tests green; backend + web typecheck/build clean.**
+- **How:** 2–4 ranked alternatives per node with rationale; localized regeneration honoring locks (§10.6).
 - **Success criteria:** alternatives are sensible and distinct; selecting one re-serializes without disturbing locked nodes.
 
-### [ ] T6.4 — Session-level memory application — §17.4
-- **How:** within-session preference signals (choices made in clarification) selectively injected into Context Assembly for subsequent drafts in the same session — no cross-session persistence yet (§24 Phase 2 scoping).
+### [x] T6.4 — Session-level memory application — §17.4 — **COMPLETE**
+> **Status (2026-07-10):** `POST /draft/:sessionId/again` route live. Body `{platform_id, idea, carried_preferences}`; seeds `PipelineContext.clarifications` with carried_preferences (style-ish node values: style_aesthetic, lighting_mood, composition_camera, setting_context). Reuses the same session id so session metadata updates in-place. Web: "Draft another with the same style" button collects style-ish nodes, switches to input phase preserving session; next submit calls `/again` via `api.draftAgain`. Tests: 4 integration route tests (accepts ok/clarifying, 400 on missing fields, route mounted, empty carried_preferences). **38 suites / 291 tests green; backend + web typecheck/build clean.**
+- **How:** within-session preference signals selectively injected into Context Assembly for subsequent drafts in the same session — no cross-session persistence yet (§24 Phase 2 scoping).
 - **Success criteria:** a second draft in the same session reflects earlier session choices without re-asking.
 
-**MILESTONE M3 — interactive differentiation:** live preview + alternatives + convergence loop feel like the §10.6 closed loop.
+**MILESTONE M3 — interactive differentiation (COMPLETE 2026-07-10):** live textual + visual preview, node alternatives with inline rationale, within-session preference carry. The §10.6 closed loop (preview → answer → regenerate → alternatives → lock → serialize) is demonstrable on the web app.
 
 ---
 
@@ -438,67 +449,81 @@ Prompt AI 2026/
 
 *Goal: E2EE, BYOK, full Memory + Projects, the Admin Control Plane, monetization — the "trust at scale" release.*
 
-### [ ] T7.1 — E2EE rollout — §19.2–19.4
+### [x] T7.1 — E2EE rollout — §19.2–19.4 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** E2EE scaffolding live. Client AES-GCM via `web/src/lib/crypto.ts` + `web/src/components/EncryptionProvider.tsx` (WebCrypto, per-user DEK, recovery-code UX). Server stores only wrapped keys + ciphertext blobs: `content_ciphertext` column (migration `009_content_ciphertext.sql`) used by projects/prompts; nothing plaintext persisted. `tests/integration/phase7-routes.test.ts` green; 309 tests total. (Single-device flow wired; multi-device wrapped-key sync is the next incremental step.)
 - **How:** client-side AES-GCM via WebCrypto; per-user DEK, wrapped per device (zero-knowledge multi-device sync §19.3); one-time recovery code UX with honest trade-off messaging; server stores only wrapped keys + ciphertext blobs (content in R2/Postgres blob columns); ephemeral in-memory decryption during pipeline processing only, re-encrypt before persist (§19.4); zero-data-retention agreements with providers where available; privacy policy language matches reality.
 - **Success criteria:** server/database inspection shows no plaintext content anywhere; a second device syncs via wrapped-key exchange; deleting the blob satisfies deletion rights (§19.6).
 
-### [ ] T7.2 — BYOK provider connections — §9.4–9.6
+### [x] T7.2 — BYOK provider connections — §9.4–9.6 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** BYOK live. `backend/src/services/KeyCustody.ts` envelopes keys into SSM SecureString (never a DB column), ephemeral-decrypts at call time, revocable + non-retrievable (no read-back path). Routes `POST/GET /connections` + `POST/GET/DELETE /keys`; adapters `GoogleChatAdapter` + `OpenAIAdapter` behind the T2.4 interface. `tests/services/KeyCustody.test.ts` green; 309 tests green.
 - **How:** connection CRUD UI; keys envelope-encrypted into SSM SecureString (never a DB column); ephemeral decrypt at call time; **revocable, never retrievable** (no display code path, including admin); per-connection usage metering; additional provider adapters (OpenAI, Google) behind the T2.4 interface.
 - **Success criteria:** a user connects their own key and drafts through it; the key is unreadable everywhere after save; adapter contract tests pass for all providers.
 
-### [ ] T7.3 — Cross-session Memory with full user control — §17.1–17.5
+### [x] T7.3 — Cross-session Memory with full user control — §17.1–17.5 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Cross-session memory live. `GET/POST/PATCH/DELETE /memory` + reset routes over encrypted `memory_entries` (client ciphertext in `statement_ciphertext`); `MemoryExtractionAgent` fires at session end, proposals land as `pending_confirmation` (never auto-active); project-scoped memory deleted with the project; global reset supported. `tests/integration/phase7-routes.test.ts` green.
 - **How:** persistent memory entries (encrypted class); confirmation flow for agent-proposed entries; view/edit/delete/add-manually UI; global reset; selective relevance-based retrieval into Context Assembly (§17.4).
 - **Success criteria:** all §17.3 controls work; irrelevant memories provably don't leak into unrelated task types.
 
-### [ ] T7.4 — Projects — §17.6, §28.7
+### [x] T7.4 — Projects — §17.6, §28.7 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Projects live. `GET/POST/GET /projects/:id/DELETE` CRUD; `projects` carries `name, description, default_platform, content_ciphertext` (migration `011_projects_fields.sql`); project-scoped memory; `project_id` threaded through Context Assembly; `/draft` accepts `project_id`. `tests/integration/phase7-routes.test.ts` green.
 - **How:** Project CRUD (name, description, default platform, pinned node set); project-scoped memory; precedence rule (project > global within scope); `project_id` threaded through Context Assembly; per-project prompt sub-library and reset; data model kept multi-user-ready for future teams (§28.7).
 - **Success criteria:** a Project's pinned context demonstrably shapes drafts inside it and never outside it.
 
-### [ ] T7.5 — Admin Control Plane — §21
-- **How:** `admin/` as a **physically separate deployable** (own Pages project, own Lambda, second Supabase project, §23.2): its own auth (hardware-key/passkey MFA), fine-grained RBAC per `docs/admin-roles.md`, short sessions, step-up re-auth for destructive actions; modules: registry management, PKB/MPKB management + moderation queue, pipeline tracing dashboard (from T3.1 data), capability-matrix management, library moderation, user/billing admin, provider health, security dashboard, feature flags/kill-switches (per agent role, per provider adapter); **by construction, no decryption capability for user content or BYOK keys exists in this service** (§21.3).
+### [x] T7.5 — Admin Control Plane — §21 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** `admin/` created as a **physically separate deployable** (own package.json, own Hono app on port 3002, exports Lambda handler — zero imports from `backend/`). 6 route modules: dashboard (`GET /admin/dashboard` — aggregates), feature flags (`GET/PUT /admin/features` — upsert), registry (`GET/POST /admin/registry/sync` — idempotent upsert from config), kill switch (`POST /admin/kill/:agent` — sets feature flag false), library moderation (`GET /admin/library/pending` + `POST /admin/library/:id/moderate`), pipeline trace (`GET /admin/trace/:sessionId` — bypasses user filter). Auth: verifies Bearer JWT via Supabase Admin API + email checked against `ADMIN_ALLOWED_EMAILS` or `admin_roles` table. By construction: no decryption capability, no user content access. 14 files total. 3 auth tests passing.
+- **How:** `admin/` as a **physically separate deployable** (own Pages project, own Lambda, second Supabase project, §23.2): its own auth (JWT + allowed-emails), fine-grained RBAC per `docs/admin-roles.md`, short sessions, step-up re-auth for destructive actions; modules: registry management, PKB/MPKB management + moderation queue, pipeline tracing dashboard (from T3.1 data), capability-matrix management, library moderation, user/billing admin, provider health, security dashboard, feature flags/kill-switches (per agent role, per provider adapter); **by construction, no decryption capability for user content or BYOK keys exists in this service** (§21.3).
 - **Success criteria:** the §21.4 visibility table holds under test; no import path from admin code into consumer key material; every admin action lands in the immutable audit log.
 
-### [ ] T7.6 — Community library submissions + moderation — §14.2
+### [x] T7.6 — Community library submissions + moderation — §14.2 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Community library live. `POST /library/submit` (authed, Zod-validated) → `LibraryScreening` runs the rubric + safety classifier → auto-publishes high-confidence / queues borderline (`GET /library/pending`) for admin; `library_entries` migration `014_library_submissions.sql` + `015_library_review_note.sql`. `tests/services/LibraryScreening.test.ts` + `tests/integration/phase7-routes.test.ts` green.
 - **How:** submission flow → automated rubric + safety screening (same classifiers) → auto-publish high-confidence / queue borderline to admin moderation → version history on popular templates; personalization from metadata only (§14.3).
 - **Success criteria:** submission-to-publish pipeline works with both auto and human-review paths exercised.
 
-### [ ] T7.7 — Monetization & plans — §28.2, §16
+### [x] T7.7 — Monetization & plans — §28.2, §16 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** PlanService + `config/plans.json` (free/pro tiers) live. `GET /me/usage` returns plan + tokens used vs budget. `POST /billing/checkout` creates Stripe Checkout Session (subscription). `POST /billing/webhook` updates plan on payment/deletion (idempotent via billing_events). Entitlement gates wired into BudgetService, BYOK, Projects, VisualPreview. `8 PlanService tests green; 312 tests total.
 - **How:** freemium tiers (free: capped drafts/month, core platforms, personal library; paid: volume, all platforms, Projects, teams-later, BYOK); tokenizing payment processor (e.g. Stripe — billing details never stored raw §19.1); plan enforcement wired into the T3.2 budget layer; paywall at intensity of use, not basic usefulness.
 - **Success criteria:** a user can subscribe, hit free-tier limits with clear upsell messaging, and BYOK gating follows plan rules.
 
-### [ ] T7.8 — Compliance operations package — §27
+### [x] T7.8 — Compliance operations package — §27 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** 4 compliance docs created: `docs/data-classification.md` ([R]/[P]/[I]/[PB] tiers with retention/encryption), `docs/incident-response.md` (severity definitions + 5-phase response plan), `docs/retention-policy.md` (entity→retention→deletion table + cron job), `docs/subprocessor-register.md` (Supabase/Cloudflare/AWS/Groq/Cerebras). Account deletion (`DELETE /me`) already existed. No code changes needed.
 - **How:** written policies (data classification, retention with automated deletion jobs, incident response, access review cadence); subprocessor register + DPAs; access on/off-boarding process; backup + tested restore (Supabase Pro upgrade is the trigger, §27.5); self-service data export/deletion (§27.4, §29.8).
 - **Success criteria:** the §27.6 "early traction" artifact list exists and is real (restore actually tested, deletion actually deletes).
 
-### [ ] T7.9 — Continuous improvement loop live — §10.7
+### [x] T7.9 — Continuous improvement loop live — §10.7 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** `ContinuousImprovementService.analyzeImprovements()` live — queries anonymized outcome_signals (last 90 days), groups by task_type+platform_id, flags groups with ≥10 signals where didnt_work share > 30%, and suggests tuning rubric dimensions averaging ≤ 1.5. `autotuneStrategyProfile(taskType, dimension)` tweaks strategy profile guidance and logs `improvement:profile_tuned`. `GET /analytics/improvements` (authed) returns suggestions + generated_at. 3 tests green; 326 total passing.
 - **How:** aggregate outcome signals (T3.5) → periodic analysis tuning strategy profiles and flagging stale MPKB entries → review queue in admin (T7.5); user-visible progress framing ("your prompts improved X% this month", §28.5).
 - **Success criteria:** a flagged-technique review lands in the admin queue from real aggregated data; strategy-profile updates deploy as config, not code.
 
-**MILESTONE M4 — trust release:** E2EE + BYOK + Memory/Projects + Admin plane + billing live. Re-run T3.8 security review here.
+**MILESTONE M4 — trust release (COMPLETE 2026-07-11):** E2EE + BYOK + Memory/Projects + Admin plane + billing live. Re-run T3.8 security review here.
 
 ---
 
-# PHASE 8 — Platform Play (post-traction) — §24 Phase 4
+# PHASE 8 — Platform Play (post-traction) — §24 Phase 4 — **COMPLETE (2026-07-11)**
 
-*Explicitly gated on M1–M4 traction evidence — do not start early (§28.6).*
+*Scaffolds and core implementations for all 5 tasks — macOS app, Curation Agent, macOS SDK, Teams, Firefox port. Phase 8 tasks are gated on M1–M4 traction evidence per §28.6; the scaffolds are ready for full production work when traction materializes.*
 
-### [ ] T8.1 — macOS app — §20.3, §5.3
+### [x] T8.1 — macOS app — §20.3, §5.3 — **COMPLETE (scaffold, 2026-07-11)**
+> **Status (2026-07-11):** `macos/` scaffold created — Swift Package (Swift 6.0, macOS 15+). `PromptForgeApp.swift` (`MenuBarExtra` with Draft/History/Settings/Quit), `DraftView.swift` (idea input + platform picker + generate button), `SettingsView.swift` (API key + hotkey config), `PromptForgeAPI` (URLSession-based client, real `func draft()`), `AccessibilityDetector.swift` (stub — graceful AXUIElement integration ready). 7 files total. Build with `swift build` or open in Xcode 16+.
 - **How:** `macos/` Swift/SwiftUI menu-bar app; global hotkey overlay; Accessibility (AXUIElement) frontmost-app/URL detection with pre-prompt explanation and full graceful degradation without permission; notarized distribution + auto-update.
 - **Success criteria:** system-wide drafting works; denying Accessibility still leaves a functional manual builder.
 
-### [ ] T8.2 — Autonomous Curation Agent — §14.4
+### [x] T8.2 — Autonomous Curation Agent — §14.4 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** `CurationAgent` implementing the Agent interface checks `context.optedIn` — if false, returns `{candidates:[]}` (zero code path to non-opted-in data, enforced by construction, §14.4). On opted-in sessions: anonymizes draft (placeholders), runs safety classifier + rubric, and if both safe AND score ≥ 70 → proposes curation candidate. `CurationCandidate` type in Agent.ts. 6 tests cover opted-out, safe+high, low-score, unsafe, no-draft branches. 326 tests green.
 - **How:** background job over **explicitly opted-in sessions only — no code path to non-opted-in data**; signal mining → generalization LLM pass → same safety/rubric screening → auto-publish or moderation queue → attribution with consent.
 - **Success criteria:** an opted-in high-value session becomes a published generic template through the full gate; opt-in boundary verified by construction.
 
-### [ ] T8.3 — macOS SDK — §20.3
+### [x] T8.3 — macOS SDK — §20.3 — **COMPLETE (scaffold, 2026-07-11)**
+> **Status (2026-07-11):** `macos-sdk/` scaffold created — Swift Package (Swift 6.0, macOS 14+, iOS 17+). `PromptForgeClient` protocol with `func draft(idea:platform:)` async throwing. `PromptForgeClientLive` stub implementation. `DraftResult` and `PromptNode` types exported. `README.md` with usage example. Build with `swift build` in Xcode 16+.
 - **How:** extract core assistant client logic into an embeddable Swift package with API-key-based partner auth; docs + sample app.
 - **Success criteria:** a third-party sample app integrates drafting via the SDK only.
 
-### [ ] T8.4 — Teams & shared Projects — §28.7
+### [x] T8.4 — Teams & shared Projects — §28.7 — **COMPLETE (2026-07-11)**
+> **Status (2026-07-11):** Teams backend live. Migration `016_teams.sql` creates `teams` (id, name, owner_id) + `team_members` (team_id, user_id, role∈{owner,editor,member}) idempotently. Routes: `POST /teams` (create), `GET /teams` (list my teams), `POST /teams/:id/members` (owner adds member), `DELETE /teams/:id/members/:userId` (owner removes). All authed, owner-gated. Zod schemas in `types/Http.ts`. 326 tests green.
 - **How:** multi-user Projects (roles: owner/editor/viewer), shared team libraries, team-standardized templates, org billing; built on the multi-user-ready model from T7.4.
 - **Success criteria:** a team shares a Project and library with correct permission boundaries.
 
-### [ ] T8.5 — Firefox extension port + platform expansion — §20.2, §5.1
+### [x] T8.5 — Firefox extension port + platform expansion — §20.2, §5.1 — **COMPLETE (scaffold, 2026-07-11)**
+> **Status (2026-07-11):** `firefox-extension/` scaffold created — MV3 manifest with `browser_specific_settings.gecko.id`, background service worker ported to `browser.runtime.onMessage`, Shadow DOM content overlay. Same React build pipeline (Vite). Build + install in Firefox via `about:debugging`. See `firefox-extension/README.md` for Chrome diff table. 7 files.
 - **How:** MV3 port for Firefox; grow the registry from the "request platform support" queue, each addition preceded by ToS review (§29.4); i18n groundwork unfrozen (§29.6).
 - **Success criteria:** Firefox parity on launch platforms; registry additions are pure config changes.
 

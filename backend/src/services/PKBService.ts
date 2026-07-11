@@ -8,12 +8,12 @@ import type { KnowledgeChunk } from '../types/Agent';
  * PKB/MPKB retrieval — spec §6, §10.2.
  * pgvector cosine-similarity search over knowledge_chunks: platform-scoped
  * PKB rows plus model-behavior MPKB rows (which apply across platforms).
- * Live-fetch fallback and the scheduled crawler are Phase 5 (T5.1/T5.2) —
- * this interface anticipates them.
+ * Live-fetch fallback and the scheduled crawler are Phase 5 (T5.1/T5.2).
  */
 export interface RetrieveFilter {
   platform_id: string;
   modality?: string;
+  modelFamily?: string;
 }
 
 interface ChunkRow {
@@ -25,29 +25,33 @@ interface ChunkRow {
   source_url: string | null;
   trust_score: string | number | null;
   ingested_at: Date;
+  similarity: number | null;
 }
 
 export class PKBService {
-  constructor(private readonly embedder: EmbeddingProvider = new GeminiEmbeddingAdapter()) {}
+  constructor(readonly embedder: EmbeddingProvider = new GeminiEmbeddingAdapter()) {}
 
-  async retrieve(query: string, filter: RetrieveFilter, k = 5): Promise<KnowledgeChunk[]> {
-    const [queryVector] = await this.embedder.embed([query], 'query');
-    if (!queryVector) throw new Error('embedding provider returned no vector');
-
-    // Defense-in-depth (§27, T3.8): the vector is bound as a parameter ($2), so
-    // this isn't SQL injection, but a non-finite element (NaN/Infinity from a
-    // misbehaving embedder) would build a malformed literal — reject it early.
-    if (!queryVector.every((n) => Number.isFinite(n))) {
+  async embedQuery(text: string): Promise<number[]> {
+    const [vector] = await this.embedder.embed([text], 'query');
+    if (!vector) throw new Error('embedding provider returned no vector');
+    if (!vector.every((n) => Number.isFinite(n))) {
       throw new Error('embedding vector contains non-finite values');
     }
+    return vector;
+  }
+
+  async retrieve(query: string, filter: RetrieveFilter, k = 5): Promise<KnowledgeChunk[]> {
+    const queryVector = await this.embedQuery(query);
     const vectorLiteral = `[${queryVector.join(',')}]`;
     const { rows } = await getPool().query<ChunkRow>(
-      `select id, kind, platform_id, model_family, content, source_url, trust_score, ingested_at
+      `select id, kind, platform_id, model_family, content, source_url, trust_score, ingested_at,
+              1 - (embedding <=> $2::vector) as similarity
          from knowledge_chunks
-        where platform_id = $1 or kind = 'mpkb'
+        where platform_id = $1
+           or (kind = 'mpkb' and (model_family = $4 or model_family in ('llm_general','diffusion_image')))
         order by embedding <=> $2::vector
         limit $3`,
-      [filter.platform_id, vectorLiteral, k]
+      [filter.platform_id, vectorLiteral, k, filter.modelFamily ?? '__none__']
     );
 
     logger.info({ type: 'pkb:retrieve', platformId: filter.platform_id, k, returned: rows.length });
@@ -61,6 +65,7 @@ export class PKBService {
       sourceUrl: r.source_url ?? '',
       ingestedAt: r.ingested_at instanceof Date ? r.ingested_at.toISOString() : String(r.ingested_at),
       trustScore: r.trust_score === null ? 0.5 : Number(r.trust_score),
+      similarity: r.similarity === null ? undefined : Number(r.similarity),
     }));
   }
 }

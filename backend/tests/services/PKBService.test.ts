@@ -38,6 +38,7 @@ describe('PKBService (§6)', () => {
         source_url: null,
         trust_score: '0.8',
         ingested_at: new Date('2026-07-07T00:00:00Z'),
+        similarity: null,
       },
     ]);
     const service = new PKBService(new MockEmbeddingAdapter());

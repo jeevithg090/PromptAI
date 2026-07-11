@@ -23,12 +23,16 @@ export interface SavePromptInput {
   assembled: string;
   strengthScore?: number;
   rubricScores?: RubricScores;
+  /** E2EE ciphertext for prompt_versions (§19.2, T7.1). When present, nodes_json is skipped. */
+  contentCiphertext?: string;
 }
 
 export interface SaveVersionInput {
   nodes: PromptNode[];
   strengthScore?: number;
   rubricScores?: RubricScores;
+  /** E2EE ciphertext for prompt_versions (§19.2, T7.1). When present, nodes_json is skipped. */
+  contentCiphertext?: string;
 }
 
 export interface VersionMeta {
@@ -72,16 +76,24 @@ export async function savePrompt(userId: string, input: SavePromptInput): Promis
     ]
   );
 
-  await pool.query(
-    `insert into prompt_versions (prompt_id, version, nodes_json, strength_score, rubric_scores)
-     values ($1, 1, $2, $3, $4)`,
-    [
-      promptId,
-      JSON.stringify(input.nodes),
-      input.strengthScore ?? null,
-      rubricJson,
-    ]
-  );
+  if (input.contentCiphertext) {
+    await pool.query(
+      `insert into prompt_versions (prompt_id, version, content_ciphertext, strength_score, rubric_scores)
+       values ($1, 1, $2, $3, $4)`,
+      [promptId, input.contentCiphertext, input.strengthScore ?? null, rubricJson]
+    );
+  } else {
+    await pool.query(
+      `insert into prompt_versions (prompt_id, version, nodes_json, strength_score, rubric_scores)
+       values ($1, 1, $2, $3, $4)`,
+      [
+        promptId,
+        JSON.stringify(input.nodes),
+        input.strengthScore ?? null,
+        rubricJson,
+      ]
+    );
+  }
 
   logger.info({ type: 'prompt:saved', userId, promptId, version: 1 });
   return promptId;
@@ -111,11 +123,19 @@ export async function saveVersion(userId: string, promptId: string, input: SaveV
   const nextVersion = Number(maxVer.rows[0]?.max_v ?? 0) + 1;
   const rubricJson = input.rubricScores ? JSON.stringify(input.rubricScores) : null;
 
-  await pool.query(
-    `insert into prompt_versions (prompt_id, version, nodes_json, strength_score, rubric_scores)
-     values ($1, $2, $3, $4, $5)`,
-    [promptId, nextVersion, JSON.stringify(input.nodes), input.strengthScore ?? null, rubricJson]
-  );
+  if (input.contentCiphertext) {
+    await pool.query(
+      `insert into prompt_versions (prompt_id, version, content_ciphertext, strength_score, rubric_scores)
+       values ($1, $2, $3, $4, $5)`,
+      [promptId, nextVersion, input.contentCiphertext, input.strengthScore ?? null, rubricJson]
+    );
+  } else {
+    await pool.query(
+      `insert into prompt_versions (prompt_id, version, nodes_json, strength_score, rubric_scores)
+       values ($1, $2, $3, $4, $5)`,
+      [promptId, nextVersion, JSON.stringify(input.nodes), input.strengthScore ?? null, rubricJson]
+    );
+  }
 
   // Update the head row's version pointer.
   await pool.query(

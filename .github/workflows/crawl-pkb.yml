@@ -1,0 +1,38 @@
+# Weekly PKB crawl — spec §6.1 (T5.1).
+# Crawls each registered platform's docs, chunks + embeds new content, upserts
+# into knowledge_chunks. Idempotent by content_hash.
+# Also serves as the Supabase keep-alive (§23.3 — supersedes any ping-only job).
+
+name: crawl-pkb
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'   # Monday 06:00 UTC
+  workflow_dispatch:       # allow manual trigger for debugging
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Build
+        working-directory: backend
+        run: npm run build
+
+      - name: Run PKB crawl
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: node dist/scripts/crawl-pkb.js

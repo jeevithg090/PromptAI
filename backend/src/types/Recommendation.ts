@@ -13,6 +13,7 @@ export const modelCapabilitySchema = z.object({
   model_id: z.string(),
   display_name: z.string(),
   provider: z.string(),
+  platform_id: z.string().optional(),
   modalities: z.array(z.enum(MODALITIES)),
   context_window: z.number().int().nonnegative(),
   /** Relative bucket 1 (cheapest) … 5 (priciest). Not a live price (§15.1). */

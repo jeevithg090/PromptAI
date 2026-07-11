@@ -1,11 +1,12 @@
 {
   "schema_version": "1.1.0",
   "last_verified": "2026-07-07",
-  "note": "Launch registry (§5.1). This file is the seed for the `platforms` table; served to clients at runtime from the server/edge cache — never hardcoded into client bundles. Selector fields are placeholders until extension work (Phase 5) verifies them against live DOMs. All capability data is perishable: re-verify via the PKB ingestion pipeline (§6.3).",
+  "note": "Launch registry (\u00a75.1). This file is the seed for the `platforms` table; served to clients at runtime from the server/edge cache \u2014 never hardcoded into client bundles. Selector fields are placeholders until extension work (Phase 5) verifies them against live DOMs. All capability data is perishable: re-verify via the PKB ingestion pipeline (\u00a76.3).",
   "platforms": [
     {
       "platform_id": "google_gemini",
       "display_name": "Google Gemini",
+      "model_family": "gemini",
       "modalities": [
         "text",
         "image",
@@ -24,9 +25,9 @@
       ],
       "docs_url": "https://ai.google.dev/gemini-api/docs",
       "quirks": [
-        "Negative prompts are unreliable for image generation — phrase exclusions positively (describe what SHOULD be present)",
+        "Negative prompts are unreliable for image generation \u2014 phrase exclusions positively (describe what SHOULD be present)",
         "Responds well to conversational, full-sentence phrasing rather than keyword lists",
-        "Aspect-ratio requests mentioned only in passing are often ignored — state them as an explicit constraint"
+        "Aspect-ratio requests mentioned only in passing are often ignored \u2014 state them as an explicit constraint"
       ],
       "syntax_rules": [
         "Plain natural language; no special parameter flags in the consumer web app",
@@ -38,6 +39,7 @@
     {
       "platform_id": "openai_chatgpt",
       "display_name": "ChatGPT (OpenAI)",
+      "model_family": "gpt",
       "modalities": [
         "text",
         "image",
@@ -57,7 +59,7 @@
       "docs_url": "https://platform.openai.com/docs/guides/prompt-engineering",
       "quirks": [
         "Strong system/persona adherence when the role is stated up front in the first message",
-        "Verbose by default — explicit length constraints materially change output",
+        "Verbose by default \u2014 explicit length constraints materially change output",
         "Image generation via integrated tooling responds to full descriptive sentences, not tag lists"
       ],
       "syntax_rules": [
@@ -96,7 +98,8 @@
         "Request output format explicitly, ideally with a short example"
       ],
       "max_prompt_tokens": 8000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "claude"
     },
     {
       "platform_id": "midjourney",
@@ -129,7 +132,8 @@
         "Avoid filler words ('a picture of', 'please')"
       ],
       "max_prompt_tokens": 350,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "diffusion_image"
     },
     {
       "platform_id": "stability_stable_diffusion",
@@ -149,17 +153,18 @@
       ],
       "docs_url": "https://platform.stability.ai/docs/getting-started",
       "quirks": [
-        "Dedicated negative-prompt field — exclusions belong there, not in the main prompt",
+        "Dedicated negative-prompt field \u2014 exclusions belong there, not in the main prompt",
         "Supports attention weighting syntax in most UIs: (word:1.3)",
         "Tag-style comma-separated descriptors outperform prose; quality tags (e.g. 'highly detailed', 'sharp focus') have documented effect"
       ],
       "syntax_rules": [
-        "Main prompt: comma-separated descriptors ordered subject → style → quality tags",
+        "Main prompt: comma-separated descriptors ordered subject \u2192 style \u2192 quality tags",
         "Negative prompt: comma-separated exclusion list (e.g. 'blurry, extra limbs, watermark, text')",
         "Keep individual descriptor phrases short; prefer many precise tags over one long sentence"
       ],
       "max_prompt_tokens": 300,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "diffusion_image"
     },
     {
       "platform_id": "anthropic_claude_code",
@@ -175,7 +180,7 @@
       "input_selector_candidates": [],
       "docs_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
       "quirks": [
-        "Agentic CLI coding tool — reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
+        "Agentic CLI coding tool \u2014 reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
         "Slash commands (e.g. /init, /clear, /compact, custom skills) change behavior; plan mode separates planning from editing",
         "Responds best to a clear objective plus constraints; it will explore the codebase itself rather than needing files pasted in",
         "CLAUDE.md files in the repo are auto-loaded as persistent instructions"
@@ -186,7 +191,8 @@
         "Reference existing conventions instead of re-specifying them; the tool reads the repo"
       ],
       "max_prompt_tokens": 200000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "claude"
     },
     {
       "platform_id": "cursor",
@@ -214,7 +220,8 @@
         "Encode house style in a rules file rather than repeating it each prompt"
       ],
       "max_prompt_tokens": 20000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "gpt"
     },
     {
       "platform_id": "github_copilot",
@@ -232,7 +239,7 @@
       "quirks": [
         "Completion + chat; chat supports slash commands (/explain, /fix, /tests, /doc) and #-file / @-participant references",
         "Leading comments and clear function/variable names strongly steer completions",
-        "Open relevant files in the editor — Copilot uses neighboring tabs as context",
+        "Open relevant files in the editor \u2014 Copilot uses neighboring tabs as context",
         "For chat, name the file/symbol explicitly rather than relying on cursor position"
       ],
       "syntax_rules": [
@@ -241,7 +248,8 @@
         "Reference files with # in chat to ground answers"
       ],
       "max_prompt_tokens": 8000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "gpt"
     },
     {
       "platform_id": "perplexity",
@@ -260,7 +268,7 @@
       ],
       "docs_url": "https://www.perplexity.ai/",
       "quirks": [
-        "Answer engine that searches the live web and cites sources — treat it like a research query, not a creative prompt",
+        "Answer engine that searches the live web and cites sources \u2014 treat it like a research query, not a creative prompt",
         "Focus modes (Web, Academic, etc.) and source constraints change results; specifying recency/domain helps",
         "Concise, keyword-rich questions retrieve better than long narrative prompts",
         "Ask for citations/comparisons explicitly to get structured, sourced answers"
@@ -271,7 +279,8 @@
         "Ask for a sourced comparison/table when you want structure"
       ],
       "max_prompt_tokens": 4000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "model_family": "gpt"
     }
   ]
 }

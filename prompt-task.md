@@ -629,7 +629,7 @@ cd ../web && npx tsc --noEmit && npm run build
 
 ---
 
-## P-T5.1 — PKB ingestion crawler, scheduled (§6.1, §6.3)
+## [x] P-T5.1 — PKB ingestion crawler, scheduled (§6.1, §6.3)
 
 ### Objective
 A scheduled job that re-crawls each registered platform's docs, chunks + embeds changed content, and upserts it — keeping the knowledge base fresh automatically (and doubling as the Supabase keep-alive, §23.3).
@@ -664,7 +664,7 @@ npm run crawl:pkb   # manual once; paste per-platform summary lines
 
 ---
 
-## P-T5.2 — Live-fetch fallback: self-healing retrieval (§6.2, §8 L3)
+## [x] P-T5.2 — Live-fetch fallback: self-healing retrieval (§6.2, §8 L3)
 
 ### Objective
 When retrieval finds nothing good for a platform, fetch that platform's docs live, answer from them, and asynchronously upsert what was learned — so the KB heals itself.
@@ -693,7 +693,7 @@ cd backend && npm run typecheck && npm test
 
 ---
 
-## P-T5.3 — MPKB population + strategy-profile tuning (§10.2)
+## [x] P-T5.3 — MPKB population + strategy-profile tuning (§10.2)
 
 ### Objective
 Deepen the Model & Prompting Knowledge Base (model-family behavior, distinct from platform docs), wire MPKB retrieval explicitly into drafting/critique, and let strategy profiles cite MPKB entries.
@@ -719,7 +719,7 @@ cd backend && npm run typecheck && npm test && npm run seed:pkb
 
 ---
 
-## P-T5.4 — Extension scaffold: MV3 + React + Vite (§20.2)
+## [x] P-T5.4 — Extension scaffold: MV3 + React + Vite (§20.2)
 
 ### Objective
 A loadable Chrome extension skeleton: background service worker (owns network + auth), content script with a Shadow-DOM overlay, hotkey + toolbar activation. No product features yet — the shell.
@@ -745,7 +745,7 @@ grep -rn "fetch(" src/content && echo "FAIL: content fetches" || echo "OK: no co
 
 ---
 
-## P-T5.5 — Platform detection engine (§5.2, §5.1)
+## [x] P-T5.5 — Platform detection engine (§5.2, §5.1)
 
 ### Objective
 Detect which registered platform the current tab is, from the server-served registry (never hardcoded), robust to SPA navigation; degrade to generic mode with a "request platform support" action.
@@ -773,7 +773,7 @@ cd ../backend && npm run typecheck && npm test
 
 ---
 
-## P-T5.6 — In-context drafting overlay + insert (§4, §20.2)
+## [x] P-T5.6 — In-context drafting overlay + insert (§4, §20.2)
 
 ### Objective
 The §4 walkthrough, verbatim, inside the overlay: invoke on a platform page → detect → clarify → draft → score → **insert into the page's input field — never auto-submit**.
@@ -799,7 +799,7 @@ cd extension && npx tsc --noEmit && npm run build && npx vitest run
 
 ---
 
-## P-T5.7 — Model & Platform Recommendation surfacing (§15)
+## [x] P-T5.7 — Model & Platform Recommendation surfacing (§15)
 
 ### Objective
 Put the existing `/recommend` backend in front of users: before drafting (web + extension), show ranked model/platform candidates with visible quality/cost/speed trade-offs; keep the matrix data fresh-able.
@@ -942,7 +942,7 @@ cd ../web && npx tsc --noEmit && npm run build
 
 ---
 
-## P-T7.1 — End-to-end encryption rollout (§19.2–19.4, §19.6)
+## [x] P-T7.1 — End-to-end encryption rollout (§19.2–19.4, §19.6)
 
 ### Objective
 Client-side encryption of all prompt/session/memory content with user-derived keys: the server stores only ciphertext + wrapped keys; plaintext exists server-side ONLY in-memory during pipeline processing; a recovery code is the sole account-recovery path.
@@ -981,7 +981,7 @@ cd ../web && npx tsc --noEmit && npm run build && npx vitest run
 
 ---
 
-## P-T7.2 — BYOK provider connections (§9.4–9.6)
+## [x] P-T7.2 — BYOK provider connections (§9.4–9.6)
 
 ### Objective
 Users connect their own provider API keys; keys are envelope-encrypted into AWS SSM SecureString, decrypted only ephemerally at call time, revocable, and **never retrievable or displayable by anyone** — including admins. Add OpenAI + Google chat adapters behind the existing seam.
@@ -1011,7 +1011,7 @@ grep -rn "api_key\|apiKey" src/ | grep -i "logger\|console" && echo FAIL || echo
 
 ---
 
-## P-T7.3 — Cross-session Memory with full user control (§17.1–17.5)
+## [x] P-T7.3 — Cross-session Memory with full user control (§17.1–17.5)
 
 ### Objective
 Persistent, user-controlled memory: agent-proposed entries require confirmation; view/edit/delete/add/reset controls; selective relevance-based injection into drafting; encrypted at rest via T7.1's DEK.
@@ -1037,7 +1037,7 @@ cd ../web && npx tsc --noEmit && npm run build && npx vitest run
 
 ---
 
-## P-T7.4 — Projects (§17.6, §28.7)
+## [x] P-T7.4 — Projects (§17.6, §28.7)
 
 ### Objective
 Real project workspaces: CRUD, per-project default platform + pinned node set + scoped memory, `project > global` precedence, all threaded through the pipeline.
@@ -1064,7 +1064,7 @@ cd ../web && npx tsc --noEmit && npm run build
 
 ---
 
-## P-T7.5 — Admin Control Plane (§21)
+## [x] P-T7.5 — Admin Control Plane (§21)
 
 ### Objective
 A **physically separate** admin deployable — own app, own auth, own DB project — with RBAC per `docs/admin-roles.md`, step-up re-auth for destructive actions, and by construction **zero capability** to read user content or keys.
@@ -1105,7 +1105,7 @@ grep -rn "decrypt\|KeyCustody" admin/ && echo FAIL || echo "OK: no decryption in
 
 ---
 
-## P-T7.6 — Community library submissions + moderation (§14.2)
+## [x] P-T7.6 — Community library submissions + moderation (§14.2)
 
 ### Objective
 Users submit templates; automated rubric + safety screening auto-publishes high-confidence entries and queues borderline ones for the T7.5 moderation queue; popular templates keep version history.
@@ -1134,7 +1134,7 @@ cd backend && npm run typecheck && npm test
 
 ---
 
-## P-T7.7 — Monetization & plans (§28.2, §16)
+## [x] P-T7.7 — Monetization & plans (§28.2, §16)
 
 ### Objective
 Freemium enforcement wired into the existing budget layer, with Stripe as the tokenizing payment processor — card data never touches our servers (§19.1).
@@ -1161,7 +1161,7 @@ cd backend && npm run typecheck && npm test && npm run migrate
 
 ---
 
-## P-T7.8 — Compliance operations package (§27)
+## [x] P-T7.8 — Compliance operations package (§27)
 
 ### Objective
 The "early traction" compliance artifact set (§27.6), real and tested: written policies, retention with automated deletion, incident response, access reviews, subprocessor register, backup/restore evidence, self-service export+deletion.
@@ -1184,7 +1184,7 @@ ls docs/compliance/
 
 ---
 
-## P-T7.9 — Continuous improvement loop live (§10.7, §28.5)
+## [x] P-T7.9 — Continuous improvement loop live (§10.7, §28.5)
 
 ### Objective
 Aggregate outcome signals into periodic analyses that tune strategy profiles and flag stale MPKB entries — with review landing in the admin queue, and user-visible progress framing.
@@ -1214,7 +1214,7 @@ cd backend && npm run typecheck && npm test && npm run migrate
 
 ---
 
-## P-T8.1 — macOS app (§20.3, §5.3)
+## [x] P-T8.1 — macOS app (§20.3, §5.3)
 
 ### Objective
 A Swift/SwiftUI menu-bar app: global hotkey opens a drafting overlay anywhere; frontmost-app/URL detection via Accessibility — with full graceful degradation when permission is denied.
@@ -1242,7 +1242,7 @@ cd macos && xcodebuild -scheme PromptForge -destination 'platform=macOS' build t
 
 ---
 
-## P-T8.2 — Autonomous Curation Agent (§14.4)
+## [x] P-T8.2 — Autonomous Curation Agent (§14.4)
 
 ### Objective
 The library grows itself: a background job mines **explicitly opted-in** sessions for high-value patterns, generalizes them with an LLM, screens them with the same rubric+safety gates as human submissions, and publishes or queues.
@@ -1269,7 +1269,7 @@ node dist/scripts/curate-library.js --dry-run
 
 ---
 
-## P-T8.3 — macOS SDK (§20.3)
+## [x] P-T8.3 — macOS SDK (§20.3)
 
 ### Objective
 Extract the assistant client into an embeddable Swift package with partner API-key auth, docs, and a sample app.
@@ -1292,7 +1292,7 @@ cd ../macos && swift test --package-path PromptForgeKit
 
 ---
 
-## P-T8.4 — Teams & shared Projects (§28.7)
+## [x] P-T8.4 — Teams & shared Projects (§28.7)
 
 ### Objective
 Multi-user Projects (owner/editor/viewer), shared team libraries, org billing — on the multi-user-ready model from T7.4.
@@ -1316,7 +1316,7 @@ cd backend && npm run typecheck && npm test && npm run migrate
 
 ---
 
-## P-T8.5 — Firefox port + platform expansion pipeline (§20.2, §5.1, §29.4)
+## [x] P-T8.5 — Firefox port + platform expansion pipeline (§20.2, §5.1, §29.4)
 
 ### Objective
 Firefox parity for the extension, and a repeatable pipeline that turns `platform_requests` into registry additions (each ToS-reviewed first).

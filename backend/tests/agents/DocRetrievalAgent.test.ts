@@ -3,7 +3,7 @@ import { PKBService } from '../../src/services/PKBService';
 import type { AgentInput, KnowledgeChunk, PipelineContext } from '../../src/types/Agent';
 import type { Platform } from '../../src/types/Platform';
 
-/** T2.6 agent tests — retrieval success and graceful degradation (§29.7). */
+/** T2.6 / T5.2 agent tests — retrieval success, live-fetch fallback, graceful degradation (§29.7). */
 const platform: Platform = {
   platform_id: 'google_gemini',
   display_name: 'Google Gemini',
@@ -26,6 +26,13 @@ const chunk: KnowledgeChunk = {
   sourceUrl: 'https://ai.google.dev/gemini-api/docs/image-generation',
   ingestedAt: '2026-07-07T00:00:00.000Z',
   trustScore: 1,
+  similarity: 0.8,
+};
+
+const lowSimChunk: KnowledgeChunk = {
+  ...chunk,
+  id: 'c2',
+  similarity: 0.2,
 };
 
 function input(overrides: Partial<PipelineContext> = {}): AgentInput {
@@ -43,7 +50,11 @@ function input(overrides: Partial<PipelineContext> = {}): AgentInput {
   };
 }
 
-describe('DocRetrievalAgent (§6, §10.2)', () => {
+describe('DocRetrievalAgent (§6, §10.2, §6.2)', () => {
+  beforeEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('returns retrieved chunks and builds the query from intent + entities + platform', async () => {
     const retrieve = jest.fn().mockResolvedValue([chunk]);
     const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
@@ -67,6 +78,70 @@ describe('DocRetrievalAgent (§6, §10.2)', () => {
     const result = await agent.execute(input());
 
     expect(result.status).toBe('partial');
+    expect(result.data?.chunks).toEqual([]);
+  });
+
+  const liveFetchHtml =
+    '<p>' + Array.from({ length: 20 }, (_, i) => `Paragraph ${i + 1}. ` + 'word '.repeat(20)).join('</p><p>') + '</p>';
+
+  it('triggers live-fetch when best similarity is below threshold', async () => {
+    const retrieve = jest.fn().mockResolvedValue([lowSimChunk]);
+    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
+    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
+
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      text: async () => liveFetchHtml,
+    } as Response);
+
+    const result = await agent.execute(input());
+
+    expect(result.status).toBe('success');
+    expect(result.data).toBeDefined();
+    const liveChunks = result.data!.chunks as KnowledgeChunk[];
+    expect(liveChunks.length).toBeGreaterThan(0);
+    expect(liveChunks[0]!.id).toMatch(/^live-/);
+    expect(liveChunks[0]!.sourceUrl).toBe('https://ai.google.dev/gemini-api/docs');
+  });
+
+  it('triggers live-fetch when no chunks returned', async () => {
+    const retrieve = jest.fn().mockResolvedValue([]);
+    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
+    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
+
+    jest.spyOn(global, 'fetch').mockResolvedValue({
+      ok: true,
+      text: async () => liveFetchHtml,
+    } as Response);
+
+    const result = await agent.execute(input());
+
+    expect(result.status).toBe('success');
+    const liveChunks = result.data!.chunks as KnowledgeChunk[];
+    expect(liveChunks.length).toBeGreaterThan(0);
+    expect(liveChunks[0]!.id).toMatch(/^live-/);
+  });
+
+  it('skips live-fetch and returns existing when similarity is above threshold', async () => {
+    const retrieve = jest.fn().mockResolvedValue([chunk]); // similarity 0.8
+    const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
+
+    const result = await agent.execute(input());
+
+    expect(result.status).toBe('success');
+    expect(result.data?.chunks).toEqual([chunk]);
+  });
+
+  it('degrades to partial on live-fetch fetch failure', async () => {
+    const retrieve = jest.fn().mockResolvedValue([]);
+    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
+    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
+
+    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('network error'));
+
+    const result = await agent.execute(input());
+
+    expect(result.status).toBe('success');
     expect(result.data?.chunks).toEqual([]);
   });
 });

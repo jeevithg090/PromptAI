@@ -48,6 +48,16 @@ export interface EmbeddingProvider {
   embed(texts: string[], kind: 'document' | 'query'): Promise<number[][]>;
 }
 
+/**
+ * Image generation provider seam — separate from chat completions (§12.2, T6.2).
+ * The visual preview route calls this directly; it is NOT a ProviderAdapter
+ * (which is for text-based chat completions through the ModelRouter).
+ */
+export interface ImageProvider {
+  name: string;
+  generateImage(prompt: string): Promise<{ imageBase64: string; mime: string }>;
+}
+
 /** Complexity tier for a pipeline step — small/fast vs. stronger models, spec §7.3. */
 export type ModelComplexity = 'small' | 'large';
 
