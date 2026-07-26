@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "outDir": "dist",
     "sourceMap": true,
-    "types": []
+    "types": ["firefox-webext-browser"]
   },
   "include": ["src"]
 }

@@ -5,6 +5,7 @@ import { CerebrasAdapter } from './CerebrasAdapter';
 import { MockAdapter } from './MockAdapter';
 import { OpenAIAdapter } from './OpenAIAdapter';
 import { GoogleChatAdapter } from './GoogleChatAdapter';
+import { GeminiNativeAdapter } from './GeminiNativeAdapter';
 import { isEnabled } from '../../services/FeatureFlags';
 
 /**
@@ -19,6 +20,7 @@ const adapters: Record<string, ProviderAdapter> = {
   mock: new MockAdapter(),
   openai: new OpenAIAdapter(),
   google: new GoogleChatAdapter(),
+  gemini: new GeminiNativeAdapter(),
 };
 
 export async function getProvider(name: string): Promise<ProviderAdapter> {

@@ -1,7 +1,7 @@
 {
   "schema_version": "1.1.0",
   "last_verified": "2026-07-07",
-  "note": "Launch registry (\u00a75.1). This file is the seed for the `platforms` table; served to clients at runtime from the server/edge cache \u2014 never hardcoded into client bundles. Selector fields are placeholders until extension work (Phase 5) verifies them against live DOMs. All capability data is perishable: re-verify via the PKB ingestion pipeline (\u00a76.3).",
+  "note": "Launch registry (§5.1). This file is the seed for the `platforms` table; served to clients at runtime from the server/edge cache — never hardcoded into client bundles. Selector fields are placeholders until extension work (Phase 5) verifies them against live DOMs. All capability data is perishable: re-verify via the PKB ingestion pipeline (§6.3). | v1.1.0 (2026-07-12): added doc-curated `modes` per platform (V1.2) — perishable, refresh from official docs.",
   "platforms": [
     {
       "platform_id": "google_gemini",
@@ -25,16 +25,117 @@
       ],
       "docs_url": "https://ai.google.dev/gemini-api/docs",
       "quirks": [
-        "Negative prompts are unreliable for image generation \u2014 phrase exclusions positively (describe what SHOULD be present)",
+        "Negative prompts are unreliable for image generation — phrase exclusions positively (describe what SHOULD be present)",
         "Responds well to conversational, full-sentence phrasing rather than keyword lists",
-        "Aspect-ratio requests mentioned only in passing are often ignored \u2014 state them as an explicit constraint"
+        "Aspect-ratio requests mentioned only in passing are often ignored — state them as an explicit constraint"
       ],
       "syntax_rules": [
         "Plain natural language; no special parameter flags in the consumer web app",
         "For image tasks, lead with subject and action, then style and mood in the same sentence or a short follow-on sentence"
       ],
       "max_prompt_tokens": 4000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "modes": [
+        {
+          "mode_id": "flash",
+          "name": "Gemini 2.5 Flash",
+          "aliases": [
+            "flash"
+          ],
+          "best_for": [
+            "fast answers",
+            "summarization",
+            "chat",
+            "extraction",
+            "classification",
+            "high volume",
+            "short form"
+          ],
+          "avoid_for": [
+            "deep multi-step reasoning",
+            "very long documents"
+          ],
+          "notes": "The default fast model — lowest latency and cost. Great for everyday chat, summaries, and extraction; hand harder reasoning to Pro or Thinking.",
+          "docs_url": "https://ai.google.dev/gemini-api/docs/models"
+        },
+        {
+          "mode_id": "pro",
+          "name": "Gemini 2.5 Pro",
+          "aliases": [
+            "pro"
+          ],
+          "best_for": [
+            "complex reasoning",
+            "long documents",
+            "code",
+            "analysis",
+            "long form writing",
+            "research"
+          ],
+          "avoid_for": [
+            "trivial lookups where Flash is cheaper"
+          ],
+          "notes": "The high-capability model with a very large context window — pick it for long inputs, serious code work, and analysis.",
+          "docs_url": "https://ai.google.dev/gemini-api/docs/models"
+        },
+        {
+          "mode_id": "thinking",
+          "name": "Thinking (extended reasoning)",
+          "aliases": [
+            "deep think"
+          ],
+          "best_for": [
+            "math",
+            "planning",
+            "multi-step logic",
+            "hard debugging",
+            "reasoning"
+          ],
+          "avoid_for": [
+            "simple creative tasks",
+            "image generation",
+            "latency-sensitive chat"
+          ],
+          "notes": "Spends visible reasoning tokens before answering — slower and pricier, but materially better on multi-step problems.",
+          "docs_url": "https://ai.google.dev/gemini-api/docs/thinking"
+        },
+        {
+          "mode_id": "imagen",
+          "name": "Image generation (Imagen)",
+          "aliases": [
+            "imagen",
+            "image"
+          ],
+          "best_for": [
+            "image",
+            "illustration",
+            "photo",
+            "art",
+            "picture"
+          ],
+          "avoid_for": [
+            "text tasks"
+          ],
+          "notes": "Gemini's image mode. Describe the SHOULD-be-present content positively; negative prompts are unreliable here.",
+          "docs_url": "https://ai.google.dev/gemini-api/docs/image-generation"
+        },
+        {
+          "mode_id": "deep_research",
+          "name": "Deep Research",
+          "aliases": [],
+          "best_for": [
+            "multi-source research",
+            "reports",
+            "literature scan",
+            "market research"
+          ],
+          "avoid_for": [
+            "quick single-fact questions"
+          ],
+          "notes": "Agentic multi-source research producing a cited report — use for breadth, not speed.",
+          "docs_url": "https://gemini.google/overview/deep-research/"
+        }
+      ]
     },
     {
       "platform_id": "openai_chatgpt",
@@ -59,7 +160,7 @@
       "docs_url": "https://platform.openai.com/docs/guides/prompt-engineering",
       "quirks": [
         "Strong system/persona adherence when the role is stated up front in the first message",
-        "Verbose by default \u2014 explicit length constraints materially change output",
+        "Verbose by default — explicit length constraints materially change output",
         "Image generation via integrated tooling responds to full descriptive sentences, not tag lists"
       ],
       "syntax_rules": [
@@ -67,7 +168,87 @@
         "State role/persona first, task second, constraints third, output format last"
       ],
       "max_prompt_tokens": 8000,
-      "tos_reviewed": false
+      "tos_reviewed": false,
+      "modes": [
+        {
+          "mode_id": "gpt4o",
+          "name": "GPT-4o",
+          "aliases": [
+            "4o"
+          ],
+          "best_for": [
+            "chat",
+            "general",
+            "multimodal",
+            "writing",
+            "summarization",
+            "brainstorming"
+          ],
+          "avoid_for": [
+            "hardest math/logic where a reasoning model wins"
+          ],
+          "notes": "The general-purpose multimodal default — balanced quality, speed, and cost.",
+          "docs_url": "https://platform.openai.com/docs/models"
+        },
+        {
+          "mode_id": "o3",
+          "name": "o3 (reasoning)",
+          "aliases": [
+            "o3"
+          ],
+          "best_for": [
+            "math",
+            "hard reasoning",
+            "complex code",
+            "planning",
+            "science"
+          ],
+          "avoid_for": [
+            "simple chat",
+            "latency-sensitive tasks"
+          ],
+          "notes": "Deliberate reasoning model — slower, but strongest on multi-step problems and hard code.",
+          "docs_url": "https://platform.openai.com/docs/models"
+        },
+        {
+          "mode_id": "o4_mini",
+          "name": "o4-mini",
+          "aliases": [
+            "mini"
+          ],
+          "best_for": [
+            "fast reasoning",
+            "code",
+            "high volume",
+            "cost sensitive"
+          ],
+          "avoid_for": [
+            "frontier-difficulty problems"
+          ],
+          "notes": "Small fast reasoning model — most of o3's skill at a fraction of the latency/cost.",
+          "docs_url": "https://platform.openai.com/docs/models"
+        },
+        {
+          "mode_id": "dalle",
+          "name": "Image generation",
+          "aliases": [
+            "dall-e",
+            "gpt-image"
+          ],
+          "best_for": [
+            "image",
+            "illustration",
+            "photo",
+            "art",
+            "logo"
+          ],
+          "avoid_for": [
+            "text tasks"
+          ],
+          "notes": "ChatGPT's image mode. Handles long natural-language scene descriptions and in-image text well.",
+          "docs_url": "https://platform.openai.com/docs/guides/image-generation"
+        }
+      ]
     },
     {
       "platform_id": "anthropic_claude",
@@ -99,7 +280,87 @@
       ],
       "max_prompt_tokens": 8000,
       "tos_reviewed": false,
-      "model_family": "claude"
+      "model_family": "claude",
+      "modes": [
+        {
+          "mode_id": "sonnet",
+          "name": "Claude Sonnet",
+          "aliases": [
+            "sonnet"
+          ],
+          "best_for": [
+            "chat",
+            "writing",
+            "code",
+            "general",
+            "summarization"
+          ],
+          "avoid_for": [],
+          "notes": "The everyday balanced model — strong writing and code at moderate cost.",
+          "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models"
+        },
+        {
+          "mode_id": "haiku",
+          "name": "Claude Haiku",
+          "aliases": [
+            "haiku",
+            "haiku-4.5"
+          ],
+          "best_for": [
+            "fast chat",
+            "classification",
+            "extraction",
+            "high volume",
+            "low latency",
+            "code",
+            "cost sensitive"
+          ],
+          "avoid_for": [
+            "complex reasoning",
+            "long-form writing"
+          ],
+          "notes": "The fastest and most cost-efficient Claude model — ideal for high-volume production workloads, classification, and extraction tasks.",
+          "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models"
+        },
+        {
+          "mode_id": "opus",
+          "name": "Claude Opus",
+          "aliases": [
+            "opus"
+          ],
+          "best_for": [
+            "hardest reasoning",
+            "long form writing",
+            "complex code",
+            "analysis",
+            "nuanced tone"
+          ],
+          "avoid_for": [
+            "high-volume cheap tasks"
+          ],
+          "notes": "The frontier model — pick it when quality matters more than cost.",
+          "docs_url": "https://docs.anthropic.com/en/docs/about-claude/models"
+        },
+        {
+          "mode_id": "extended_thinking",
+          "name": "Extended thinking",
+          "aliases": [
+            "thinking"
+          ],
+          "best_for": [
+            "math",
+            "multi-step reasoning",
+            "planning",
+            "hard debugging"
+          ],
+          "avoid_for": [
+            "simple creative tasks",
+            "latency-sensitive chat"
+          ],
+          "notes": "Lets Claude reason step-by-step before answering — enable for problems with a right answer.",
+          "docs_url": "https://docs.anthropic.com/en/docs/build-with-claude/extended-thinking"
+        }
+      ]
     },
     {
       "platform_id": "midjourney",
@@ -133,7 +394,66 @@
       ],
       "max_prompt_tokens": 350,
       "tos_reviewed": false,
-      "model_family": "diffusion_image"
+      "model_family": "diffusion_image",
+      "modes": [
+        {
+          "mode_id": "v7",
+          "name": "Version 7 (default)",
+          "aliases": [
+            "--v 7"
+          ],
+          "best_for": [
+            "photo",
+            "photorealistic",
+            "general",
+            "image",
+            "concept art",
+            "cinematic"
+          ],
+          "avoid_for": [],
+          "notes": "The default engine — best coherence and photorealism.",
+          "docs_url": "https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version"
+        },
+        {
+          "mode_id": "niji",
+          "name": "Niji (anime)",
+          "aliases": [
+            "--niji"
+          ],
+          "best_for": [
+            "anime",
+            "manga",
+            "illustration",
+            "character art",
+            "stylized"
+          ],
+          "avoid_for": [
+            "photorealistic",
+            "photorealism",
+            "photo"
+          ],
+          "notes": "Anime/illustration-tuned engine — dramatically better for manga and character art styles.",
+          "docs_url": "https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version"
+        },
+        {
+          "mode_id": "raw",
+          "name": "Raw style",
+          "aliases": [
+            "--style raw"
+          ],
+          "best_for": [
+            "literal adherence",
+            "product shots",
+            "precise control",
+            "photography"
+          ],
+          "avoid_for": [
+            "when you want Midjourney's opinionated aesthetic"
+          ],
+          "notes": "Reduces the house beautification so your prompt is followed more literally.",
+          "docs_url": "https://docs.midjourney.com/hc/en-us/articles/32180011136653-Style"
+        }
+      ]
     },
     {
       "platform_id": "stability_stable_diffusion",
@@ -153,18 +473,56 @@
       ],
       "docs_url": "https://platform.stability.ai/docs/getting-started",
       "quirks": [
-        "Dedicated negative-prompt field \u2014 exclusions belong there, not in the main prompt",
+        "Dedicated negative-prompt field — exclusions belong there, not in the main prompt",
         "Supports attention weighting syntax in most UIs: (word:1.3)",
         "Tag-style comma-separated descriptors outperform prose; quality tags (e.g. 'highly detailed', 'sharp focus') have documented effect"
       ],
       "syntax_rules": [
-        "Main prompt: comma-separated descriptors ordered subject \u2192 style \u2192 quality tags",
+        "Main prompt: comma-separated descriptors ordered subject → style → quality tags",
         "Negative prompt: comma-separated exclusion list (e.g. 'blurry, extra limbs, watermark, text')",
         "Keep individual descriptor phrases short; prefer many precise tags over one long sentence"
       ],
       "max_prompt_tokens": 300,
       "tos_reviewed": false,
-      "model_family": "diffusion_image"
+      "model_family": "diffusion_image",
+      "modes": [
+        {
+          "mode_id": "sd35_large",
+          "name": "SD 3.5 Large",
+          "aliases": [
+            "large"
+          ],
+          "best_for": [
+            "quality",
+            "image",
+            "detailed scenes",
+            "typography"
+          ],
+          "avoid_for": [
+            "rapid iteration"
+          ],
+          "notes": "Highest-quality tier — best prompt adherence and detail; slower per image.",
+          "docs_url": "https://stability.ai/stable-image"
+        },
+        {
+          "mode_id": "sd35_turbo",
+          "name": "SD 3.5 Large Turbo",
+          "aliases": [
+            "turbo"
+          ],
+          "best_for": [
+            "speed",
+            "iteration",
+            "drafts",
+            "high volume"
+          ],
+          "avoid_for": [
+            "final hero images"
+          ],
+          "notes": "Distilled fast tier — iterate compositions cheaply, then rerun winners on Large.",
+          "docs_url": "https://stability.ai/stable-image"
+        }
+      ]
     },
     {
       "platform_id": "anthropic_claude_code",
@@ -180,7 +538,7 @@
       "input_selector_candidates": [],
       "docs_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
       "quirks": [
-        "Agentic CLI coding tool \u2014 reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
+        "Agentic CLI coding tool — reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
         "Slash commands (e.g. /init, /clear, /compact, custom skills) change behavior; plan mode separates planning from editing",
         "Responds best to a clear objective plus constraints; it will explore the codebase itself rather than needing files pasted in",
         "CLAUDE.md files in the repo are auto-loaded as persistent instructions"
@@ -192,7 +550,26 @@
       ],
       "max_prompt_tokens": 200000,
       "tos_reviewed": false,
-      "model_family": "claude"
+      "model_family": "claude",
+      "modes": [
+        {
+          "mode_id": "interactive",
+          "name": "Interactive CLI",
+          "aliases": [],
+          "best_for": [
+            "code",
+            "refactoring",
+            "debugging",
+            "repo tasks",
+            "automation"
+          ],
+          "avoid_for": [
+            "non-code tasks"
+          ],
+          "notes": "Repo-aware agentic coding in the terminal — give it goals and constraints, not keystrokes.",
+          "docs_url": "https://docs.anthropic.com/en/docs/claude-code/overview"
+        }
+      ]
     },
     {
       "platform_id": "cursor",
@@ -221,7 +598,45 @@
       ],
       "max_prompt_tokens": 20000,
       "tos_reviewed": false,
-      "model_family": "gpt"
+      "model_family": "gpt",
+      "modes": [
+        {
+          "mode_id": "agent",
+          "name": "Agent mode",
+          "aliases": [
+            "composer"
+          ],
+          "best_for": [
+            "multi-file edits",
+            "features",
+            "refactoring",
+            "autonomous coding"
+          ],
+          "avoid_for": [
+            "quick questions"
+          ],
+          "notes": "Plans and executes multi-file changes autonomously — the mode for real feature work.",
+          "docs_url": "https://docs.cursor.com/agent"
+        },
+        {
+          "mode_id": "ask",
+          "name": "Ask mode",
+          "aliases": [
+            "chat"
+          ],
+          "best_for": [
+            "questions",
+            "explanations",
+            "code review",
+            "understanding code"
+          ],
+          "avoid_for": [
+            "making edits"
+          ],
+          "notes": "Read-only Q&A over your codebase — explanations without touching files.",
+          "docs_url": "https://docs.cursor.com/chat/overview"
+        }
+      ]
     },
     {
       "platform_id": "github_copilot",
@@ -239,7 +654,7 @@
       "quirks": [
         "Completion + chat; chat supports slash commands (/explain, /fix, /tests, /doc) and #-file / @-participant references",
         "Leading comments and clear function/variable names strongly steer completions",
-        "Open relevant files in the editor \u2014 Copilot uses neighboring tabs as context",
+        "Open relevant files in the editor — Copilot uses neighboring tabs as context",
         "For chat, name the file/symbol explicitly rather than relying on cursor position"
       ],
       "syntax_rules": [
@@ -249,7 +664,45 @@
       ],
       "max_prompt_tokens": 8000,
       "tos_reviewed": false,
-      "model_family": "gpt"
+      "model_family": "gpt",
+      "modes": [
+        {
+          "mode_id": "completions",
+          "name": "Inline completions",
+          "aliases": [
+            "ghost text"
+          ],
+          "best_for": [
+            "autocomplete",
+            "boilerplate",
+            "in-flow coding"
+          ],
+          "avoid_for": [
+            "multi-file changes",
+            "design questions"
+          ],
+          "notes": "As-you-type suggestions — steer with nearby comments and good function names.",
+          "docs_url": "https://docs.github.com/en/copilot/using-github-copilot/getting-code-suggestions-in-your-ide-with-github-copilot"
+        },
+        {
+          "mode_id": "chat",
+          "name": "Copilot Chat",
+          "aliases": [
+            "chat"
+          ],
+          "best_for": [
+            "explanations",
+            "refactoring",
+            "tests",
+            "debugging"
+          ],
+          "avoid_for": [
+            "silent inline flow"
+          ],
+          "notes": "Conversational panel with slash-commands (/tests, /fix) and workspace context.",
+          "docs_url": "https://docs.github.com/en/copilot/github-copilot-chat"
+        }
+      ]
     },
     {
       "platform_id": "perplexity",
@@ -268,7 +721,7 @@
       ],
       "docs_url": "https://www.perplexity.ai/",
       "quirks": [
-        "Answer engine that searches the live web and cites sources \u2014 treat it like a research query, not a creative prompt",
+        "Answer engine that searches the live web and cites sources — treat it like a research query, not a creative prompt",
         "Focus modes (Web, Academic, etc.) and source constraints change results; specifying recency/domain helps",
         "Concise, keyword-rich questions retrieve better than long narrative prompts",
         "Ask for citations/comparisons explicitly to get structured, sourced answers"
@@ -280,7 +733,174 @@
       ],
       "max_prompt_tokens": 4000,
       "tos_reviewed": false,
-      "model_family": "gpt"
+      "model_family": "gpt",
+      "modes": [
+        {
+          "mode_id": "search",
+          "name": "Quick search",
+          "aliases": [
+            "auto"
+          ],
+          "best_for": [
+            "quick facts",
+            "cited answers",
+            "news",
+            "lookup"
+          ],
+          "avoid_for": [
+            "deep multi-source synthesis"
+          ],
+          "notes": "Fast web-grounded answers with citations — the default for lookups.",
+          "docs_url": "https://www.perplexity.ai/hub/faq/how-does-perplexity-work"
+        },
+        {
+          "mode_id": "deep_research",
+          "name": "Deep Research",
+          "aliases": [
+            "pro search"
+          ],
+          "best_for": [
+            "research reports",
+            "multi-source synthesis",
+            "comparisons",
+            "due diligence"
+          ],
+          "avoid_for": [
+            "single-fact questions"
+          ],
+          "notes": "Runs many searches and synthesizes a cited report — minutes, not seconds.",
+          "docs_url": "https://www.perplexity.ai/hub/blog/introducing-perplexity-deep-research"
+        }
+      ]
+    },
+    {
+      "platform_id": "mistral_le_chat",
+      "display_name": "Mistral Le Chat",
+      "model_family": "mistral",
+      "modalities": [
+        "text",
+        "code"
+      ],
+      "url_patterns": [
+        "https://chat.mistral.ai/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "input_selector_candidates": [
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "docs_url": "https://docs.mistral.ai/guides/prompting_capabilities/",
+      "quirks": [
+        "Follows explicit, numbered instructions reliably; benefits from clear delimiters between context and task",
+        "Strong at structured JSON output when the schema is stated explicitly"
+      ],
+      "syntax_rules": [
+        "Plain natural language; separate distinct sections (context, task, format) with clear headers or line breaks",
+        "State the desired output format explicitly, especially for JSON or tables"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "huggingface_chat",
+      "display_name": "HuggingChat",
+      "model_family": "open",
+      "modalities": [
+        "text",
+        "code"
+      ],
+      "url_patterns": [
+        "https://huggingface.co/chat/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "input_selector_candidates": [
+        "textarea[enterkeyhint]",
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "docs_url": "https://huggingface.co/docs/transformers/en/tasks/prompting",
+      "quirks": [
+        "Runs a rotating set of open-weight models; keep prompts model-agnostic and explicit rather than relying on a specific model's habits",
+        "Open models follow few-shot examples well — include one or two when format matters"
+      ],
+      "syntax_rules": [
+        "Plain natural language; lead with a clear instruction, then context, then any examples",
+        "For structured output, show a concrete example of the exact format wanted"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "xai_grok",
+      "display_name": "Grok (xAI)",
+      "model_family": "grok",
+      "modalities": [
+        "text",
+        "code",
+        "image"
+      ],
+      "url_patterns": [
+        "https://grok.com/*",
+        "https://x.com/i/grok*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "input_selector_candidates": [
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "docs_url": "https://docs.x.ai/docs/guides/prompt-engineering",
+      "quirks": [
+        "Conversational and willing to reason step by step when asked; benefits from an explicit request to think before answering",
+        "Can access real-time context on X — state when you want current information versus general knowledge"
+      ],
+      "syntax_rules": [
+        "Plain natural language; ask for step-by-step reasoning explicitly when the task is analytical",
+        "Be explicit about tone — Grok defaults to a casual, witty register"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
+    },
+    {
+      "platform_id": "deepseek_chat",
+      "display_name": "DeepSeek Chat",
+      "model_family": "deepseek",
+      "modalities": [
+        "text",
+        "code"
+      ],
+      "url_patterns": [
+        "https://chat.deepseek.com/*"
+      ],
+      "dom_fingerprint_selectors": [
+        "textarea#chat-input",
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "input_selector_candidates": [
+        "textarea#chat-input",
+        "textarea",
+        "div[contenteditable='true']"
+      ],
+      "docs_url": "https://api-docs.deepseek.com/guides/reasoning_model",
+      "quirks": [
+        "The reasoning (R1) mode exposes chain-of-thought — do NOT add your own 'think step by step' instruction, it already reasons and extra instructions can degrade output",
+        "For the reasoning model, keep the prompt to a clear problem statement and let it reason"
+      ],
+      "syntax_rules": [
+        "Plain natural language; state the problem and desired final-answer format, not the reasoning process",
+        "Strong at code and math — provide exact constraints and edge cases"
+      ],
+      "max_prompt_tokens": 4000,
+      "tos_reviewed": false
     }
   ]
 }

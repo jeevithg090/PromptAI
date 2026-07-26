@@ -53,3 +53,41 @@ describe('RecommendationService (§15)', () => {
     }
   });
 });
+
+// ---- V1.2: platform-mode recommendation ----
+import { recommendMode } from '../../src/services/RecommendationService';
+import { getPlatform } from '../../src/services/PlatformService';
+
+describe('recommendMode (V1.2)', () => {
+  it('every registry platform parses with modes', () => {
+    const gemini = getPlatform('google_gemini');
+    expect(gemini).toBeDefined();
+    expect(gemini!.modes.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('prefers an image mode for a text_to_image task on Gemini', () => {
+    const gemini = getPlatform('google_gemini')!;
+    const ranked = recommendMode(gemini, 'text_to_image', 'a photo of a horse at sunset');
+    expect(ranked[0]!.mode.mode_id).toBe('imagen');
+    expect(ranked[0]!.reason).toContain(ranked[0]!.mode.name);
+  });
+
+  it('prefers a reasoning mode for a reasoning_code task on Gemini', () => {
+    const gemini = getPlatform('google_gemini')!;
+    const ranked = recommendMode(gemini, 'reasoning_code', 'debug a tricky race condition in my scheduler');
+    expect(['thinking', 'pro']).toContain(ranked[0]!.mode.mode_id);
+  });
+
+  it('prefers niji for anime on Midjourney and penalizes it for photorealism', () => {
+    const mj = getPlatform('midjourney')!;
+    const anime = recommendMode(mj, 'text_to_image', 'an anime character in manga style');
+    expect(anime[0]!.mode.mode_id).toBe('niji');
+    const photo = recommendMode(mj, 'text_to_image', 'photorealistic portrait, studio photo');
+    expect(photo[0]!.mode.mode_id).not.toBe('niji');
+  });
+
+  it('returns [] for a platform with no modes', () => {
+    const bare = { ...getPlatform('midjourney')!, modes: [] };
+    expect(recommendMode(bare, 'text_to_image', 'x')).toEqual([]);
+  });
+});

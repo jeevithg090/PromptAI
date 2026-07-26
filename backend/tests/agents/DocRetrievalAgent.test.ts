@@ -1,5 +1,6 @@
 import { DocRetrievalAgent } from '../../src/agents/DocRetrievalAgent';
 import { PKBService } from '../../src/services/PKBService';
+import { groundingService } from '../../src/services/GroundingService';
 import type { AgentInput, KnowledgeChunk, PipelineContext } from '../../src/types/Agent';
 import type { Platform } from '../../src/types/Platform';
 
@@ -81,63 +82,65 @@ describe('DocRetrievalAgent (§6, §10.2, §6.2)', () => {
     expect(result.data?.chunks).toEqual([]);
   });
 
-  const liveFetchHtml =
-    '<p>' + Array.from({ length: 20 }, (_, i) => `Paragraph ${i + 1}. ` + 'word '.repeat(20)).join('</p><p>') + '</p>';
+  // Doc-grounded chunks GroundingService would return from the platform docs.
+  const groundedChunks: KnowledgeChunk[] = [
+    {
+      id: 'grounded-google_gemini-0',
+      kind: 'pkb',
+      platformId: 'google_gemini',
+      content: 'Describe the desired image in a single detailed sentence (docs: "use rich, descriptive prompts")',
+      sourceUrl: 'https://ai.google.dev/gemini-api/docs',
+      ingestedAt: '2026-07-19T00:00:00.000Z',
+      trustScore: 0.9,
+      similarity: 0.9,
+    },
+  ];
 
-  it('triggers live-fetch when best similarity is below threshold', async () => {
+  it('grounds from docs when best similarity is below threshold', async () => {
     const retrieve = jest.fn().mockResolvedValue([lowSimChunk]);
-    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
-    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
-
-    jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      text: async () => liveFetchHtml,
-    } as Response);
+    const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
+    const ground = jest.spyOn(groundingService, 'ground').mockResolvedValue(groundedChunks);
 
     const result = await agent.execute(input());
 
+    expect(ground).toHaveBeenCalled();
     expect(result.status).toBe('success');
-    expect(result.data).toBeDefined();
-    const liveChunks = result.data!.chunks as KnowledgeChunk[];
-    expect(liveChunks.length).toBeGreaterThan(0);
-    expect(liveChunks[0]!.id).toMatch(/^live-/);
-    expect(liveChunks[0]!.sourceUrl).toBe('https://ai.google.dev/gemini-api/docs');
+    const chunks = result.data!.chunks as KnowledgeChunk[];
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0]!.id).toMatch(/^grounded-/);
+    expect(chunks[0]!.sourceUrl).toBe('https://ai.google.dev/gemini-api/docs');
+    expect(chunks[0]!.trustScore).toBe(0.9);
   });
 
-  it('triggers live-fetch when no chunks returned', async () => {
+  it('grounds from docs when no chunks returned', async () => {
     const retrieve = jest.fn().mockResolvedValue([]);
-    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
-    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
-
-    jest.spyOn(global, 'fetch').mockResolvedValue({
-      ok: true,
-      text: async () => liveFetchHtml,
-    } as Response);
+    const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
+    jest.spyOn(groundingService, 'ground').mockResolvedValue(groundedChunks);
 
     const result = await agent.execute(input());
 
     expect(result.status).toBe('success');
-    const liveChunks = result.data!.chunks as KnowledgeChunk[];
-    expect(liveChunks.length).toBeGreaterThan(0);
-    expect(liveChunks[0]!.id).toMatch(/^live-/);
+    const chunks = result.data!.chunks as KnowledgeChunk[];
+    expect(chunks.length).toBeGreaterThan(0);
+    expect(chunks[0]!.id).toMatch(/^grounded-/);
   });
 
-  it('skips live-fetch and returns existing when similarity is above threshold', async () => {
+  it('skips grounding and returns existing when similarity is above threshold', async () => {
     const retrieve = jest.fn().mockResolvedValue([chunk]); // similarity 0.8
+    const ground = jest.spyOn(groundingService, 'ground').mockResolvedValue(groundedChunks);
     const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
 
     const result = await agent.execute(input());
 
+    expect(ground).not.toHaveBeenCalled();
     expect(result.status).toBe('success');
     expect(result.data?.chunks).toEqual([chunk]);
   });
 
-  it('degrades to partial on live-fetch fetch failure', async () => {
+  it('keeps the low-similarity chunks when grounding yields nothing', async () => {
     const retrieve = jest.fn().mockResolvedValue([]);
-    const embedQuery = jest.fn().mockResolvedValue([0.1, 0.2, 0.3]);
-    const agent = new DocRetrievalAgent({ retrieve, embedQuery } as unknown as PKBService);
-
-    jest.spyOn(global, 'fetch').mockRejectedValue(new Error('network error'));
+    const agent = new DocRetrievalAgent({ retrieve } as unknown as PKBService);
+    jest.spyOn(groundingService, 'ground').mockResolvedValue([]);
 
     const result = await agent.execute(input());
 

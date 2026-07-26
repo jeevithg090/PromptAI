@@ -1,0 +1,32 @@
+{
+  "name": "pf-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PromptForge desktop app (macOS + Windows) — Electron shell hosting the builder, enhance, tray, and floating widget.",
+  "main": "dist/main/index.js",
+  "scripts": {
+    "build:main": "esbuild src/main/index.ts src/preload/index.ts src/preload/widget.ts src/main/tray.ts src/main/widget.ts --bundle --platform=node --format=cjs --external:electron --outdir=dist --out-extension:.js=.js --entry-names=[dir]/[name]",
+    "build:assets": "cp build/trayTemplate.png build/trayTemplate@2x.png dist/ 2>/dev/null || true",
+    "build:renderer": "cd renderer && npm run build",
+    "build": "npm run build:main && npm run build:assets && npm run build:renderer",
+    "typecheck": "tsc -p tsconfig.json --noEmit && cd renderer && tsc --noEmit",
+    "test": "jest",
+    "dev": "npm run build:main && electron .",
+    "dist:dry": "npm run build && electron-builder --publish never",
+    "dist:mac": "npm run build && electron-builder --mac --publish never",
+    "dist:win": "npm run build && electron-builder --win --publish never"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "esbuild": "^0.24.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.5.0",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.14.0"
+  }
+}

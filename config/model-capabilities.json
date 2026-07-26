@@ -1,29 +1,489 @@
 {
-  "schema_version": "1.0.0",
-  "note": "Model Capability Matrix (spec §15.1) — PERISHABLE data, refreshed via the ingestion pipeline (T5.x), never hardcoded into logic. Cost tiers are relative buckets (1=cheapest … 5=priciest), not live prices; latency likewise relative. Used by RecommendationService (TA.2) to rank models/platforms per task with visible trade-offs (§15.2). last_verified marks staleness.",
-  "last_verified": "2026-07-07",
+  "schema_version": "2.1.0",
+  "note": "Comprehensive Model Capability Matrix — v2.1 with reasoning effort support. All data sourced from official provider docs as of July 2026. Each model includes its actual supported reasoning effort levels (low/medium/high/xhigh/max) and provider-specific parameter names. The ReasoningEffortAdvisor in RecommendationService suggests optimal effort per-task dynamically based on what the model actually supports.",
+  "last_verified": "2026-07-13",
   "models": [
     {
-      "model_id": "llama-3.1-8b-instant",
-      "display_name": "Llama 3.1 8B Instant (Groq)",
-      "provider": "groq",
-      "modalities": ["text", "code"],
-      "context_window": 131072,
+      "model_id": "gpt-5.6-sol",
+      "display_name": "GPT-5.6 Sol (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "cost_tier": 5,
+      "latency_tier": 3,
+      "strengths": ["reasoning", "code", "writing", "multimodal", "long-context", "agentic", "planning", "frontend-design", "tool-use"],
+      "benchmark_scores": {
+        "swe_bench_verified": "~82%",
+        "gpqa_diamond": "~93%",
+        "mmlu": "~91%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["none", "low", "medium", "high", "xhigh", "max"],
+        "default": "medium",
+        "parameter": "reasoning.effort",
+        "pro_mode": true,
+        "pro_mode_parameter": "reasoning.mode",
+        "can_disable": true,
+        "notes": "GPT-5.6 supports none/low/medium/high/xhigh/max. Default is medium. Use 'pro' mode via reasoning.mode for difficult tasks needing more model work. Pro mode works with any effort level. Supports persisted reasoning via reasoning.context for multi-turn quality."
+      }
+    },
+    {
+      "model_id": "gpt-5.6-terra",
+      "display_name": "GPT-5.6 Terra (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "writing", "multimodal", "balanced", "general"],
+      "reasoning_efforts": {
+        "supported_levels": ["none", "low", "medium", "high", "xhigh", "max"],
+        "default": "medium",
+        "parameter": "reasoning.effort",
+        "pro_mode": true,
+        "pro_mode_parameter": "reasoning.mode",
+        "can_disable": true,
+        "notes": "Same reasoning spectrum as Sol. Use low for latency-sensitive production, medium as balanced default, high/xhigh for complex reasoning."
+      },
+      "notes": "Strong performance at lower price — $2.50/$15 per 1M tokens. Best balance of intelligence and cost for most production workloads."
+    },
+    {
+      "model_id": "gpt-5.6-luna",
+      "display_name": "GPT-5.6 Luna (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 1050000,
+      "max_output_tokens": 128000,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["high-throughput", "efficient", "cheap", "classification", "extraction", "short-form"],
+      "reasoning_efforts": {
+        "supported_levels": ["none", "low", "medium", "high", "xhigh", "max"],
+        "default": "medium",
+        "parameter": "reasoning.effort",
+        "pro_mode": false,
+        "can_disable": true,
+        "notes": "Supports full effort spectrum but Luna is optimized for efficiency. Use none or low for maximum throughput on simple tasks."
+      },
+      "notes": "Efficient, high-volume model — $1/$6 per 1M tokens. Optimized for cost-sensitive workloads."
+    },
+    {
+      "model_id": "o4-mini",
+      "display_name": "o4-mini (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 200000,
+      "max_output_tokens": 100000,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["reasoning", "code", "math", "cost-efficient", "fast-reasoning", "tool-use"],
+      "benchmark_scores": {
+        "swe_bench_verified": "68.1%",
+        "aime_2025": "92.7%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high"],
+        "default": "medium",
+        "parameter": "reasoning.effort",
+        "can_disable": false,
+        "notes": "o-series reasoning model. Uses chain-of-thought with thinking budgets rather than GPT-5.6-style reasoning.effort. Low for fast production, medium default, high for complex reasoning."
+      },
+      "notes": "Cost-efficient reasoning model — $1.10/$4.40 per 1M tokens. Near o3 performance on math/coding at ~9x lower cost."
+    },
+    {
+      "model_id": "o3",
+      "display_name": "o3 (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 200000,
+      "max_output_tokens": 100000,
+      "cost_tier": 4,
+      "latency_tier": 4,
+      "strengths": ["reasoning", "code", "math", "science", "research", "deep-reasoning", "multimodal-reasoning"],
+      "benchmark_scores": {
+        "swe_bench_verified": "69.1%",
+        "humanitys_last_exam": "~35%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high", "xhigh"],
+        "default": "high",
+        "parameter": "reasoning.effort",
+        "can_disable": false,
+        "notes": "Research-grade reasoning. High or xhigh for complex science/math tasks. Medium for balanced. Not recommended for latency-sensitive workloads."
+      },
+      "notes": "Research-grade reasoning model — $10/$40 per 1M tokens. Top-tier on hard science benchmarks."
+    },
+    {
+      "model_id": "gpt-5-mini",
+      "display_name": "GPT-5 mini (OpenAI)",
+      "provider": "openai",
+      "platform_id": "chatgpt",
+      "modalities": ["text", "code", "image"],
+      "context_window": 200000,
+      "max_output_tokens": 100000,
       "cost_tier": 1,
       "latency_tier": 1,
-      "strengths": ["classification", "extraction", "short-form", "high-throughput"],
-      "notes": "Very fast and cheap; great for routing, classification, and preview steps. Weaker at deep reasoning."
+      "strengths": ["efficient", "cheap", "high-throughput", "classification", "extraction", "simple-reasoning"],
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high"],
+        "default": "low",
+        "parameter": "reasoning.effort",
+        "can_disable": true,
+        "notes": "Optimized for fast, efficient reasoning at scale. Low default for maximum throughput. Medium for balanced quality."
+      },
+      "notes": "Successor to o4-mini. Optimized for fast, efficient reasoning at scale."
+    },
+    {
+      "model_id": "claude-opus-4-8",
+      "display_name": "Claude Opus 4.8 (Anthropic)",
+      "provider": "anthropic",
+      "platform_id": "claude",
+      "modalities": ["text", "code"],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "cost_tier": 4,
+      "latency_tier": 3,
+      "strengths": ["reasoning", "code", "long-context", "writing", "agentic", "computer-use", "enterprise", "planning"],
+      "benchmark_scores": {
+        "online_mind2web": "84%",
+        "swe_bench_verified": "~81%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high", "xhigh", "max"],
+        "default": "high",
+        "parameter": "effort",
+        "adaptive_thinking": true,
+        "adaptive_thinking_parameter": "thinking: {type: \"adaptive\"}",
+        "can_disable": true,
+        "notes": "Opus 4.8 uses effort parameter (low/medium/high/xhigh/max). Default: high. Adaptive thinking is OFF by default — enable with thinking: {type: 'adaptive'}. Use xhigh for coding/agentic, max for hardest tasks. For latency-sensitive, use low or medium. At high+, set max_tokens to 64k+ for headroom."
+      }
+    },
+    {
+      "model_id": "claude-sonnet-5",
+      "display_name": "Claude Sonnet 5 (Anthropic)",
+      "provider": "anthropic",
+      "platform_id": "claude",
+      "modalities": ["text", "code"],
+      "context_window": 1000000,
+      "max_output_tokens": 128000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "writing", "balanced", "tool-use", "general"],
+      "benchmark_scores": {
+        "swe_bench_verified": "~79%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high", "xhigh", "max"],
+        "default": "high",
+        "parameter": "effort",
+        "adaptive_thinking": true,
+        "adaptive_thinking_parameter": "thinking: {type: \"adaptive\"} (on by default)",
+        "can_disable": true,
+        "disable_parameter": "thinking: {type: \"disabled\"}",
+        "notes": "Sonnet 5 defaults to high effort. Adaptive thinking is ON by default (different from Opus 4.8). Use xhigh for hardest coding/agentic tasks. Sonnet 5 at medium ≈ Sonnet 4.6 at high. Uses new tokenizer (~30% more tokens for same text). Pass thinking: {type: 'disabled'} to turn off adaptive thinking."
+      }
+    },
+    {
+      "model_id": "claude-haiku-4-5",
+      "display_name": "Claude Haiku 4.5 (Anthropic)",
+      "provider": "anthropic",
+      "platform_id": "claude",
+      "modalities": ["text", "code"],
+      "context_window": 200000,
+      "max_output_tokens": 64000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["code", "fast", "cheap", "high-throughput", "classification", "extraction", "agentic", "short-form"],
+      "benchmark_scores": {
+        "swe_bench_verified": "73.3%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["low", "medium", "high"],
+        "default": "medium",
+        "parameter": "extended thinking",
+        "adaptive_thinking": false,
+        "can_disable": false,
+        "notes": "Haiku 4.5 supports extended thinking (not adaptive). No explicit effort parameter — thinking is always on at a fixed level optimized for speed. Best used as-is without effort tuning."
+      },
+      "notes": "Lightning-fast, cost-efficient model — $1/$5 per 1M tokens. 73.3% SWE-bench Verified."
+    },
+    {
+      "model_id": "gemini-3.1-pro",
+      "display_name": "Gemini 3.1 Pro (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image", "audio", "video"],
+      "context_window": 1000000,
+      "max_output_tokens": 64000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "multimodal", "long-context", "agentic", "vibe-coding", "browsing", "research"],
+      "benchmark_scores": {
+        "swe_bench_verified": "80.6%",
+        "arc_agi_2": "77.1%",
+        "humanitys_last_exam": "44.4%",
+        "browsecomp": "85.9%",
+        "gpqa_diamond": "94.3%",
+        "terminal_bench_2": "68.5%"
+      },
+      "reasoning_efforts": {
+        "supported_levels": ["LOW", "MEDIUM", "HIGH"],
+        "default": "HIGH",
+        "parameter": "thinkingLevel",
+        "thinking_always_on": true,
+        "dynamic_thinking": true,
+        "notes": "Gemini 3.x uses thinkingLevel (LOW/MEDIUM/HIGH). 3.1 Pro supports LOW, MEDIUM, HIGH. Default: HIGH. Thinking CANNOT be disabled on 3.x models. HIGH activates Deep Think Mini for complex reasoning. MEDIUM for daily default. LOW for fast tasks. Use GenerationConfig.thinkingLevel."
+      }
+    },
+    {
+      "model_id": "gemini-3.5-flash",
+      "display_name": "Gemini 3.5 Flash (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image", "audio"],
+      "context_window": 1000000,
+      "max_output_tokens": 64000,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["multimodal", "fast", "cheap", "high-throughput", "agentic", "coding", "reasoning"],
+      "reasoning_efforts": {
+        "supported_levels": ["MINIMAL", "LOW", "MEDIUM", "HIGH"],
+        "default": "MEDIUM",
+        "parameter": "thinkingLevel",
+        "thinking_always_on": true,
+        "dynamic_thinking": true,
+        "notes": "Gemini 3.5 Flash supports MINIMAL/LOW/MEDIUM/HIGH. Default: MEDIUM. MINIMAL for near-zero thinking on trivial tasks. HIGH for complex reasoning. Thinking always on."
+      }
+    },
+    {
+      "model_id": "gemini-3.1-flash-lite",
+      "display_name": "Gemini 3.1 Flash-Lite (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image"],
+      "context_window": 1000000,
+      "max_output_tokens": 32000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["cheap", "fast", "high-throughput", "classification", "extraction", "short-form", "multimodal"],
+      "reasoning_efforts": {
+        "supported_levels": ["MINIMAL", "LOW", "MEDIUM", "HIGH"],
+        "default": "MINIMAL",
+        "parameter": "thinkingLevel",
+        "thinking_always_on": true,
+        "dynamic_thinking": true,
+        "notes": "Gemini 3.1 Flash-Lite supports all 4 levels. Default: MINIMAL (lowest thinking). Thinking always on. Best with MINIMAL or LOW for high-throughput."
+      },
+      "notes": "Most cost-efficient multimodal model. Best for: high-frequency lightweight tasks, routing, classification."
+    },
+    {
+      "model_id": "gemini-2.5-pro",
+      "display_name": "Gemini 2.5 Pro (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image", "audio", "video"],
+      "context_window": 1000000,
+      "max_output_tokens": 64000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "multimodal", "long-context", "deep-reasoning"],
+      "reasoning_efforts": {
+        "supported_levels": ["budget"],
+        "default": "8192",
+        "parameter": "thinkingBudget",
+        "budget_min": 128,
+        "budget_max": 32768,
+        "thinking_always_on": true,
+        "can_disable": false,
+        "dynamic_budget_parameter": -1,
+        "notes": "Gemini 2.5 Pro uses thinkingBudget (token count). Default: 8192. Range: 128-32768. Dynamic thinking: set to -1 (max 8192). Cannot be disabled. Higher budget = deeper reasoning but more latency/cost."
+      },
+      "notes": "Previous-gen flagship. Deep reasoning and coding capabilities."
+    },
+    {
+      "model_id": "gemini-2.5-flash",
+      "display_name": "Gemini 2.5 Flash (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image", "audio"],
+      "context_window": 1000000,
+      "max_output_tokens": 64000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["cheap", "fast", "reasoning", "multimodal", "high-throughput"],
+      "reasoning_efforts": {
+        "supported_levels": ["budget"],
+        "default": "8192",
+        "parameter": "thinkingBudget",
+        "budget_min": 1,
+        "budget_max": 24576,
+        "can_disable": true,
+        "disable_value": 0,
+        "dynamic_budget_parameter": -1,
+        "notes": "Gemini 2.5 Flash uses thinkingBudget. Default: 8192. Range: 1-24576. Can disable thinking by setting to 0. Dynamic: set to -1 (max 8192). Good default for cheap multimodal."
+      },
+      "notes": "Best price-performance for low-latency, high-volume tasks that require reasoning."
+    },
+    {
+      "model_id": "gemini-2.5-flash-lite",
+      "display_name": "Gemini 2.5 Flash-Lite (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["text", "code", "image", "audio"],
+      "context_window": 1000000,
+      "max_output_tokens": 32000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["cheap", "fast", "high-throughput", "classification", "extraction"],
+      "reasoning_efforts": {
+        "supported_levels": ["budget"],
+        "default": "0",
+        "parameter": "thinkingBudget",
+        "budget_min": 512,
+        "budget_max": 24576,
+        "disabled_by_default": true,
+        "can_disable": true,
+        "disable_value": 0,
+        "dynamic_budget_parameter": -1,
+        "notes": "Gemini 2.5 Flash-Lite: thinking is DISABLED by default (budget=0). Enable by setting budget 512-24576. Dynamic: set to -1."
+      },
+      "notes": "Fastest and most budget-friendly multimodal model in the 2.5 family."
+    },
+    {
+      "model_id": "gemini-omni-flash",
+      "display_name": "Gemini Omni Flash (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["video", "image"],
+      "context_window": 0,
+      "cost_tier": 4,
+      "latency_tier": 4,
+      "strengths": ["video-generation", "video-editing", "multimodal-video", "conversational-editing"],
+      "reasoning_efforts": null,
+      "notes": "Video generation model. No reasoning effort controls."
+    },
+    {
+      "model_id": "nano-banana-2-lite",
+      "display_name": "Nano Banana 2 Lite (Google)",
+      "provider": "google",
+      "platform_id": "gemini",
+      "modalities": ["image"],
+      "context_window": 0,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["image-generation", "fast", "cheap", "high-throughput", "prototyping"],
+      "reasoning_efforts": null,
+      "notes": "Fastest Gemini image model. 4-second text-to-image. $0.034 per 1K images."
+    },
+    {
+      "model_id": "llama-4-scout",
+      "display_name": "Llama 4 Scout (Groq/Meta)",
+      "provider": "groq",
+      "platform_id": "groq",
+      "modalities": ["text", "code", "image"],
+      "context_window": 128000,
+      "max_output_tokens": 32000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["multimodal", "fast", "cheap", "high-throughput", "open-weight", "classification", "extraction"],
+      "reasoning_efforts": null,
+      "notes": "109B MoE (17B active), 16 experts. 460+ tok/s on Groq. $0.11/$0.34 per 1M tokens."
+    },
+    {
+      "model_id": "llama-4-maverick",
+      "display_name": "Llama 4 Maverick (Groq/Meta)",
+      "provider": "groq",
+      "platform_id": "groq",
+      "modalities": ["text", "code", "image"],
+      "context_window": 128000,
+      "max_output_tokens": 32000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["reasoning", "code", "multimodal", "general", "creative-writing", "open-weight"],
+      "reasoning_efforts": null,
+      "notes": "400B MoE (17B active), 128 experts. $0.50/$0.77 per 1M tokens. High quality at lower price."
     },
     {
       "model_id": "llama-3.3-70b-versatile",
       "display_name": "Llama 3.3 70B Versatile (Groq)",
       "provider": "groq",
+      "platform_id": "groq",
       "modalities": ["text", "code"],
       "context_window": 131072,
-      "cost_tier": 2,
+      "cost_tier": 1,
       "latency_tier": 1,
       "strengths": ["reasoning", "drafting", "code", "general"],
-      "notes": "Strong open-weight generalist at very low latency on Groq; the default large-tier drafting/critique model."
+      "reasoning_efforts": null,
+      "notes": "Strong open-weight generalist at very low latency on Groq — 500+ tok/s. $0.59/$0.79 per 1M tokens."
+    },
+    {
+      "model_id": "llama-3.1-8b-instant",
+      "display_name": "Llama 3.1 8B Instant (Groq)",
+      "provider": "groq",
+      "platform_id": "groq",
+      "modalities": ["text", "code"],
+      "context_window": 131072,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["classification", "extraction", "short-form", "high-throughput"],
+      "reasoning_efforts": null,
+      "notes": "Very fast and cheap — $0.05/$0.08 per 1M tokens. Great for routing, classification, preview steps."
+    },
+    {
+      "model_id": "qwen3-32b",
+      "display_name": "Qwen3 32B (Groq)",
+      "provider": "groq",
+      "platform_id": "groq",
+      "modalities": ["text", "code"],
+      "context_window": 128000,
+      "cost_tier": 1,
+      "latency_tier": 1,
+      "strengths": ["reasoning", "code", "multilingual", "efficient"],
+      "reasoning_efforts": null,
+      "notes": "32B parameter model on Groq. $0.29/$0.39 per 1M tokens. Strong reasoning at very low cost."
+    },
+    {
+      "model_id": "mistral-large-3",
+      "display_name": "Mistral Large 3 (Mistral)",
+      "provider": "mistral",
+      "modalities": ["text", "code"],
+      "context_window": 128000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["reasoning", "code", "multilingual", "tool-use", "json-mode"],
+      "reasoning_efforts": null,
+      "notes": "675B flagship. Rivals GPT-4-class across reasoning, coding, multilingual. Native tool use. Good for EU data sovereignty."
+    },
+    {
+      "model_id": "codestral",
+      "display_name": "Codestral (Mistral)",
+      "provider": "mistral",
+      "modalities": ["code"],
+      "context_window": 256000,
+      "cost_tier": 2,
+      "latency_tier": 1,
+      "strengths": ["code", "long-context", "multi-file-editing", "codebase-understanding"],
+      "reasoning_efforts": null,
+      "notes": "Dedicated code model with 256K context. 80+ programming languages."
+    },
+    {
+      "model_id": "pixtral-large",
+      "display_name": "Pixtral Large (Mistral)",
+      "provider": "mistral",
+      "modalities": ["text", "code", "image"],
+      "context_window": 128000,
+      "cost_tier": 3,
+      "latency_tier": 2,
+      "strengths": ["vision", "document-understanding", "chart-analysis", "visual-reasoning"],
+      "reasoning_efforts": null,
+      "notes": "Multimodal vision model. Document understanding, chart analysis."
     },
     {
       "model_id": "gpt-oss-120b",
@@ -31,70 +491,11 @@
       "provider": "cerebras",
       "modalities": ["text", "code"],
       "context_window": 128000,
-      "cost_tier": 2,
-      "latency_tier": 1,
-      "strengths": ["reasoning", "general"],
-      "notes": "Fast wafer-scale inference; free-tier context capped at ~8k tokens, so best for shorter tasks."
-    },
-    {
-      "model_id": "claude-opus",
-      "display_name": "Claude Opus (Anthropic)",
-      "provider": "anthropic",
-      "platform_id": "claude",
-      "modalities": ["text", "code"],
-      "context_window": 200000,
-      "cost_tier": 5,
-      "latency_tier": 3,
-      "strengths": ["reasoning", "long-context", "code", "writing", "nuance"],
-      "notes": "Top-tier quality and long context; higher cost/latency. Best when quality dominates budget."
-    },
-    {
-      "model_id": "claude-sonnet",
-      "display_name": "Claude Sonnet (Anthropic)",
-      "provider": "anthropic",
-      "platform_id": "claude",
-      "modalities": ["text", "code"],
-      "context_window": 200000,
-      "cost_tier": 3,
-      "latency_tier": 2,
-      "strengths": ["reasoning", "code", "writing", "balanced"],
-      "notes": "Strong balance of quality, speed, and cost for most production text/code work."
-    },
-    {
-      "model_id": "gpt-5",
-      "display_name": "GPT-5 (OpenAI)",
-      "provider": "openai",
-      "platform_id": "chatgpt",
-      "modalities": ["text", "code", "image"],
-      "context_window": 400000,
-      "cost_tier": 4,
-      "latency_tier": 3,
-      "strengths": ["reasoning", "general", "multimodal", "writing"],
-      "notes": "High-quality multimodal generalist; premium cost/latency."
-    },
-    {
-      "model_id": "gemini-flash",
-      "display_name": "Gemini Flash (Google)",
-      "provider": "google",
-      "platform_id": "gemini",
-      "modalities": ["text", "code", "image"],
-      "context_window": 1000000,
       "cost_tier": 1,
       "latency_tier": 1,
-      "strengths": ["long-context", "multimodal", "high-throughput", "cheap"],
-      "notes": "Very large context at low cost/latency; strong default for cheap multimodal and long-document tasks."
-    },
-    {
-      "model_id": "gemini-pro",
-      "display_name": "Gemini Pro (Google)",
-      "provider": "google",
-      "platform_id": "gemini",
-      "modalities": ["text", "code", "image", "video"],
-      "context_window": 1000000,
-      "cost_tier": 3,
-      "latency_tier": 2,
-      "strengths": ["reasoning", "long-context", "multimodal", "video"],
-      "notes": "Higher-quality Gemini with video understanding and a very large context window."
+      "strengths": ["reasoning", "general", "fast"],
+      "reasoning_efforts": null,
+      "notes": "Fast wafer-scale inference (~50ms). $0.25/$0.69 per 1M tokens. Free tier caps context at ~8K tokens."
     },
     {
       "model_id": "midjourney-v6",
@@ -104,9 +505,10 @@
       "modalities": ["image"],
       "context_window": 0,
       "cost_tier": 3,
-      "latency_tier": 3,
+      "latency_tier": 2,
       "strengths": ["image-aesthetics", "stylization", "photorealism"],
-      "notes": "Best-in-class aesthetic image generation; keyword-tag prompting, no chat/context window."
+      "reasoning_efforts": null,
+      "notes": "Best-in-class aesthetic image generation. Keyword-tag prompting. $0.04 per image."
     },
     {
       "model_id": "stable-diffusion-xl",
@@ -116,9 +518,10 @@
       "modalities": ["image"],
       "context_window": 0,
       "cost_tier": 1,
-      "latency_tier": 2,
+      "latency_tier": 1,
       "strengths": ["image", "controllability", "open-weight", "cheap"],
-      "notes": "Open-weight image model; strong control (negative prompts, weights, ControlNet), cheap to run."
+      "reasoning_efforts": null,
+      "notes": "Open-weight image model. ControlNet, negative prompts. $0.01 per image."
     },
     {
       "model_id": "veo-video",
@@ -127,10 +530,125 @@
       "platform_id": "gemini",
       "modalities": ["video"],
       "context_window": 0,
-      "cost_tier": 5,
+      "cost_tier": 4,
       "latency_tier": 5,
       "strengths": ["video-generation", "camera-control"],
-      "notes": "Text-to-video generation; high cost/latency, single-scene clips."
+      "reasoning_efforts": null,
+      "notes": "Text-to-video generation. $0.50/sec."
     }
-  ]
+  ],
+  "task_profiles": {
+    "classification": {
+      "description": "Text classification, intent detection, routing, tagging",
+      "ideal_strengths": ["classification", "extraction", "short-form", "high-throughput"],
+      "cost_sensitivity": "high",
+      "latency_sensitivity": "high",
+      "quality_sensitivity": "medium",
+      "recommended_reasoning_effort": "low"
+    },
+    "extraction": {
+      "description": "Data extraction, entity recognition, structured output from unstructured text",
+      "ideal_strengths": ["extraction", "classification", "short-form", "high-throughput"],
+      "cost_sensitivity": "high",
+      "latency_sensitivity": "high",
+      "quality_sensitivity": "medium",
+      "recommended_reasoning_effort": "low"
+    },
+    "simple_chat": {
+      "description": "Simple conversational AI, customer support, Q&A",
+      "ideal_strengths": ["general", "cheap", "fast"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "high",
+      "quality_sensitivity": "low",
+      "recommended_reasoning_effort": "low"
+    },
+    "reasoning": {
+      "description": "Complex multi-step reasoning, math, logic puzzles, analytical tasks",
+      "ideal_strengths": ["reasoning", "deep-reasoning", "math", "science"],
+      "cost_sensitivity": "low",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "high"
+    },
+    "coding": {
+      "description": "Code generation, debugging, code review, software engineering",
+      "ideal_strengths": ["code", "reasoning", "agentic", "tool-use"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "medium",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "high"
+    },
+    "agentic_coding": {
+      "description": "Autonomous coding agents, multi-file editing, long-horizon software engineering",
+      "ideal_strengths": ["agentic", "code", "planning", "long-context", "computer-use"],
+      "cost_sensitivity": "low",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "xhigh"
+    },
+    "writing": {
+      "description": "Creative writing, content generation, long-form articles, marketing copy",
+      "ideal_strengths": ["writing", "creative-writing", "nuance"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "medium"
+    },
+    "long_context": {
+      "description": "Document analysis, book summarization, long-context RAG, research",
+      "ideal_strengths": ["long-context", "reasoning", "research"],
+      "cost_sensitivity": "low",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "medium"
+    },
+    "multimodal": {
+      "description": "Working with images, audio, video in addition to text",
+      "ideal_strengths": ["multimodal", "vision", "multimodal-reasoning"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "medium",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "medium"
+    },
+    "image_generation": {
+      "description": "Generating images from text descriptions",
+      "ideal_strengths": ["image-generation", "image-aesthetics", "stylization", "photorealism"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": null
+    },
+    "video_generation": {
+      "description": "Generating or editing video content",
+      "ideal_strengths": ["video-generation", "video-editing", "camera-control"],
+      "cost_sensitivity": "medium",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": null
+    },
+    "transcription": {
+      "description": "Speech-to-text, audio transcription",
+      "ideal_strengths": [],
+      "cost_sensitivity": "high",
+      "latency_sensitivity": "high",
+      "quality_sensitivity": "medium",
+      "recommended_reasoning_effort": null
+    },
+    "research": {
+      "description": "Deep research, multi-source synthesis, academic work, browsing",
+      "ideal_strengths": ["research", "browsing", "reasoning", "long-context"],
+      "cost_sensitivity": "low",
+      "latency_sensitivity": "low",
+      "quality_sensitivity": "high",
+      "recommended_reasoning_effort": "xhigh"
+    },
+    "cost_sensitive_production": {
+      "description": "High-volume production workloads where cost is the primary constraint",
+      "ideal_strengths": ["cheap", "high-throughput", "efficient"],
+      "cost_sensitivity": "very_high",
+      "latency_sensitivity": "medium",
+      "quality_sensitivity": "low",
+      "recommended_reasoning_effort": "low"
+    }
+  }
 }

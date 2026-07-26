@@ -1,9 +1,11 @@
 import { RUBRIC_DIMENSIONS, RUBRIC_WEIGHTS, type NodeType, type RubricDimension } from '../types/Prompt';
+import { numberChunks } from '../utils/chunkRefs';
 import type { PipelineContext } from '../types/Agent';
 import type {
   DesignedNode,
   DesignedResponse,
   GovernorPresentation,
+  GroundingPresentation,
   StrengthBand,
   StrengthPresentation,
 } from '../types/Response';
@@ -18,7 +20,7 @@ import type {
  */
 
 /** Friendly labels for node types (§13.1) — UI display only. */
-const NODE_LABELS: Record<NodeType, string> = {
+export const NODE_LABELS: Record<NodeType, string> = {
   subject: 'Subject',
   action_behavior: 'Action / Behavior',
   setting_context: 'Setting / Context',
@@ -101,6 +103,46 @@ function designWhyThisWorks(context: PipelineContext): string[] {
   return lessons;
 }
 
+/**
+ * Doc-grounded "why" with resolved sources (V1.6). Uses the SAME [P<n>]/[M<n>]
+ * numbering the DraftingAgent showed the model (utils/chunkRefs), so citation
+ * tokens in node rationales resolve to real doc URLs. Lessons mirror
+ * designWhyThisWorks (dedup, trust-ranked, cap 4) but keep their refs.
+ */
+function designGrounding(context: PipelineContext): GroundingPresentation | undefined {
+  const numbered = numberChunks(context.pkbChunks);
+  if (numbered.length === 0) return undefined;
+
+  const sources = numbered.map(({ ref, chunk }) => {
+    let domain = '';
+    try {
+      domain = new URL(chunk.sourceUrl).hostname;
+    } catch {
+      domain = chunk.sourceUrl;
+    }
+    return {
+      ref,
+      kind: chunk.kind,
+      url: chunk.sourceUrl,
+      domain,
+      snippet: chunk.content.trim().slice(0, 200),
+    };
+  });
+
+  const seen = new Set<string>();
+  const lessons: Array<{ lesson: string; ref: string | null }> = [];
+  for (const { ref, chunk } of [...numbered].sort((a, b) => b.chunk.trustScore - a.chunk.trustScore)) {
+    const text = chunk.content.trim();
+    if (text && !seen.has(text)) {
+      seen.add(text);
+      lessons.push({ lesson: text, ref });
+    }
+    if (lessons.length >= 4) break;
+  }
+
+  return { sources, lessons };
+}
+
 export function design(context: PipelineContext): DesignedResponse | null {
   const draft = context.finalDraft;
   if (!draft) return null;
@@ -126,6 +168,7 @@ export function design(context: PipelineContext): DesignedResponse | null {
     nodes,
     strength: designStrength(context),
     whyThisWorks: designWhyThisWorks(context),
+    grounding: designGrounding(context),
     improvementHints: ev?.issues ?? [],
     governor: designGovernor(context),
     defaultedNodeTypes: nodes.filter((n) => n.defaulted).map((n) => n.type),

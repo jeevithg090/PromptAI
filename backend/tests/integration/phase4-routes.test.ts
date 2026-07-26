@@ -1,6 +1,8 @@
 import { buildApp } from '../../src/handlers/routes';
 import { setPoolForTesting } from '../../src/utils/db';
+import { resetBuckets } from '../../src/middleware/rateLimit';
 import { config } from '../../src/config/env';
+import { systemPromptOf, dualCompletion } from '../helpers/providerMock';
 import type { Pool } from 'pg';
 
 /**
@@ -15,20 +17,16 @@ process.env.DEV_AUTH_BYPASS = 'true';
 const app = buildApp();
 const authed = { Authorization: 'Bearer dev', 'Content-Type': 'application/json' };
 
-/** Canned OpenAI-compatible completion, routed by a marker in the system prompt. */
-function completion(content: unknown): unknown {
-  return {
-    choices: [{ message: { content: JSON.stringify(content) }, finish_reason: 'stop' }],
-    usage: { prompt_tokens: 60, completion_tokens: 40 },
-  };
-}
+/** Canned completion (valid for both OpenAI-compat and native Gemini), routed by a marker in the system prompt. */
+const completion = dualCompletion;
 function mockProvider() {
   jest.spyOn(global, 'fetch').mockImplementation(async (_url, init) => {
-    const body = JSON.parse((init as RequestInit).body as string) as { messages?: Array<{ role: string; content: string }> };
-    const system = body.messages?.find((m) => m.role === 'system')?.content ?? '';
+    const system = systemPromptOf(init as RequestInit);
     let payload: unknown;
     if (system.includes('refining ONE node')) {
       payload = completion({ value: 'a crimson bicycle', rationale: 'sharper', alternatives: [] });
+    } else if (system.includes('prompt-design assistant chatting')) {
+      payload = completion({ type: 'prompt', message: 'Made it dramatic.', nodes: [{ type: 'subject', value: 'a dramatic red bicycle', rationale: '', alternatives: [] }] });
     } else if (system.includes('intent classifier')) {
       payload = completion({ task_type: 'text_to_image', entities: { subject: 'a horse' }, platform_hint: null, confidence: 0.95 });
     } else if (system.includes('quality critic')) {
@@ -65,7 +63,7 @@ describe('Phase 4 web-helper routes are mounted (not 404)', () => {
     expect(res.status).not.toBe(404);
   });
 
-  it.each(['/serialize', '/redraft-node', '/me/bootstrap'])('POST %s is mounted (not 404)', async (path) => {
+  it.each(['/serialize', '/redraft-node', '/chat-refine', '/chat-draft', '/debug', '/reverse', '/migrate', '/simulate', '/analyze/ambiguity', '/lint', '/workflows/run', '/prompt-tests/run', '/me/bootstrap'])('POST %s is mounted (not 404)', async (path) => {
     const res = await app.request(path, { method: 'POST', headers: authed, body: '{}' });
     expect(res.status).not.toBe(404);
   });
@@ -104,6 +102,97 @@ describe('POST /redraft-node (T4.5)', () => {
       method: 'POST',
       headers: authed,
       body: JSON.stringify({ platform_id: 'nope', task_type: 'text_to_image', nodes, target_node_type: 'subject' }),
+    });
+    expect(res.status).toBe(404);
+  });
+});
+
+describe('platform modes + mode recommendation (V1.2)', () => {
+  afterEach(() => resetBuckets());
+
+  it('GET /platforms/:id/modes returns curated modes', async () => {
+    const res = await app.request('/platforms/google_gemini/modes');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { modes: Array<{ mode_id: string }> };
+    expect(body.modes.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('GET /platforms/:id/modes 404s unknown platform', async () => {
+    const res = await app.request('/platforms/nope/modes');
+    expect(res.status).toBe(404);
+  });
+
+  it('GET /platforms/:id/guide returns platform + lessons + starters (seed fallback, no DB)', async () => {
+    const res = await app.request('/platforms/midjourney/guide');
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { platform: { syntax_rules: string[] }; lessons: Array<{ content: string; source_url: string }>; starter_prompts: unknown[] };
+    expect(body.platform.syntax_rules.length).toBeGreaterThan(0);
+    expect(body.lessons.length).toBeGreaterThan(0); // seed-file fallback fills lessons without a DB
+    expect(body.lessons.every((l) => l.source_url)).toBe(true);
+    expect(body.starter_prompts.length).toBeGreaterThan(0);
+  });
+
+  it('POST /recommend/mode ranks modes with reasons', async () => {
+    const res = await app.request('/recommend/mode', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'google_gemini', task_type: 'text_to_image', idea: 'a photo of a horse' }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { recommendations: Array<{ mode: { mode_id: string }; reason: string }> };
+    expect(body.recommendations[0]?.mode.mode_id).toBe('imagen');
+    expect(body.recommendations[0]?.reason.length).toBeGreaterThan(10);
+  });
+});
+
+describe('POST /chat-refine', () => {
+  // Resets the shared in-memory rate-limit bucket (module-level state, DB unavailable in
+  // tests) so this block's extra authed requests don't tip later tests in the file over
+  // RATE_LIMIT_REQUESTS_PER_MINUTE and get a spurious 429.
+  afterEach(() => {
+    jest.restoreAllMocks();
+    resetBuckets();
+  });
+
+  const nodes = [{ type: 'subject', value: 'a red bicycle' }];
+
+  it('returns an updated prompt (mocked provider)', async () => {
+    mockProvider();
+    const res = await app.request('/chat-refine', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({
+        platform_id: 'midjourney',
+        task_type: 'text_to_image',
+        nodes,
+        messages: [{ role: 'user', content: 'make it more dramatic' }],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { status: string; type: string; message: string; assembled: string };
+    expect(body.type).toBe('prompt');
+    expect(body.assembled).toContain('a dramatic red bicycle');
+  });
+
+  it('400s an empty messages array', async () => {
+    const res = await app.request('/chat-refine', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({ platform_id: 'midjourney', task_type: 'text_to_image', nodes, messages: [] }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('404s an unknown platform', async () => {
+    const res = await app.request('/chat-refine', {
+      method: 'POST',
+      headers: authed,
+      body: JSON.stringify({
+        platform_id: 'nope',
+        task_type: 'text_to_image',
+        nodes,
+        messages: [{ role: 'user', content: 'make it more dramatic' }],
+      }),
     });
     expect(res.status).toBe(404);
   });
@@ -166,7 +255,7 @@ describe('DB-backed web routes with a fake pool (T4.2/T4.7)', () => {
     expect(body.sessions).toHaveLength(1);
     // ownership filter: the sessions query is scoped to the caller's userId
     const sessionsCall = query.mock.calls.find(([sql]) => (sql as string).includes('from sessions'));
-    expect(sessionsCall?.[1]).toContain('dev-user-000');
+    expect(sessionsCall?.[1]).toContain('00000000-0000-4000-8000-000000000001');
   });
 
   it('GET /export returns metadata-only export shape', async () => {
@@ -187,7 +276,7 @@ describe('DB-backed web routes with a fake pool (T4.2/T4.7)', () => {
     // find the app_users insert (the rate limiter also queries via the same pool)
     const insertCall = query.mock.calls.find(([sql]) => (sql as string).includes('app_users'));
     const params = insertCall?.[1] as unknown[];
-    expect(params[0]).toBe('dev-user-000'); // id
+    expect(params[0]).toBe('00000000-0000-4000-8000-000000000001'); // id
     expect(params[1]).toBeNull(); // email — null under dev-bypass (no hardcoded placeholder)
   });
 });

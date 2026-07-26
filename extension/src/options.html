@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PromptForge — Settings</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; max-width: 560px; margin: 40px auto; padding: 0 20px; color: #1a1a1a; }
+    h1 { font-size: 20px; margin-bottom: 4px; }
+    p.sub { color: #666; margin-top: 0; font-size: 13px; }
+    label { display: block; font-weight: 600; margin: 18px 0 4px; font-size: 13px; }
+    input { width: 100%; padding: 8px 10px; font-size: 14px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+    .hint { color: #888; font-size: 12px; margin-top: 4px; }
+    button { margin-top: 20px; padding: 9px 18px; font-size: 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .status { margin-top: 14px; font-size: 13px; color: #16a34a; min-height: 18px; }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row button { margin-top: 0; background: #6b7280; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>PromptForge Settings</h1>
+  <p class="sub">Connect the extension to your PromptForge account and backend.</p>
+
+  <label for="apiOrigin">Backend URL</label>
+  <input id="apiOrigin" type="url" placeholder="http://localhost:3001" />
+  <div class="hint">Where the PromptForge backend runs. Defaults to <code>http://localhost:3001</code> for local development.</div>
+
+  <label for="authToken">Session token</label>
+  <input id="authToken" type="password" placeholder="Paste your Supabase access token" />
+  <div class="hint">Sign in on the PromptForge web app, copy your access token from the account page, and paste it here. Without a token, only the free demo works.</div>
+
+  <div class="row" style="margin-top: 20px;">
+    <button id="save">Save</button>
+    <button id="clear" type="button">Clear token</button>
+  </div>
+  <div class="status" id="status"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>

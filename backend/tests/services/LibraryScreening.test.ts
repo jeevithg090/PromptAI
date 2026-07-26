@@ -1,4 +1,5 @@
 import { screenSubmission } from '../../src/services/LibraryScreening';
+import { systemPromptOf, dualCompletion } from '../helpers/providerMock';
 
 /**
  * LibraryScreening tests (§14.2, T7.6).
@@ -8,19 +9,12 @@ import { screenSubmission } from '../../src/services/LibraryScreening';
  */
 function mockCritic(strength: number) {
   jest.spyOn(global, 'fetch').mockImplementation(async (_url, init) => {
-    const body = JSON.parse((init as RequestInit).body as string) as { messages?: Array<{ role: string; content: string }> };
-    const system = body.messages?.find((m) => m.role === 'system')?.content ?? '';
-    let payload: unknown;
-    if (system.includes('community library')) {
-      payload = { strength, issues: strength < 40 ? ['low quality'] : [] };
-    } else {
-      payload = { strength, issues: [] };
-    }
-    const openai = {
-      choices: [{ message: { content: JSON.stringify(payload), finish_reason: 'stop' } }],
-      usage: { prompt_tokens: 10, completion_tokens: 10 },
-    };
-    return { ok: true, status: 200, json: async () => openai, text: async () => JSON.stringify(openai) } as Response;
+    const system = systemPromptOf(init as RequestInit);
+    const payload = system.includes('community library')
+      ? { strength, issues: strength < 40 ? ['low quality'] : [] }
+      : { strength, issues: [] };
+    const dual = dualCompletion(payload);
+    return { ok: true, status: 200, json: async () => dual, text: async () => JSON.stringify(dual) } as Response;
   });
 }
 

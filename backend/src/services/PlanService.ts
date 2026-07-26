@@ -41,8 +41,25 @@ export function getPlanConfig(planId: string): Plan {
   return (planId in plans.plans ? plans.plans[planId] : plans.plans.free) as Plan;
 }
 
-// Core platforms: the original free-tier set.
-const CORE_PLATFORMS = new Set(['midjourney', 'chatgpt', 'claude', 'gemini', 'dalle']);
+// Core platforms: the free-tier set — the consumer chat + image platforms the
+// browser extension targets (finalplan §B4, the ten supported sites). IDs MUST
+// match config/platform-registry.json exactly. The "all" tier (pro) additionally
+// unlocks the answer engines + coding assistants (perplexity,
+// anthropic_claude_code, cursor, github_copilot) and pro features (A/B compare,
+// BYOK, projects, visual preview). NOTE (finalplan): mistral/huggingface/grok/
+// deepseek were added to the free set so every extension-target site drafts;
+// revert them here to make those platforms paid-only.
+const CORE_PLATFORMS = new Set([
+  'google_gemini',
+  'openai_chatgpt',
+  'anthropic_claude',
+  'midjourney',
+  'stability_stable_diffusion',
+  'mistral_le_chat',
+  'huggingface_chat',
+  'xai_grok',
+  'deepseek_chat',
+]);
 
 export function platformAllowed(platformId: string, plan: Plan): boolean {
   return plan.platforms === 'all' || CORE_PLATFORMS.has(platformId);
@@ -58,12 +75,8 @@ export interface Entitlements {
   platformAllowed: (platformId: string) => boolean;
 }
 
-export async function getEntitlements(userId: string): Promise<Entitlements> {
-  const pool = getPool();
-  const res = await pool.query('select plan, monthly_token_budget from app_users where id = $1', [userId]);
-  const row = res.rows[0];
-  const planId = row?.plan ?? 'free';
-  const adminBudgetOverride = row?.monthly_token_budget; // non-null = admin override (T7.7 precedence doc)
+/** Build the entitlement view for a plan id + optional admin budget override. */
+function entitlementsFor(planId: string, adminBudgetOverride: unknown): Entitlements {
   const plan = getPlanConfig(planId);
   return {
     planId,
@@ -74,6 +87,26 @@ export async function getEntitlements(userId: string): Promise<Entitlements> {
     visualPreview: plan.visual_preview,
     platformAllowed: (platformId: string) => platformAllowed(platformId, plan),
   };
+}
+
+/**
+ * Resolve a user's entitlements. **Fails open to the free plan** on any DB
+ * error or missing user row (F0.1): plans are a cost/feature control, not a
+ * security boundary — a plans-table outage must not 500 the draft path.
+ * Mirrors BudgetService.checkMonthlyBudget's fail-open posture.
+ */
+export async function getEntitlements(userId: string): Promise<Entitlements> {
+  try {
+    const pool = getPool();
+    const res = await pool.query('select plan, monthly_token_budget from app_users where id = $1', [userId]);
+    const row = res.rows[0];
+    const planId = row?.plan ?? 'free';
+    const adminBudgetOverride = row?.monthly_token_budget; // non-null = admin override (T7.7 precedence doc)
+    return entitlementsFor(planId, adminBudgetOverride);
+  } catch (err) {
+    logger.warn({ type: 'plan:check_skipped', reason: (err as Error).message }, 'entitlement lookup failed — defaulting to free plan');
+    return entitlementsFor('free', null);
+  }
 }
 
 export function checkGate(entitlements: Entitlements, feature: string): { allowed: boolean; message?: string } {

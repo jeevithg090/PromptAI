@@ -2,113 +2,241 @@
   {
     "id": "photo-realistic-portrait",
     "title": "Photorealistic portrait",
-    "description": "A detailed portrait prompt for Midjourney with lighting, composition, and style specs.",
+    "description": "Studio-grade portrait with lighting, lens, and composition specs.",
+    "niche": "art",
+    "modality": "image",
     "platform_id": "midjourney",
     "idea": "A striking photorealistic portrait of a woman with freckles, warm golden hour lighting, shallow depth of field",
-    "modality": "image"
+    "template": "photorealistic portrait of a woman with sun-freckled skin, gentle confident gaze, golden hour rim lighting, shot on 85mm f/1.4, shallow depth of field, creamy bokeh, editorial photography, natural skin texture, subtle film grain --ar 4:5 --style raw"
   },
   {
     "id": "fantasy-landscape",
-    "title": "Fantasy landscape scene",
-    "description": "Epic fantasy landscape with dramatic lighting and atmospheric effects.",
+    "title": "Epic fantasy landscape",
+    "description": "Sweeping matte-painting style vista with atmosphere and scale cues.",
+    "niche": "art",
+    "modality": "image",
     "platform_id": "midjourney",
-    "idea": "A fantasy landscape with floating islands, waterfalls cascading into clouds, bioluminescent flora, dramatic sunset lighting",
-    "modality": "image"
-  },
-  {
-    "id": "product-photo",
-    "title": "Product photography",
-    "description": "Clean product shot with professional studio lighting for Stable Diffusion.",
-    "platform_id": "stability_stable_diffusion",
-    "idea": "A minimalist product photo of a perfume bottle on a marble surface, soft studio lighting, clean background, reflections",
-    "modality": "image"
+    "idea": "An epic fantasy landscape with floating islands and waterfalls at dawn",
+    "template": "epic fantasy landscape, floating islands chained by ancient stone bridges, waterfalls pouring into a sea of clouds, dawn light breaking through mist, tiny travelers on a rope bridge for scale, matte painting, cinematic composition, volumetric light --ar 21:9"
   },
   {
     "id": "cyberpunk-city",
-    "title": "Cyberpunk city scene",
-    "description": "Vibrant cyberpunk cityscape with neon lights and rain-soaked streets.",
+    "title": "Cyberpunk street scene",
+    "description": "Neon-noir city street with weather, mood, and camera direction.",
+    "niche": "art",
+    "modality": "image",
     "platform_id": "stability_stable_diffusion",
-    "idea": "A cyberpunk city at night, neon signs reflecting on wet pavement, flying cars, rain, high contrast, detailed architecture",
-    "modality": "image"
+    "idea": "A rainy cyberpunk city street at night with neon signs",
+    "template": "rain-slicked cyberpunk street at night, dense neon signage in kanji and hangul reflecting in puddles, steam rising from vents, lone figure with transparent umbrella, low-angle cinematic shot, teal and magenta palette, blade runner mood, highly detailed. Negative prompt: daylight, cartoon, blurry, low quality, text artifacts"
   },
   {
-    "id": "animation-video",
-    "title": "Animated explainer video",
-    "description": "Short animated video description with camera motion and pacing for text-to-video.",
-    "platform_id": "runway",
-    "idea": "A 15-second animated explainer showing how solar panels work, top-down view zooming into a panel, cross-section animation of photons hitting silicon cells, electrons flowing, pulsing energy glow",
-    "modality": "video"
+    "id": "product-photo",
+    "title": "E-commerce product shot",
+    "description": "Clean catalog hero image with staging and lighting instructions.",
+    "niche": "marketing",
+    "modality": "image",
+    "platform_id": "midjourney",
+    "idea": "A professional product photo of a ceramic coffee mug for an online store",
+    "template": "minimalist product photography of a matte ceramic coffee mug, centered on seamless off-white backdrop, soft diffused studio lighting from upper left, gentle shadow, styled with a single coffee bean beside it, high resolution catalog hero shot, crisp edges --ar 1:1 --style raw"
   },
   {
-    "id": "friendly-tutor",
-    "title": "Friendly coding tutor",
-    "description": "A patient, encouraging ChatGPT persona for teaching beginners to code.",
-    "platform_id": "chatgpt",
-    "idea": "A friendly coding tutor that explains concepts simply, uses analogies, never judges, and asks guiding questions instead of giving answers",
-    "modality": "chat"
+    "id": "ad-copy-landing",
+    "title": "Landing-page hero copy",
+    "description": "Conversion-focused hero section with voice, audience, and structure constraints.",
+    "niche": "marketing",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "Write landing page hero copy for a meal-prep subscription for busy parents",
+    "template": "You are a direct-response copywriter. Write hero-section copy for a weekly meal-prep subscription aimed at working parents of young kids.\n\nDeliver exactly:\n1. A headline under 10 words that leads with the outcome (evenings back, not \"meal kits\")\n2. A subheadline under 25 words naming the audience and the mechanism\n3. One CTA button label, 2-4 words, first person\n\nVoice: warm, plain-spoken, zero corporate jargon, no exclamation marks. Do not mention price. Avoid the words \"delicious\", \"easy\", and \"solution\"."
   },
   {
-    "id": "professional-email",
-    "title": "Professional email writer",
-    "description": "Helps draft professional emails in any tone — formal, persuasive, or friendly.",
-    "platform_id": "chatgpt",
-    "idea": "A professional email writing assistant that adapts tone based on the recipient and purpose, offers multiple versions, and keeps a consistent professional voice",
-    "modality": "chat"
-  },
-  {
-    "id": "claude-analyst",
-    "title": "Data analyst assistant",
-    "description": "A Claude persona for analyzing data, spotting trends, and explaining findings.",
-    "platform_id": "claude",
-    "idea": "A data analyst assistant that examines tables and charts, identifies trends and outliers, explains statistical significance in plain language, and suggests visualizations",
-    "modality": "chat"
+    "id": "social-campaign",
+    "title": "30-day social calendar",
+    "description": "A structured content calendar with pillars, formats, and hooks.",
+    "niche": "marketing",
+    "modality": "text",
+    "platform_id": "openai_chatgpt",
+    "idea": "Create a 30-day Instagram content calendar for a small fitness studio",
+    "template": "Act as a social media strategist for a neighborhood fitness studio (audience: locals 25-45, mixed fitness levels). Build a 30-day Instagram calendar.\n\nFormat: a table with columns Day | Content pillar | Format (reel/carousel/story) | Hook (first line, under 12 words) | CTA.\n\nRules: rotate 4 pillars — member stories, quick workouts, myth-busting, behind-the-scenes; no more than 2 promotional posts per week; every hook must create curiosity or name a specific pain; write hooks in second person."
   },
   {
     "id": "python-script",
     "title": "Python automation script",
-    "description": "Generate a Python script that processes CSV files with error handling.",
-    "platform_id": "chatgpt",
-    "idea": "Write a Python script that reads a CSV file, validates each row, transforms date formats, filters rows by criteria, and writes a clean output CSV with error logging",
-    "modality": "code"
+    "description": "A production-quality script request with error handling and style constraints.",
+    "niche": "coding",
+    "modality": "code",
+    "platform_id": "openai_chatgpt",
+    "idea": "A Python script that renames files in a folder based on their creation date",
+    "template": "Write a Python 3.11 script that renames every file in a target folder to the pattern YYYY-MM-DD_HHMMSS_originalname.ext based on file creation time.\n\nRequirements:\n- argparse CLI: positional folder path, --dry-run flag that prints the rename plan without touching files\n- Handle name collisions by appending _1, _2…\n- Skip hidden files and subdirectories\n- Use pathlib only (no os.path), type hints throughout, and a main() guard\n- On any per-file error, log to stderr and continue; exit code 1 if any file failed\nOutput only the complete script in one code block, no explanation."
   },
   {
     "id": "react-component",
-    "title": "React component generator",
-    "description": "Generate a reusable React component with TypeScript and Tailwind CSS.",
-    "platform_id": "claude",
-    "idea": "Create a TypeScript React component for a searchable dropdown with keyboard navigation, async option loading, multi-select support, and Tailwind styling",
-    "modality": "code"
+    "title": "Accessible React component",
+    "description": "Typed, tested component request with a11y and API constraints.",
+    "niche": "coding",
+    "modality": "code",
+    "platform_id": "cursor",
+    "idea": "Build a React autocomplete input component with keyboard navigation",
+    "template": "Build an accessible autocomplete text input in React 18 + TypeScript.\n\nAPI: <Autocomplete options={string[]} value onChange onSelect placeholder />.\nBehavior: filter options case-insensitively as the user types; highlight the active option; full keyboard support (ArrowUp/Down, Enter to select, Escape to close); close on outside click.\nA11y: combobox/listbox ARIA pattern with aria-activedescendant, aria-expanded, and a visually hidden status region announcing result counts.\nStyling: CSS modules, no UI libraries. Include a brief usage example. Keep the component under 200 lines."
   },
   {
     "id": "api-docs",
-    "title": "API documentation writer",
-    "description": "Generate clear API documentation with examples and curl snippets.",
-    "platform_id": "chatgpt",
-    "idea": "Write API documentation for a RESTful endpoint that accepts POST requests with JSON body, validates input, and returns structured responses with proper status codes and error messages",
-    "modality": "code"
+    "title": "API endpoint documentation",
+    "description": "Consistent, example-rich REST documentation from a code snippet.",
+    "niche": "coding",
+    "modality": "code",
+    "platform_id": "anthropic_claude",
+    "idea": "Document a REST API endpoint from its Express handler code",
+    "template": "You are a technical writer. I will paste an Express route handler. Produce API reference documentation with exactly these sections:\n\n## Endpoint — method + path\n## Description — 2-3 sentences, plain language, lead with what it's for\n## Request — parameters table (name, in, type, required, description) and a realistic JSON body example\n## Responses — one subsection per status code with a realistic JSON example and when it occurs\n## Errors — table of error codes with the exact condition that triggers each\n\nInfer unstated behavior from the code only; where the code is ambiguous, flag it with **[verify]** rather than guessing."
   },
   {
-    "id": "legal-summary",
-    "title": "Legal document summarizer",
-    "description": "Extract key clauses and obligations from legal text.",
-    "platform_id": "claude",
-    "idea": "Summarize this legal document: extract all defined terms, key obligations for each party, termination conditions, liability caps, and dispute resolution procedures in a structured format",
-    "modality": "text"
+    "id": "professional-email",
+    "title": "Difficult professional email",
+    "description": "Tone-calibrated email for a delicate situation.",
+    "niche": "writing",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "Write an email declining a project extension request from an important client",
+    "template": "Write an email to a long-term client declining their request to extend the project deadline by three weeks.\n\nContext: we have a hard dependency on a vendor slot that cannot move; we CAN offer a reduced-scope on-time delivery plus a fast-follow release.\nTone: warm but unambiguous — the decline must be clear in the first two sentences, not buried.\nStructure: acknowledge the request, decline with the one-sentence reason, present the alternative with concrete dates, end with a collaborative next step.\nLength: under 160 words. No apologizing more than once, no corporate filler (\"per my last email\", \"circling back\")."
   },
   {
     "id": "blog-post",
-    "title": "Blog post outline",
-    "description": "Generate a well-structured blog post outline with SEO keywords.",
-    "platform_id": "gemini",
-    "idea": "Write a 1500-word blog post outline about the benefits of renewable energy, targeting homeowners considering solar panels, include SEO keywords, subheadings, and key statistics",
-    "modality": "text"
+    "title": "SEO blog post outline+draft",
+    "description": "Structured long-form post with search intent and voice constraints.",
+    "niche": "writing",
+    "modality": "text",
+    "platform_id": "openai_chatgpt",
+    "idea": "A 1,500-word blog post about beginner indoor plant care",
+    "template": "Write a 1,500-word blog post: \"Indoor Plants for Beginners: A No-Guilt Guide to Not Killing Them\".\n\nAudience: first-time plant owners in apartments. Search intent: informational, keyword \"indoor plants for beginners\" (use naturally ≤5 times).\nStructure: hook that names the reader's fear of killing plants; H2 for each of 5 beginner plants (include light, water cadence, one failure mode each); H2 troubleshooting table (symptom → cause → fix); short buying checklist; closing that gives permission to lose a plant occasionally.\nVoice: funny-but-useful, second person, contractions, no listicle clichés (\"without further ado\"), no em-dash overuse."
   },
   {
-    "id": "recipe-card",
-    "title": "Recipe card generator",
-    "description": "Generate a formatted recipe with ingredients and step-by-step instructions.",
-    "platform_id": "gemini",
-    "idea": "Create a detailed recipe for homemade sourdough bread including ingredient list with weights, step-by-step instructions with timestamps, troubleshooting tips, and storage recommendations",
-    "modality": "text"
+    "id": "legal-summary",
+    "title": "Plain-English contract summary",
+    "description": "Faithful simplification with risk flags and structure.",
+    "niche": "writing",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "Summarize a freelance contract in plain English with risk flags",
+    "template": "You are a paralegal writing for a non-lawyer freelancer. I will paste a contract. Produce:\n\n1. **One-paragraph gist** (under 80 words)\n2. **Your obligations** — bullet list, each with the source clause number\n3. **Their obligations** — same format\n4. **Risk flags** — anything unusual or one-sided (auto-renewal, IP assignment breadth, indemnity, non-compete scope), each rated Low/Medium/High with a one-line why\n5. **Questions to ask before signing** — max 5\n\nRules: never paraphrase a clause number you're unsure of — quote it; do not give legal advice, describe what the text says; if a standard clause is MISSING (payment terms, kill fee, late fees), flag that too."
+  },
+  {
+    "id": "friendly-tutor",
+    "title": "Socratic study tutor",
+    "description": "A patient tutor persona that teaches by questioning.",
+    "niche": "education",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "A patient tutor that helps a 9th grader understand algebra without giving away answers",
+    "template": "You are a patient, encouraging algebra tutor for a 9th grader. Your goal is understanding, not answers.\n\nMethod: when I bring a problem, never solve it outright. First ask what I've tried. Then guide with one question at a time, each question small enough that I can answer it. If I'm stuck twice on the same step, give a worked example of a SIMILAR problem (different numbers), then return to mine.\nTone: warm, zero condescension; celebrate correct reasoning, not just correct answers.\nAlways end a session by asking me to explain the solved problem back to you in my own words, and correct any gaps in my explanation."
+  },
+  {
+    "id": "lesson-plan",
+    "title": "50-minute lesson plan",
+    "description": "Complete classroom plan with timings, checks, and differentiation.",
+    "niche": "education",
+    "modality": "text",
+    "platform_id": "google_gemini",
+    "idea": "A 50-minute middle school lesson plan about the water cycle",
+    "template": "Create a 50-minute lesson plan on the water cycle for a 7th-grade science class of ~28 students.\n\nFormat with these exact sections: Learning objectives (3, measurable, \"students will be able to…\"), Materials, Timeline (minute-by-minute table: 0-5 hook, 5-20 direct instruction, 20-40 activity, 40-50 assessment + exit ticket), Group activity (hands-on, uses only common classroom materials), Differentiation (one support for struggling students, one extension for advanced), Exit ticket (3 questions: one recall, one application, one drawing).\nConstraint: the hook must be a demonstration or question, never a video."
+  },
+  {
+    "id": "flashcards-quiz",
+    "title": "Flashcards + quiz generator",
+    "description": "Spaced-repetition-ready cards and a leveled quiz from any material.",
+    "niche": "education",
+    "modality": "text",
+    "platform_id": "openai_chatgpt",
+    "idea": "Turn my biology notes into flashcards and a practice quiz",
+    "template": "I will paste study notes. Convert them into study materials:\n\nPart 1 — Flashcards: 12-20 cards as a table (Front | Back). Fronts must be questions or cloze deletions, never headings; backs under 25 words; no card may test two facts at once.\nPart 2 — Quiz: 8 questions in ascending difficulty — 3 recall MCQs (4 options, plausible distractors), 3 application questions, 2 short-answer synthesis questions. Answer key at the end with one-line explanations of WHY each wrong MCQ option is wrong.\nIf my notes contain an apparent error or contradiction, list it under \"Check your notes\" instead of putting it on a card."
+  },
+  {
+    "id": "ux-microcopy",
+    "title": "UX microcopy pass",
+    "description": "Rewrites interface copy with voice, length, and state constraints.",
+    "niche": "product-ux",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "Rewrite error messages and empty states for my app to be helpful and human",
+    "template": "You are a UX writer. I will paste interface strings (errors, empty states, confirmations). Rewrite each one.\n\nRules per string: lead with what happened or what to do — never \"Oops\" or \"Something went wrong\" alone; give the ONE next action; max 12 words for errors, 20 for empty states; no blame (\"you entered an invalid…\" → \"that email doesn't look right\"); no humor in destructive or payment flows.\nOutput a table: Original | Rewrite | What changed (3-6 words). Then flag any string whose real problem is the flow, not the copy."
+  },
+  {
+    "id": "interview-guide",
+    "title": "User interview guide",
+    "description": "Non-leading discovery interview script with probes.",
+    "niche": "product-ux",
+    "modality": "text",
+    "platform_id": "openai_chatgpt",
+    "idea": "A user interview script to learn why customers abandon onboarding",
+    "template": "Create a 30-minute user-interview guide investigating why users abandon our product's onboarding.\n\nStructure: intro script (consent, no-wrong-answers framing, recording ask); 5 warm-up minutes on their context; core section with 8-10 open questions strictly about PAST behavior (\"walk me through the last time…\"), each with two follow-up probes; a 5-minute wrap with the magic-wand question and anything-we-didn't-ask.\nHard rules: no leading questions, no hypotheticals (\"would you use…\"), no feature pitching, no question answerable with yes/no. After the guide, add a 5-point checklist for the interviewer on staying neutral."
+  },
+  {
+    "id": "prd-writer",
+    "title": "One-page PRD",
+    "description": "Tight product requirements doc with scope fences.",
+    "niche": "product-ux",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "Turn my feature idea into a one-page PRD with scope and success metrics",
+    "template": "You are a senior product manager. I'll describe a feature idea; turn it into a one-page PRD.\n\nSections: Problem (2-3 sentences, evidence-based framing), Who it's for (primary persona + trigger moment), Success metrics (1 primary, 2 guardrails, with target numbers as [placeholders]), Solution sketch (what it does, not how it's built — max 5 bullets), Explicitly OUT of scope (min 3 items — infer the tempting adjacencies and fence them off), Open questions (max 4), Launch risks (top 2 with mitigations).\nTotal under 450 words. Where I haven't given you information, write [assumption: …] rather than inventing facts silently."
+  },
+  {
+    "id": "claude-analyst",
+    "title": "Data analysis persona",
+    "description": "A rigorous analyst persona with methodology constraints.",
+    "niche": "data",
+    "modality": "text",
+    "platform_id": "anthropic_claude",
+    "idea": "An analyst that reviews my metrics and finds insights without overclaiming",
+    "template": "You are a skeptical senior data analyst. I will share metrics, tables, or dashboard screenshots.\n\nFor each analysis: separate OBSERVATIONS (what the data literally shows) from INTERPRETATIONS (what it might mean) under distinct headings; every interpretation gets a confidence level (high/medium/low) and the alternative explanation you'd want to rule out; name the single most useful follow-up query or data pull.\nNever: extrapolate beyond the date range shown, treat correlation as causation, or average ratios without flagging the weighting problem. If sample sizes are small, say so before anything else."
+  },
+  {
+    "id": "sql-analyst",
+    "title": "SQL query builder",
+    "description": "Readable, correct SQL with edge-case handling.",
+    "niche": "data",
+    "modality": "code",
+    "platform_id": "openai_chatgpt",
+    "idea": "Write a SQL query for monthly retention cohorts from an events table",
+    "template": "Write PostgreSQL for monthly retention cohorts.\n\nSchema: events(user_id bigint, event_name text, occurred_at timestamptz). \"Active\" = any event in the month. Cohort = month of a user's first-ever event.\nOutput: cohort_month, months_since_signup (0-11), active_users, retention_pct (of cohort size, 1 decimal).\nRequirements: CTEs with meaningful names over subqueries; date_trunc for months; handle users active in non-consecutive months correctly (classic retention, not consecutive); exclude cohorts younger than the months_since offset (no partial denominators); comment each CTE in one line. Then explain the trickiest part of the query in 3 sentences."
+  },
+  {
+    "id": "chart-story",
+    "title": "Chart → narrative",
+    "description": "Turns a chart into an honest executive narrative.",
+    "niche": "data",
+    "modality": "text",
+    "platform_id": "google_gemini",
+    "idea": "Turn this chart into three bullet points for an executive update",
+    "template": "I will share a chart (image or described data). Write the executive narrative.\n\nDeliver: a headline finding (one sentence, includes the magnitude — \"up 23%\", not \"up significantly\"); three supporting bullets, each ≤20 words, ordered by business impact; one caveat bullet starting \"Watch out:\" naming the most important limitation (seasonality, sample, denominator change…).\nRules: numbers over adjectives; compare to a stated baseline, never to vibes; if the chart's axes are truncated or the data can't support a causal claim I've implied, say so explicitly instead of complying."
+  },
+  {
+    "id": "animation-video",
+    "title": "Animated explainer scene",
+    "description": "A text-to-video scene with camera, motion, and style directions.",
+    "niche": "video",
+    "modality": "video",
+    "platform_id": "google_gemini",
+    "idea": "A short animated scene of a paper boat sailing down a rainy street gutter",
+    "template": "Animated scene, 8 seconds: a small origami paper boat sails down a rain-filled street gutter, bobbing over ripples, passing a red autumn leaf. Camera: low tracking shot at water level following the boat, slight handheld feel. Style: soft painterly 3D animation, warm streetlight reflections on wet asphalt, gentle rain streaks, cozy melancholy mood. Motion: steady 4-second track, then the boat spins slowly once in an eddy, then continues. No text, no people, no logos."
+  },
+  {
+    "id": "product-demo-video",
+    "title": "Product demo storyboard",
+    "description": "A 60-second demo video script with shots and voiceover.",
+    "niche": "video",
+    "modality": "video",
+    "platform_id": "openai_chatgpt",
+    "idea": "A 60-second product demo video script for a budgeting app",
+    "template": "Write a 60-second product demo video script for a personal budgeting app.\n\nFormat: table with columns Time (5-10s blocks) | Shot (screen recording vs lifestyle b-roll, with framing) | On-screen text (≤6 words) | Voiceover (conversational, ≤25 words per block).\nArc: 0-10s the pain (checking account anxiety, no app yet); 10-45s three features MAX, each shown solving one specific moment; 45-60s social proof line + CTA.\nRules: voiceover reads like a friend, not a narrator (\"you know that feeling when…\"); never say \"seamless\", \"powerful\", or \"all-in-one\"; the CTA names the free tier."
+  },
+  {
+    "id": "cinematic-trailer",
+    "title": "Cinematic trailer shot",
+    "description": "A single hero trailer shot with precise camera grammar.",
+    "niche": "video",
+    "modality": "video",
+    "platform_id": "google_gemini",
+    "idea": "An epic cinematic trailer shot of a lone rider crossing a desert at dusk",
+    "template": "Cinematic trailer shot, 6 seconds: a lone rider on horseback crests a massive dune at dusk, silhouetted against a deep orange sky, sand streaming off the ridge in the wind. Camera: slow aerial pull-back and rise, starting close on the rider and revealing the vast empty desert. Lighting: low sun, long shadows, atmospheric haze. Style: anamorphic widescreen, filmic color grade with teal shadows and amber highlights, subtle lens flare. Mood: solitary, mythic. No text overlays, no other characters."
   }
 ]

@@ -199,6 +199,8 @@ ${DRAFT_JSON_FEWSHOT}`;
     }
     totalTokens += first.tokensUsed;
 
+    // The pre-refinement score is the "before" baseline for enhance mode (F1.1).
+    const initialEvaluation = first.evaluation;
     let current = draft;
     let evaluation = first.evaluation;
     const cap = config.CRITIC_MAX_REFINEMENTS;
@@ -233,6 +235,6 @@ ${DRAFT_JSON_FEWSHOT}`;
       needsRefinement: evaluation.needsRefinement,
     });
 
-    return { status: 'success', data: { draft: finalDraft, evaluation }, tokensUsed: totalTokens };
+    return { status: 'success', data: { draft: finalDraft, evaluation, initialEvaluation }, tokensUsed: totalTokens };
   }
 }

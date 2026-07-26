@@ -149,3 +149,23 @@ describe('ResponseDesign.design (§8 L6, §10.5)', () => {
     expect(result.governor.suggestions.length).toBeGreaterThan(0);
   });
 });
+
+describe('grounding (V1.6)', () => {
+  it('resolves [P/M] refs to sources with domains and snippets', () => {
+    const res = design(baseContext())!;
+    expect(res.grounding).toBeDefined();
+    const { sources, lessons } = res.grounding!;
+    // Numbering matches chunkRefs: k1→P1, k2→M1, k3→P2 (order preserved, kind-scoped counters).
+    expect(sources.map((s) => s.ref)).toEqual(['P1', 'M1', 'P2']);
+    expect(sources[0]!.domain).toBe('ai.google.dev');
+    expect(sources[0]!.snippet).toContain('photography vocabulary');
+    // Lessons dedupe identical content and keep a resolvable ref.
+    expect(lessons.length).toBe(2);
+    expect(lessons.every((l) => l.ref && sources.some((s) => s.ref === l.ref))).toBe(true);
+  });
+
+  it('is absent when nothing was retrieved', () => {
+    const res = design(baseContext({ pkbChunks: [] }))!;
+    expect(res.grounding).toBeUndefined();
+  });
+});

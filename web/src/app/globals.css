@@ -1,1 +1,230 @@
 @import "tailwindcss";
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────
+ * PromptForge — "FORGE" design language (V2)
+ * A warm editorial system: bone paper + warm ink + a molten EMBER accent.
+ * The ember ties to the brand ("forge"): rough ideas heated into sharp prompts.
+ * No purple, no violet, no gradient fills. Data-viz (score meters) keep their
+ * own red→amber→green signal scale so "good" always reads green, not brand.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+@theme {
+  /* ── Ember accent scale (brand) ── */
+  --color-ember-50:  #fff5ed;
+  --color-ember-100: #ffe7d3;
+  --color-ember-200: #fdcba6;
+  --color-ember-300: #fba86e;
+  --color-ember-400: #f67c37;
+  --color-ember-500: #ef5f14;
+  --color-ember-600: #d9480f; /* primary CTA */
+  --color-ember-700: #b23809; /* hover */
+  --color-ember-800: #8f2d0d;
+  --color-ember-900: #74260f;
+
+  /* Remap Tailwind's built-in emerald scale → ember so every existing
+     `emerald-*` utility across the app instantly re-skins to the brand. */
+  --color-emerald-50:  var(--color-ember-50);
+  --color-emerald-100: var(--color-ember-100);
+  --color-emerald-200: var(--color-ember-200);
+  --color-emerald-300: var(--color-ember-300);
+  --color-emerald-400: var(--color-ember-400);
+  --color-emerald-500: var(--color-ember-500);
+  --color-emerald-600: var(--color-ember-600);
+  --color-emerald-700: var(--color-ember-700);
+  --color-emerald-800: var(--color-ember-800);
+  --color-emerald-900: var(--color-ember-900);
+
+  /* Warm the neutral (stone) ramp a touch toward paper/graphite. */
+  --color-stone-50:  #faf9f6;
+  --color-stone-100: #f3f1ea;
+  --color-stone-200: #e7e3d9;
+  --color-stone-300: #d5cfc1;
+  --color-stone-400: #a8a091;
+  --color-stone-500: #7c7568;
+  --color-stone-600: #5c564c;
+  --color-stone-700: #423d35;
+  --color-stone-800: #2a2620;
+  --color-stone-900: #1a1712;
+
+  /* Some screens use cool `gray`/`neutral`; warm them to match stone so the
+     whole product reads as one temperature. */
+  --color-gray-50:  #faf9f6;
+  --color-gray-100: #f3f1ea;
+  --color-gray-200: #e7e3d9;
+  --color-gray-300: #d5cfc1;
+  --color-gray-400: #a8a091;
+  --color-gray-500: #7c7568;
+  --color-gray-600: #5c564c;
+  --color-gray-700: #423d35;
+  --color-gray-800: #2a2620;
+  --color-gray-900: #1a1712;
+  --color-neutral-50:  #faf9f6;
+  --color-neutral-100: #f3f1ea;
+  --color-neutral-200: #e7e3d9;
+  --color-neutral-300: #d5cfc1;
+  --color-neutral-400: #a8a091;
+  --color-neutral-500: #7c7568;
+  --color-neutral-600: #5c564c;
+  --color-neutral-700: #423d35;
+  --color-neutral-800: #2a2620;
+  --color-neutral-900: #1a1712;
+
+  /* ── Semantic tokens ── */
+  --color-paper: #f8f6f1;   /* app background (warm bone) */
+  --color-surface: #ffffff; /* cards */
+  --color-ink: #1a1712;     /* primary text (warm near-black) */
+  --color-ink-soft: #5c564c;
+  --color-line: #e7e3d9;    /* hairline borders */
+  --color-accent: var(--color-ember-600);
+  --color-accent-hover: var(--color-ember-700);
+  --color-accent-soft: var(--color-ember-50);
+
+  /* ── Score / health signal scale (independent of brand) ── */
+  --color-signal-good: #2f9e63; /* green  */
+  --color-signal-mid:  #d99613; /* amber  */
+  --color-signal-low:  #d1493c; /* clay red */
+
+  /* ── Type ── */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: var(--font-display), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono-code), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* ── Radii ── */
+  --radius-sm: 0.5rem;
+  --radius: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* ── Elevation (warm, low, editorial) ── */
+  --shadow-sm: 0 1px 2px rgba(26, 23, 18, 0.05);
+  --shadow-md: 0 4px 16px -4px rgba(26, 23, 18, 0.10), 0 1px 2px rgba(26, 23, 18, 0.04);
+  --shadow-lg: 0 18px 48px -12px rgba(26, 23, 18, 0.18), 0 2px 6px rgba(26, 23, 18, 0.05);
+  --shadow-ember: 0 8px 24px -8px rgba(217, 72, 15, 0.35);
+}
+
+/* ── Base ── */
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+::selection {
+  background: var(--color-ember-200);
+  color: var(--color-ink);
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Warm, slim scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-stone-300) transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb {
+  background: var(--color-stone-300);
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover { background: var(--color-stone-400); }
+
+/* ── Textures (CSS patterns, not gradient fills) ── */
+.dot-grid {
+  background-image: radial-gradient(circle, rgba(26, 23, 18, 0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+/* A faint warm "heat haze" wash behind the hero — a radial tint, kept very subtle. */
+.hero-wash {
+  background:
+    radial-gradient(60% 50% at 50% -10%, rgba(217, 72, 15, 0.06), transparent 70%),
+    var(--color-paper);
+}
+
+/* ── Component layer ── */
+@layer components {
+  .pf-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 1.1rem;
+    font-size: 0.875rem; font-weight: 600;
+    line-height: 1; white-space: nowrap;
+    transition: background-color .15s ease, color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .05s ease;
+    cursor: pointer; border: 1px solid transparent;
+  }
+  .pf-btn:active { transform: translateY(0.5px); }
+  .pf-btn-primary {
+    background: var(--color-accent); color: #fff;
+    box-shadow: var(--shadow-ember);
+  }
+  .pf-btn-primary:hover { background: var(--color-accent-hover); }
+  .pf-btn-secondary {
+    background: var(--color-surface); color: var(--color-ink);
+    border-color: var(--color-line); box-shadow: var(--shadow-sm);
+  }
+  .pf-btn-secondary:hover { border-color: var(--color-stone-300); background: var(--color-stone-50); }
+  .pf-btn-ghost { background: transparent; color: var(--color-ink-soft); }
+  .pf-btn-ghost:hover { color: var(--color-ink); background: var(--color-stone-100); }
+
+  .pf-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+  }
+  .pf-input {
+    width: 100%;
+    background: var(--color-surface);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.9rem; color: var(--color-ink);
+    transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .pf-input:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px var(--color-ember-100); }
+
+  .pf-badge {
+    display: inline-flex; align-items: center; gap: 0.375rem;
+    border-radius: 999px; padding: 0.25rem 0.7rem;
+    font-size: 0.72rem; font-weight: 600; letter-spacing: 0.01em;
+    background: var(--color-ember-50); color: var(--color-ember-700);
+    border: 1px solid var(--color-ember-100);
+  }
+  .pf-chip {
+    display: inline-flex; align-items: center;
+    border-radius: 999px; padding: 0.3rem 0.8rem;
+    font-size: 0.8rem; font-weight: 500;
+    background: var(--color-surface); color: var(--color-ink-soft);
+    border: 1px solid var(--color-line); cursor: pointer;
+    transition: all .15s ease;
+  }
+  .pf-chip:hover { border-color: var(--color-ember-300); color: var(--color-ink); }
+  .pf-chip--active {
+    background: var(--color-accent); color: #fff; border-color: var(--color-accent);
+  }
+  .pf-kbd {
+    font-family: var(--font-mono); font-size: 0.7rem;
+    background: var(--color-stone-100); border: 1px solid var(--color-line);
+    border-bottom-width: 2px; border-radius: 0.375rem;
+    padding: 0.1rem 0.4rem; color: var(--color-ink-soft);
+  }
+}
+
+@keyframes pf-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.pf-rise { animation: pf-rise .5s cubic-bezier(0.22, 1, 0.36, 1) both; }

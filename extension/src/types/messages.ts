@@ -13,6 +13,23 @@ export interface ApiResponse {
   error?: string;
 }
 
+// ── DICTATION (F1.3) ──
+// The content script records audio (MediaRecorder) and hands the raw bytes to
+// the background worker as an ArrayBuffer (structured-clone transferable); the
+// worker does the multipart POST so the content script stays fetch/credential-free.
+export interface TranscribeRequest {
+  type: 'TRANSCRIBE';
+  audio: ArrayBuffer;
+  mimeType: string;
+}
+
+export interface TranscribeResponse {
+  type: 'TRANSCRIBE_RESPONSE';
+  status: number;
+  text?: string;
+  error?: string;
+}
+
 // ── OVERLAY ──
 export interface ShowOverlay {
   type: 'SHOW_OVERLAY';
@@ -27,5 +44,7 @@ export interface HideOverlay {
 export type ExtensionMessage =
   | ApiRequest
   | ApiResponse
+  | TranscribeRequest
+  | TranscribeResponse
   | ShowOverlay
   | HideOverlay;

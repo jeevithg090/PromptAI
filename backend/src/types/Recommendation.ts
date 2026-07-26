@@ -1,13 +1,29 @@
 import { z } from 'zod';
+import type { PlatformMode } from './Platform';
 
-/**
- * Model & Platform Recommendation types — spec §15.
- * The Model Capability Matrix (§15.1) is perishable KB data; recommendation
- * logic (§15.2) ranks against task constraints and shows the trade-off, not a
- * single winner.
- */
-export const MODALITIES = ['text', 'code', 'image', 'video'] as const;
+export const MODALITIES = ['text', 'code', 'image', 'video', 'audio'] as const;
 export type Modality = (typeof MODALITIES)[number];
+
+export const reasoningEffortSchema = z.object({
+  supported_levels: z.array(z.string()).nullable().optional(),
+  default: z.string().nullable().optional(),
+  parameter: z.string().nullable().optional(),
+  pro_mode: z.boolean().optional(),
+  pro_mode_parameter: z.string().optional(),
+  adaptive_thinking: z.boolean().optional(),
+  adaptive_thinking_parameter: z.string().optional(),
+  thinking_always_on: z.boolean().optional(),
+  dynamic_thinking: z.boolean().optional(),
+  can_disable: z.boolean().optional(),
+  disable_parameter: z.string().optional(),
+  disable_value: z.union([z.number(), z.string()]).optional(),
+  disabled_by_default: z.boolean().optional(),
+  budget_min: z.number().optional(),
+  budget_max: z.number().optional(),
+  dynamic_budget_parameter: z.union([z.number(), z.string()]).optional(),
+  notes: z.string().optional(),
+}).nullable();
+export type ReasoningEffort = z.infer<typeof reasoningEffortSchema>;
 
 export const modelCapabilitySchema = z.object({
   model_id: z.string(),
@@ -16,11 +32,12 @@ export const modelCapabilitySchema = z.object({
   platform_id: z.string().optional(),
   modalities: z.array(z.enum(MODALITIES)),
   context_window: z.number().int().nonnegative(),
-  /** Relative bucket 1 (cheapest) … 5 (priciest). Not a live price (§15.1). */
+  max_output_tokens: z.number().int().nonnegative().optional(),
   cost_tier: z.number().int().min(1).max(5),
-  /** Relative bucket 1 (fastest) … 5 (slowest). */
   latency_tier: z.number().int().min(1).max(5),
   strengths: z.array(z.string()),
+  benchmark_scores: z.record(z.string()).optional(),
+  reasoning_efforts: reasoningEffortSchema.optional(),
   notes: z.string().optional(),
 });
 export type ModelCapability = z.infer<typeof modelCapabilitySchema>;
@@ -30,25 +47,61 @@ export const capabilityMatrixSchema = z.object({
   note: z.string().optional(),
   last_verified: z.string(),
   models: z.array(modelCapabilitySchema),
+  task_profiles: z.record(z.object({
+    description: z.string(),
+    ideal_strengths: z.array(z.string()),
+    cost_sensitivity: z.string().optional(),
+    latency_sensitivity: z.string().optional(),
+    quality_sensitivity: z.string().optional(),
+    recommended_reasoning_effort: z.string().nullable().optional(),
+  })).optional(),
 });
 export type CapabilityMatrix = z.infer<typeof capabilityMatrixSchema>;
 
-/** What the caller is optimizing for. Weights let the UI express user priorities. */
 export interface RecommendationRequest {
   modality: Modality;
-  /** 0–1 each — how much the user cares about that axis. Defaults balanced. */
   prioritizeQuality?: number;
   prioritizeCost?: number;
   prioritizeLatency?: number;
-  /** Rough expected prompt+output size; filters out models whose context can't hold it. */
   minContextWindow?: number;
-  /** Optional free-text task strengths to match against (e.g. "reasoning", "long-context"). */
   desiredStrengths?: string[];
+}
+
+export interface TaskRecommendationRequest {
+  task: string;
+  task_type?: 'general' | 'coding' | 'reasoning' | 'image_generation' | 'video_generation' | 'classification' | 'extraction' | 'research' | 'writing' | 'long_context' | 'multimodal';
+  modality?: Modality;
+  prioritizeQuality?: number;
+  prioritizeCost?: number;
+  prioritizeLatency?: number;
 }
 
 export interface Recommendation {
   model: ModelCapability;
-  score: number; // 0–100, higher = better fit
-  /** Human-readable trade-off line (§15.2 — never present a bare winner). */
+  score: number;
   tradeoff: string;
+  match_reason: string;
+}
+
+export interface ReasoningEffortSuggestion {
+  model_id: string;
+  display_name: string;
+  suggested_effort: string | null;
+  supported_levels: string[] | null;
+  default_effort: string | null;
+  parameter: string | null;
+  pro_mode_suggested: boolean;
+  notes: string | null;
+  description_suffix: string;
+}
+
+export interface TaskRecommendation {
+  task_type: string;
+  task_description: string;
+  recommendations: Recommendation[];
+  best_model: Recommendation;
+  reasoning_effort: ReasoningEffortSuggestion;
+  platform_mode: PlatformMode | null;
+  pkb_guidance: string[];
+  explanation: string;
 }

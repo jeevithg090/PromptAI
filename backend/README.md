@@ -1,6 +1,6 @@
 # PromptForge — Backend
 
-The orchestration backend: a single "Lambdalith" (one AWS Lambda behind a Function URL, Hono router) that is internally rigorously modular. See `../prompt-assistant-technical-architecture.md` for the full design and `../task.md` for the build sequence.
+The orchestration backend: a single "Lambdalith" (one AWS Lambda behind **API Gateway** — Function URLs are org-blocked on this AWS account; see `../final-task-prompt.md` Global Context Block v2 — with a Hono router) that is internally rigorously modular. Live at `https://qsfu5lcqt2.execute-api.us-east-1.amazonaws.com`. See `../prompt-assistant-technical-architecture.md` for the full design, `../task.md` for the historical build sequence, and `../final-task.md` for the live plan.
 
 ## Quick start (no cloud accounts needed)
 

@@ -218,7 +218,43 @@ describe('Phase 7 routes', () => {
       // Every delete targets the caller's userId.
       const deletes = query.mock.calls.filter(([sql]) => (sql as string).startsWith('delete from'));
       expect(deletes.length).toBeGreaterThanOrEqual(6);
-      expect(deletes.every(([, params]) => (params as unknown[])[0] === 'dev-user-000')).toBe(true);
+      expect(deletes.every(([, params]) => (params as unknown[])[0] === '00000000-0000-4000-8000-000000000001')).toBe(true);
+    });
+  });
+
+  /**
+   * SR2 (F0.5): the PUBLIC community-library endpoints must never expose a
+   * contributor's email. The DB join on app_users.email was removed; the SQL
+   * must not reference au.email, and the response must not contain it.
+   */
+  describe('Library public endpoints do not leak contributor email (F0.5)', () => {
+    function libraryPool(): jest.Mock {
+      const query = jest.fn().mockImplementation(async (sql: string) => {
+        if (sql.includes('from library_entries') && sql.includes("moderation_status = 'approved'")) {
+          return { rows: [{ id: 'lib-1', title: 'T', description: 'D', modality: 'image', template: 'x', attributed: true, created_at: new Date().toISOString() }] };
+        }
+        return { rows: [] };
+      });
+      setPoolForTesting({ query } as unknown as Pool);
+      return query;
+    }
+
+    it('GET /library selects no email column and returns none', async () => {
+      const query = libraryPool();
+      const res = await app.request('/library');
+      expect(res.status).toBe(200);
+      const listSql = query.mock.calls.map(([sql]) => sql as string).find((s) => s.includes('order by l.popularity'));
+      expect(listSql).not.toMatch(/au\.email|attributed_email/);
+      expect(JSON.stringify(await res.json())).not.toMatch(/@/);
+    });
+
+    it('GET /library/:id selects no email column and returns none', async () => {
+      const query = libraryPool();
+      const res = await app.request('/library/lib-1');
+      expect(res.status).toBe(200);
+      const detailSql = query.mock.calls.map(([sql]) => sql as string).find((s) => s.includes('where l.id = $1'));
+      expect(detailSql).not.toMatch(/au\.email|attributed_email|l\.\*/);
+      expect(JSON.stringify(await res.json())).not.toMatch(/@/);
     });
   });
 });

@@ -49,12 +49,30 @@ describe('serializeNodes (§13.3)', () => {
     );
   });
 
-  it('conversational platforms: prose with explicit exclusion line', () => {
+  it('conversational platforms: scene sentences, a Requirements block, and an explicit exclusion line', () => {
     const gm = horseNodes.map((n) => (n.type === 'technical_parameters' ? { ...n, value: 'The image must be in 16:9 landscape format' } : n));
     const out = serializeNodes(gm, platform('google_gemini'));
-    expect(out).toContain('a chestnut horse, galloping through shallow water, photorealistic, wide shot, golden hour.');
-    expect(out).toContain('The image must be in 16:9 landscape format.');
+    // Scene nodes are joined as SENTENCES, never comma-fused (the fragment-salad bug).
+    expect(out).toContain('a chestnut horse. galloping through shallow water. photorealistic. wide shot. golden hour.');
+    // Technical parameters / constraints become an enumerated Requirements block.
+    expect(out).toContain('Requirements:\n- The image must be in 16:9 landscape format.');
     expect(out).toContain('Do not include: text, watermark.');
+  });
+
+  it('conversational platforms: composes fluent prose, not comma-fused fragments', () => {
+    const nodes: PromptNode[] = [
+      node('persona_role', 'You are an expert copywriter.', 0),
+      node('subject', 'Write a product description for eco-friendly water bottles', 1),
+      node('constraints_rules', 'Keep it under 150 words', 2),
+      node('output_format', 'Return plain text', 3),
+    ];
+    const out = serializeNodes(nodes, platform('openai_chatgpt'));
+    // No node value should be comma-joined to the next (each ends with sentence punctuation).
+    expect(out).toContain('You are an expert copywriter. Write a product description for eco-friendly water bottles.');
+    expect(out).toContain('Requirements:\n- Keep it under 150 words.');
+    expect(out).toContain('Output format: Return plain text.');
+    // The ".," artifact from the old comma-join must never appear.
+    expect(out).not.toContain('.,');
   });
 
   it('orders by node position regardless of array order', () => {

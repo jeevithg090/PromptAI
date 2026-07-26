@@ -541,3 +541,29 @@ Prompt AI 2026/
 ### [x] TA.2 — Model & Platform Recommendation engine (backend) — §15, FA-2a — **built now** (pulls T5.7 backend forward)
 - **Description:** "Which model/platform suits this task best" as backend logic + a populated Model Capability Matrix, with trade-off output (quality vs cost vs latency), never a single winner (§15.2). Frontend surfacing stays in T5.7.
 - **How:** `config/model-capabilities.json` (perishable matrix data, §15.1) → `services/RecommendationService.ts` → `GET/POST /recommend`. Cost/token estimation ties into the Governor (FA-2b).
+
+### [x] TA.3 — Token-reduction advisor (incl. PDF→Markdown) — §16, FA-3 — **SHIPPED** (ledger reconciled 2026-07-11, F0.4)
+- **Description:** "Make this prompt cheaper" — deterministic, no-LLM advisor detecting filler/redundancy/duplicate-lines/whitespace and recommending PDF→Markdown + table→CSV, with estimated token savings.
+- **How / evidence:** `backend/src/services/TokenOptimizationAdvisor.ts` + `POST /optimize` (authed). Verified present in code + covered by the integration test ("POST /optimize returns token-reduction suggestions"). Built 2026-07-07 with TA.1/TA.2; ledger entry was simply never written.
+- **Success criteria:** ✅ verbose+PDF prompt → `pdf_to_markdown` + `trim_filler` suggestions with savings estimate.
+
+### [x] TA.4 — Multi-platform prompt fan-out — §13.3, FA-1d — **SHIPPED** (ledger reconciled 2026-07-11, F0.4)
+- **Description:** From one finished node set, serialize the prompt for 2–5 target platforms at once, each with its own governor report; honest note that fan-out re-serializes the *same* nodes (per-platform re-drafting is what `/draft` does).
+- **How / evidence:** `POST /fanout` (authed) in `routes.ts`, pure/deterministic over `serializeNodes` + `govern`; Phase-4 fan-out tests present. Verified in code.
+- **Success criteria:** ✅ one node set → per-platform assembled strings + token reports; unknown platforms listed in `skipped`.
+
+### [ ] TA.5 — Trending-prompt discovery — FA-1c (extends §14.4) — **NOT BUILT** (verified 2026-07-11, F0.4)
+- **Description:** Surface popular/rising community templates (a discovery feed over anonymized popularity signals).
+- **Status:** Prompt exists (`prompt-task.md` P-TA.5) but **never executed** — no `trending`/`discover` code in backend, config, or web (grep-confirmed). The `library_entries` table has a `popularity`/`remix_count` column the feature would build on. Deferred; not required for the MF launch milestone.
+
+### [~] TA.6 — Platform usage coaching delivery — FA-4 — **PARTIAL** (verified 2026-07-11, F0.4)
+- **Description:** Deliver platform-usage coaching (e.g. Claude Code slash commands) to the user at the right moment.
+- **Status:** The **knowledge** shipped in TA.1 (the `usage_tips` chunk category in `config/pkb-seed.json`) and flows into drafts through normal PKB retrieval, but there is **no dedicated coaching-delivery surface/route** (no `/tips`, no coaching UI). Counts as data-present / delivery-not-built. A dedicated delivery feature is deferred; the tips are not lost (they ground drafts today).
+
+### [~] TA.7 — New-website walkthrough — FA-5 (extends §5.4) — **PARTIAL** (verified 2026-07-11, F0.4)
+- **Description:** When the user is on an unrecognized site, offer a guided "here's how to use PromptForge here" flow + a "request platform support" action.
+- **Status:** The **"request platform support"** half shipped — `POST /platform-requests` (public, IP-rate-limited) in `routes.ts` + `types/Http.ts`, plus T5.5's generic-mode detection fallback. The distinct **guided walkthrough** experience is **not built** as a separate feature. Partial; the escape-hatch works, the guided tour does not.
+
+---
+
+**LEDGER NOTE (2026-07-11, F0.4):** TA.3–TA.7 above were reconciled from shipped code during the final-phase audit — TA.3/TA.4 verifiably shipped (files/routes present + tested); TA.5 never built; TA.6/TA.7 partial (data/escape-hatch present, dedicated delivery/walkthrough surfaces not). Live plan continues in **`final-task.md`** (Phases F0–F2).

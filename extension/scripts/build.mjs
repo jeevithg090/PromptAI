@@ -41,6 +41,11 @@ async function main() {
 
   copyFileSync(resolve(srcDir, 'manifest.json'), resolve(outDir, 'manifest.json'));
 
+  // Static options page (no bundling — plain HTML + chrome.storage script).
+  for (const f of ['options.html', 'options.js']) {
+    copyFileSync(resolve(srcDir, f), resolve(outDir, f));
+  }
+
   const iconsSrc = resolve(srcDir, 'icons');
   if (existsSync(iconsSrc)) {
     const iconsDest = resolve(outDir, 'icons');

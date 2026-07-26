@@ -5,6 +5,10 @@ import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
 import type { DesignedNode, DesignedResponse, NodeAlternative } from '@/lib/api-types';
 import NodeCard from '@/components/NodeCard';
+import ChatRefine from '@/components/ChatRefine';
+import TokenMeter, { type TokenMeterData } from '@/components/TokenMeter';
+import { estimateTokens } from '@/lib/tokens';
+import { customPlatformPayload } from '@/lib/customPlatforms';
 
 interface NodeEditorProps {
   response: DesignedResponse;
@@ -18,14 +22,27 @@ export default function NodeEditor({ response, onUpdate }: NodeEditorProps) {
   const [assembled, setAssembled] = useState(response.assembled);
   const [regeneratingType, setRegeneratingType] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [governor, setGovernor] = useState<TokenMeterData | null>(response.governor ?? null);
+  const [governorEstimated, setGovernorEstimated] = useState(false);
 
   const serialize = useCallback(async (updatedNodes: DesignedNode[]) => {
+    // Instant client estimate so the meter tracks keystrokes; server truth follows.
+    setGovernor((prev) => prev && {
+      ...prev,
+      tokenCount: estimateTokens(updatedNodes.map((n) => n.value).join(', ')),
+    });
+    setGovernorEstimated(true);
     try {
       const res = await api.serialize({
         platform_id: response.platformId,
         nodes: updatedNodes,
+        ...customPlatformPayload(response.platformId),
       });
       setAssembled(res.assembled);
+      if (res.governor) {
+        setGovernor(res.governor);
+        setGovernorEstimated(false);
+      }
       onUpdate({ ...response, nodes: updatedNodes, assembled: res.assembled });
     } catch {
       // serialize failed — keep old assembled
@@ -103,6 +120,12 @@ export default function NodeEditor({ response, onUpdate }: NodeEditorProps) {
     });
   }, [serialize]);
 
+  const handleChatApply = useCallback((updatedNodes: DesignedNode[], newAssembled: string) => {
+    setNodes(updatedNodes);
+    setAssembled(newAssembled);
+    onUpdate({ ...response, nodes: updatedNodes, assembled: newAssembled });
+  }, [response, onUpdate]);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(assembled).then(() => {
       const btn = document.activeElement as HTMLButtonElement | null;
@@ -126,12 +149,21 @@ export default function NodeEditor({ response, onUpdate }: NodeEditorProps) {
         </pre>
       </div>
 
+      {governor && <TokenMeter governor={governor} estimated={governorEstimated} />}
+
       <button
         onClick={handleCopy}
         className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
       >
         {strings.resultCopy}
       </button>
+
+      <ChatRefine
+        platformId={response.platformId}
+        taskType={response.taskType}
+        nodes={nodes}
+        onApply={handleChatApply}
+      />
 
       {error && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
@@ -150,6 +182,7 @@ export default function NodeEditor({ response, onUpdate }: NodeEditorProps) {
             onRegenerate={handleRegenerate}
             onSelectAlternative={handleSelectAlternative}
             isRegenerating={regeneratingType === node.type}
+            sources={response.grounding?.sources}
           />
         ))}
       </div>

@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { strings } from '@/lib/strings';
-import type { DesignedNode, NodeAlternative } from '@/lib/api-types';
+import { estimateTokens, formatTokens } from '@/lib/tokens';
+import { RationaleWithCitations } from '@/components/CitationChip';
+import type { DesignedNode, NodeAlternative, GroundingSource } from '@/lib/api-types';
 
 interface NodeCardProps {
   node: DesignedNode;
@@ -11,6 +13,8 @@ interface NodeCardProps {
   onRegenerate: (nodeType: string) => void;
   onSelectAlternative: (nodeType: string, alt: NodeAlternative) => void;
   isRegenerating: boolean;
+  /** Grounding sources (V1.6) — lets [P1]-style tokens in the rationale resolve to doc links. */
+  sources?: GroundingSource[];
 }
 
 export default function NodeCard({
@@ -20,6 +24,7 @@ export default function NodeCard({
   onRegenerate,
   onSelectAlternative,
   isRegenerating,
+  sources = [],
 }: NodeCardProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(node.value);
@@ -72,6 +77,11 @@ export default function NodeCard({
         </div>
 
         <div className="flex items-center gap-1">
+          {node.value.length > 0 && (
+            <span className="mr-1 text-[10px] tabular-nums text-gray-400" title={strings.tokenMeter.label}>
+              {strings.tokenMeter.perNode(formatTokens(estimateTokens(node.value)))}
+            </span>
+          )}
           {node.locked && (
             <span className="mr-1 text-xs text-amber-600">{strings.nodeLocked}</span>
           )}
@@ -137,9 +147,11 @@ export default function NodeCard({
         </p>
       )}
 
-      {/* Rationale (collapsed) */}
+      {/* Rationale (collapsed) — [P1]/[M2] tokens resolve to doc citations (V1.6) */}
       {node.rationale && !isEditing && (
-        <p className="mt-1 text-xs text-gray-400">{node.rationale}</p>
+        <p className="mt-1 text-xs text-gray-400">
+          <RationaleWithCitations text={node.rationale} sources={sources} />
+        </p>
       )}
 
       {/* Actions */}

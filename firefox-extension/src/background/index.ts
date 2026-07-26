@@ -34,9 +34,10 @@ browser.runtime.onMessage.addListener(
 );
 
 async function handleApiRequest(
-  msg: ExtensionMessage & { type: 'API_REQUEST' },
+  msg: ExtensionMessage,
 ): Promise<ApiResponse> {
-  const url = `${API_ORIGIN}/api${msg.path}`;
+  // Backend routes are mounted at the root, NOT under /api.
+  const url = `${API_ORIGIN}${msg.path}`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 
   const res = await fetch(url, {

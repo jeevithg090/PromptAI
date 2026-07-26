@@ -56,6 +56,14 @@ export interface PipelineContext {
   memories?: string[];
   /** User has opted into anonymous curation (T8.2, §14.4). */
   optedIn?: boolean;
+  /** Pipeline mode (F1.1): 'draft' (default) generates from an idea; 'enhance' improves a pasted finished prompt. */
+  mode?: 'draft' | 'enhance';
+  /** Enhance mode: the platform the imported prompt looks written for (surfaced to the UI, not necessarily the target). */
+  platformHint?: string | null;
+  /** Enhance mode: the Critic's pre-refinement score of the imported prompt — the "before" baseline for the improvement delta. */
+  baselineEvaluation?: RubricEvaluation;
+  /** Enhance mode: the untouched imported draft (before the Critic refined it) — the "before" nodes. */
+  importedDraft?: DraftPrompt;
 }
 
 /** Curation candidate proposed by the CurationAgent (§14.4, T8.2). */

@@ -1,7 +1,8 @@
 import { PKBService } from '../services/PKBService';
 import { logger } from '../utils/logger';
 import { config } from '../config/env';
-import { fetchDoc, extractText, chunkText, ingestChunks } from '../services/DocIngest';
+import { ingestChunks } from '../services/DocIngest';
+import { groundingService } from '../services/GroundingService';
 import { Client } from 'pg';
 import type { Agent, AgentInput, AgentOutput, KnowledgeChunk } from '../types/Agent';
 import type { Platform } from '../types/Platform';
@@ -27,6 +28,14 @@ export class DocRetrievalAgent implements Agent {
 
   async execute(input: AgentInput): Promise<AgentOutput> {
     const { context } = input;
+
+    // Custom platform (V1.1): the client already supplied doc chunks fetched
+    // from the platform's own docs — pass them through untouched. There is
+    // nothing in the DB to retrieve for a `custom:` platform id.
+    if (context.platform.platform_id.startsWith('custom:')) {
+      return { status: 'success', data: { chunks: context.pkbChunks ?? [] }, tokensUsed: 0 };
+    }
+
     const query = [
       context.taskType ?? 'general prompt',
       ...Object.values(context.entities ?? {}),
@@ -65,51 +74,20 @@ export class DocRetrievalAgent implements Agent {
     return bestSimilarity < config.PKB_MIN_SIMILARITY;
   }
 
-  /** Live-fetch the platform's docs_url, chunk, rank against query, and async-upsert. */
+  /**
+   * Self-healing grounding (§6.2, finalplan §A2): when the PKB is cold or
+   * low-similarity, extract prompt-writing rules from the platform's OFFICIAL
+   * docs via GroundingService (Gemini url_context, or an SSRF-guarded HTML
+   * fetch fallback). Real doc-grounded chunks replace the old fake-0.5 stub.
+   * Fresh chunks are async-upserted so the next request is a fast pgvector hit.
+   */
   private async tryLiveFetch(platform: Platform, query: string): Promise<KnowledgeChunk[] | null> {
-    // SSRF guard (§27, T3.8-T5.2): only the platform's registered docs_url is fetchable.
     const docsUrl = platform.docs_url;
     if (!docsUrl) return null;
 
     const started = Date.now();
-    const html = await fetchDoc(docsUrl, 8_000);
-    if (!html) return null;
-
-    const text = extractText(html);
-    const rawChunks = chunkText(text);
-    if (rawChunks.length === 0) return null;
-
-    // Embed the query and rank fresh chunks in-memory by cosine similarity.
-    let queryVector: number[];
-    try {
-      queryVector = await this.pkb.embedQuery(query);
-    } catch {
-      return null;
-    }
-
-    const norm = Math.sqrt(queryVector.reduce((s, x) => s + x * x, 0)) || 1;
-    const queryUnit = queryVector.map((x) => x / norm);
-
-    const ranked: Array<{ content: string; similarity: number }> = rawChunks.map((c) => {
-      // We don't have embeddings for fresh chunks — approximate similarity by
-      // embedding a combined query+chunk representation. For v1, just return
-      // the first 3 chunks as-is (live-fetched content is inherently relevant).
-      return { content: c, similarity: 0.5 };
-    });
-
-    ranked.sort((a, b) => b.similarity - a.similarity);
-    const top = ranked.slice(0, 3);
-
-    const liveChunks: KnowledgeChunk[] = top.map((c, i) => ({
-      id: `live-${i}`,
-      kind: 'pkb' as const,
-      platformId: platform.platform_id,
-      content: c.content,
-      sourceUrl: docsUrl,
-      ingestedAt: new Date().toISOString(),
-      trustScore: 0.6,
-      similarity: c.similarity,
-    }));
+    const chunks = await groundingService.ground(platform, query);
+    if (chunks.length === 0) return null;
 
     // Fire-and-forget upsert so the request is not blocked by DB writes.
     if (config.DATABASE_URL) {
@@ -117,8 +95,8 @@ export class DocRetrievalAgent implements Agent {
       client.connect().then(() => {
         ingestChunks(
           client,
-          rawChunks.map((c) => ({ content: c, sourceUrl: docsUrl })),
-          { kind: 'pkb', platformId: platform.platform_id, trustScore: 0.6, category: 'crawled' }
+          chunks.map((c) => ({ content: c.content, sourceUrl: c.sourceUrl })),
+          { kind: 'pkb', platformId: platform.platform_id, trustScore: chunks[0]!.trustScore, category: 'crawled' }
         ).catch(() => {}).finally(() => client.end().catch(() => {}));
       }).catch(() => {});
     }
@@ -127,10 +105,10 @@ export class DocRetrievalAgent implements Agent {
       type: 'tool:live_fetch',
       platformId: platform.platform_id,
       durationMs: Date.now() - started,
-      chunksFound: rawChunks.length,
+      chunksFound: chunks.length,
       status: 'success',
     });
 
-    return liveChunks;
+    return chunks;
   }
 }

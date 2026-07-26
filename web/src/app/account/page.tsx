@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { strings } from '@/lib/strings';
+import { strings, getLocale, setLocale, LOCALES } from '@/lib/strings';
+import { launchTour } from '@/components/Tour';
+import StyleGuideEditor from '@/components/StyleGuideEditor';
 import { useRequireAuth } from '@/components/AuthProvider';
 import { useEncryption } from '@/components/EncryptionProvider';
 import { api } from '@/lib/api';
@@ -205,6 +207,31 @@ export default function AccountPage() {
         <div>
           <label className="block text-sm font-medium text-gray-700">{strings.accountEmail}</label>
           <p className="mt-1 text-sm text-gray-900">{user?.email ?? '—'}</p>
+        </div>
+
+        {/* Language + onboarding (F2.6) */}
+        <div>
+          <label htmlFor="locale" className="block text-sm font-medium text-gray-700">{strings.locale.label}</label>
+          <div className="mt-1 flex items-center gap-3">
+            <select
+              id="locale"
+              defaultValue={getLocale()}
+              onChange={(e) => setLocale(e.target.value)}
+              className="rounded-md border border-gray-300 px-3 py-1.5 text-sm"
+            >
+              {Object.entries(LOCALES).map(([code, l]) => (
+                <option key={code} value={code}>{l.label}</option>
+              ))}
+            </select>
+            <span className="text-xs text-gray-400">{strings.locale.note}</span>
+          </div>
+          <button onClick={() => launchTour()} className="mt-3 text-sm text-emerald-600 hover:underline">
+            {strings.tour.relaunch}
+          </button>
+        </div>
+
+        <div className="border-t border-stone-200 pt-6">
+          <StyleGuideEditor />
         </div>
 
         <div>

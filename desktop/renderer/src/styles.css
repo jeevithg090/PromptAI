@@ -1,0 +1,128 @@
+/*
+ * PromptForge desktop — "FORGE" language, warm-dark expression.
+ * Same ember accent + type + radii as web; dark chrome suited to a utility.
+ * No purple anywhere.
+ */
+:root {
+  --bg: #17130f;         /* warm near-black */
+  --bg-2: #120f0b;       /* recessed (inputs) */
+  --panel: #201a15;      /* cards */
+  --panel-2: #2a231c;    /* raised / active */
+  --border: #362c23;     /* hairline */
+  --border-strong: #47392d;
+  --text: #f3ede4;
+  --muted: #a89a89;
+  --accent: #ef5f14;     /* ember-500 (bright for dark bg) */
+  --accent-hover: #f67c37;
+  --accent-soft: rgba(239, 95, 20, 0.12);
+  --good: #40c07f;       /* score: good */
+  --mid: #e0a336;        /* score: mid */
+  --red: #ef6b52;        /* score: low / error */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.6);
+  --ember-glow: 0 6px 20px -6px rgba(239, 95, 20, 0.5);
+  --font-ui: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: rgba(239, 95, 20, 0.3); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; border: 3px solid transparent; background-clip: padding-box; }
+
+.center { display: flex; align-items: center; justify-content: center; height: 100vh; }
+.muted { color: var(--muted); }
+.error { color: var(--red); font-size: 13px; }
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+/* Top bar */
+.topbar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.015), transparent);
+  -webkit-app-region: drag;
+}
+.topbar strong {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-ui); font-size: 15px; font-weight: 600; letter-spacing: -0.02em;
+}
+.topbar strong::before {
+  content: ''; width: 22px; height: 22px; border-radius: 7px;
+  background: var(--accent); box-shadow: var(--ember-glow);
+  -webkit-mask: no-repeat center / 13px url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3c1.5 3 4 4 4 7a4 4 0 0 1-8 0c0-1 .5-2 1.2-2.8'/><path d='M12 21v-4'/></svg>");
+}
+.tabs { display: flex; gap: 4px; margin-left: 8px; -webkit-app-region: no-drag; }
+.tabs button { background: none; border: none; color: var(--muted); padding: 6px 14px; border-radius: 999px; cursor: pointer; font-size: 13px; font-weight: 500; transition: background .15s, color .15s; }
+.tabs button:hover { color: var(--text); background: var(--panel); }
+.tabs button.active { background: var(--panel-2); color: var(--text); }
+.link { margin-left: auto; background: none; border: none; color: var(--muted); cursor: pointer; font-size: 13px; -webkit-app-region: no-drag; }
+.link:hover { color: var(--text); }
+
+.workspace { flex: 1; overflow: auto; padding: 28px 20px; }
+
+/* Cards */
+.card {
+  max-width: 720px; margin: 0 auto;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  display: flex; flex-direction: column; gap: 13px;
+  box-shadow: var(--shadow);
+}
+.card.auth { max-width: 360px; }
+.card h1 { margin: 0; font-family: var(--font-ui); font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+
+/* Form controls */
+label { font-size: 12px; font-weight: 600; letter-spacing: 0.01em; color: var(--muted); text-transform: uppercase; }
+.label-row { display: flex; align-items: center; justify-content: space-between; }
+input, select, textarea {
+  background: var(--bg-2); border: 1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-sm); padding: 10px 12px; font-size: 14px; font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+}
+input::placeholder, textarea::placeholder { color: #6f6355; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+textarea { resize: vertical; line-height: 1.5; }
+
+/* Buttons */
+button {
+  font-size: 14px; font-weight: 600; padding: 10px 16px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: var(--panel-2); color: var(--text);
+  cursor: pointer; transition: background .15s, border-color .15s, box-shadow .15s, transform .05s;
+}
+button:hover:not(:disabled) { border-color: #5a4a3a; }
+button:active:not(:disabled) { transform: translateY(0.5px); }
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: var(--ember-glow); }
+button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+button:disabled { opacity: 0.45; cursor: default; }
+.btn-row { display: flex; gap: 10px; }
+.mic { padding: 5px 9px; background: var(--bg-2); }
+
+/* Chips */
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { padding: 6px 13px; border-radius: 999px; font-size: 13px; font-weight: 500; background: var(--bg-2); border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all .15s; }
+.chip:hover { border-color: var(--accent); color: var(--text); }
+.chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.question { display: flex; flex-direction: column; gap: 7px; margin-bottom: 12px; }
+
+/* Banner (enhance) */
+.banner { background: var(--accent-soft); border: 1px solid rgba(239,95,20,0.35); color: var(--accent-hover); border-radius: var(--radius-sm); padding: 9px 13px; font-weight: 600; font-size: 13px; }
+
+/* Result */
+.score { font-size: 15px; font-family: var(--font-ui); }
+.assembled {
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 14px; white-space: pre-wrap; font-family: var(--font-mono); font-size: 13px;
+  line-height: 1.6; overflow-x: auto; color: #e9ddcb;
+}
+.nodes { display: flex; flex-direction: column; gap: 7px; margin-top: 8px; }
+.node { display: flex; gap: 12px; font-size: 13px; padding: 9px 11px; background: var(--bg-2); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.node-type { color: var(--muted); min-width: 120px; font-weight: 600; }

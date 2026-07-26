@@ -13,15 +13,19 @@
     "migrate": "node dist/scripts/migrate.js",
     "seed:registry": "node dist/scripts/seed-registry.js",
     "seed:pkb": "npm run build && node dist/scripts/seed-pkb.js",
+    "seed:grounding": "npm run build && node dist/scripts/seed-pkb-grounding.js",
+    "smoke": "npm run build && node dist/scripts/smoke.js",
     "smoke:intent": "npm run build && node dist/scripts/smoke-intent.js",
     "crawl:pkb": "npm run build && node dist/scripts/crawl-pkb.js",
     "retention": "npm run build && node dist/scripts/retention-sweep.js",
-    "analyze:outcomes": "npm run build && node dist/scripts/improvement-analysis.js"
+    "analyze:outcomes": "npm run build && node dist/scripts/improvement-analysis.js",
+    "refresh:models": "npm run build && node dist/scripts/refresh-model-capabilities.js"
   },
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.1084.0",
     "@hono/node-server": "^1.13.0",
     "@supabase/supabase-js": "^2.45.0",
+    "dotenv": "^17.4.2",
     "hono": "^4.6.0",
     "jose": "^4.15.9",
     "pg": "^8.22.0",

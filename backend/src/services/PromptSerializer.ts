@@ -43,24 +43,49 @@ function serializeStableDiffusion(nodes: PromptNode[]): string {
   return negatives ? `${body}\n\nNegative prompt: ${negatives}` : body;
 }
 
-/** Conversational platforms (Gemini, ChatGPT, Claude): prose paragraph + explicit constraint/format lines. */
+/** Ensure a node value reads as a complete sentence: single-spaced and terminally punctuated. */
+function asSentence(s: string): string {
+  const t = s.trim().replace(/\s+/g, ' ');
+  if (!t) return '';
+  return /[.!?:]$/.test(t) ? t : `${t}.`;
+}
+
+/**
+ * Conversational platforms (Gemini, ChatGPT, Claude): a role/task paragraph
+ * followed by an explicit Requirements bullet list and an Output format line.
+ * Node values are complete instructions (the drafting model writes them in the
+ * platform's register), so they are joined as SENTENCES — never comma-fused,
+ * which used to produce fragment-salad like "…stainless steel, designed to…, The".
+ * Sections are blank-line separated so the model reads structure, not a run-on.
+ */
 function serializeConversational(nodes: PromptNode[]): string {
-  const parts: string[] = [];
+  const sections: string[] = [];
 
-  const persona = values(nodes, 'persona_role');
-  if (persona.length) parts.push(persona.join(' '));
+  // 1. Role + task description as an opening paragraph (each node = one sentence).
+  const intro = values(
+    nodes,
+    'persona_role', 'subject', 'action_behavior', 'setting_context', 'style_aesthetic', 'composition_camera', 'lighting_mood'
+  ).map(asSentence);
+  if (intro.length) sections.push(intro.join(' '));
 
-  const scene = values(nodes, 'subject', 'action_behavior', 'setting_context', 'style_aesthetic', 'composition_camera', 'lighting_mood');
-  if (scene.length) parts.push(scene.join(', ') + '.');
+  // 2. Constraints + technical parameters as an enumerated Requirements block —
+  // models follow explicit bullet rules more reliably than rules buried in prose.
+  const requirements = values(nodes, 'constraints_rules', 'technical_parameters').map(asSentence);
+  if (requirements.length) {
+    sections.push(`Requirements:\n${requirements.map((r) => `- ${r}`).join('\n')}`);
+  }
 
-  for (const c of values(nodes, 'constraints_rules')) parts.push(c.endsWith('.') ? c : `${c}.`);
-  for (const t of values(nodes, 'technical_parameters')) parts.push(t.endsWith('.') ? t : `${t}.`);
-  for (const f of values(nodes, 'output_format')) parts.push(f.endsWith('.') ? f : `${f}.`);
-  // Conversational models handle negation poorly mid-prose (PKB) — keep it a separate, explicit line.
+  // 3. Output format as its own directive line.
+  const format = values(nodes, 'output_format').map(asSentence);
+  if (format.length) sections.push(`Output format: ${format.join(' ')}`);
+
+  // 4. Negatives — conversational models handle negation poorly mid-prose (PKB),
+  // so keep it a separate, explicit line.
   const negatives = values(nodes, 'negative_prompt');
-  if (negatives.length) parts.push(`Do not include: ${negatives.join(', ')}.`);
+  if (negatives.length) sections.push(`Do not include: ${negatives.join(', ')}.`);
 
-  return parts.join(' ').replace(/\s+/g, ' ').trim();
+  // Collapse runs of spaces/tabs but PRESERVE the newlines that structure the block.
+  return sections.join('\n\n').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').trim();
 }
 
 export function serializeNodes(nodes: PromptNode[], platform: Platform): string {

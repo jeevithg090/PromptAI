@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
 import type { Recommendation, Platform } from '@/lib/api-types';
@@ -11,14 +11,23 @@ interface RecommendationPanelProps {
   onSelectPlatform: (platformId: string) => void;
 }
 
+// The backend's capability matrix speaks output modalities (text|code|image|video),
+// NOT pipeline task types — sending task types here was the V1.2 bug (guaranteed 400).
 const MODALITIES = [
-  { id: 'text_to_image', label: 'Text to Image' },
-  { id: 'text_to_video', label: 'Text to Video' },
-  { id: 'chat_persona', label: 'Chat Persona' },
-  { id: 'reasoning_code', label: 'Reasoning & Code' },
-  { id: 'extraction_classification', label: 'Extraction & Classification' },
-  { id: 'long_form_writing', label: 'Long Form Writing' },
+  { id: 'image', label: 'Image' },
+  { id: 'video', label: 'Video' },
+  { id: 'text', label: 'Text' },
+  { id: 'code', label: 'Code' },
 ];
+
+/** Crude idea→modality guess so the picker starts on the right foot. */
+export function guessModality(idea: string): string {
+  const t = idea.toLowerCase();
+  if (/\b(image|photo|picture|illustration|logo|art|drawing|render)\b/.test(t)) return 'image';
+  if (/\b(video|animation|clip|film|motion)\b/.test(t)) return 'video';
+  if (/\b(code|script|function|program|bug|refactor|api|sql)\b/.test(t)) return 'code';
+  return 'text';
+}
 
 function costTierLabel(tier: number): string {
   return '$'.repeat(tier) || '$';
@@ -39,7 +48,13 @@ function scoreBadgeColor(score: number): string {
 
 export default function RecommendationPanel({ idea, platforms, onSelectPlatform }: RecommendationPanelProps) {
   const [expanded, setExpanded] = useState(false);
-  const [modality, setModality] = useState('text_to_image');
+  const [modality, setModality] = useState('text');
+  const [modalityTouched, setModalityTouched] = useState(false);
+
+  // Follow the idea until the user explicitly picks a modality.
+  useEffect(() => {
+    if (!modalityTouched && idea.trim()) setModality(guessModality(idea));
+  }, [idea, modalityTouched]);
   const [prioritizeQuality, setPrioritizeQuality] = useState(0.5);
   const [prioritizeCost, setPrioritizeCost] = useState(0.5);
   const [prioritizeLatency, setPrioritizeLatency] = useState(0.5);
@@ -100,16 +115,22 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
       {expanded && (
         <div className="border-t border-gray-100 px-4 py-4 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Modality</label>
-            <select
-              value={modality}
-              onChange={(e) => setModality(e.target.value)}
-              className="block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
-            >
+            <label className="block text-xs font-medium text-gray-700 mb-1">{strings.recommendation.modalityLabel}</label>
+            <div className="flex flex-wrap gap-2">
               {MODALITIES.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => { setModality(m.id); setModalityTouched(true); }}
+                  aria-pressed={modality === m.id}
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 ${
+                    modality === m.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {m.label}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
@@ -204,7 +225,9 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-500 mb-3">
                       <span>{strings.recommendation.costTier.replace('{tier}', costTierLabel(rec.model.cost_tier))}</span>
                       <span>{strings.recommendation.latencyTier.replace('{tier}', latencyTierLabel(rec.model.latency_tier))}</span>
-                      <span>{strings.recommendation.contextWindow.replace('{tokens}', String(rec.model.context_window))}</span>
+                      {rec.model.context_window > 0 && (
+                        <span>{strings.recommendation.contextWindow.replace('{tokens}', new Intl.NumberFormat().format(rec.model.context_window))}</span>
+                      )}
                     </div>
 
                     <button

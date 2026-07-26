@@ -57,10 +57,19 @@ const PLATFORM_PATTERNS: PlatformPattern[] = [
     },
   },
   {
-    id: 'groq',
-    hostname: /groq\.com/,
+    id: 'grok',
+    hostname: /grok\.com|x\.com/,
     selectors: {
       input: ['textarea', 'div[contenteditable="true"]'],
+      title: ['h1'],
+      model: ['[class*="model"]'],
+    },
+  },
+  {
+    id: 'deepseek',
+    hostname: /chat\.deepseek\.com/,
+    selectors: {
+      input: ['textarea#chat-input', 'textarea', 'div[contenteditable="true"]'],
       title: ['h1'],
       model: ['[class*="model"]'],
     },
@@ -75,8 +84,9 @@ const PLATFORM_PATTERNS: PlatformPattern[] = [
     },
   },
   {
+    // Hostname-only match — the /chat/ path is enforced by the content-script glob.
     id: 'huggingface',
-    hostname: /huggingface\.co\/chat/,
+    hostname: /huggingface\.co/,
     selectors: {
       input: ['textarea', 'div[contenteditable="true"]'],
       title: ['h1'],
@@ -93,7 +103,7 @@ const PLATFORM_PATTERNS: PlatformPattern[] = [
   },
   {
     id: 'stability',
-    hostname: /stability\.ai/,
+    hostname: /stability\.ai|dreamstudio\.ai/,
     selectors: {
       input: ['textarea', 'input[type="text"]'],
       title: ['h1'],

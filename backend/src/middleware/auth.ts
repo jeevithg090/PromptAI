@@ -11,6 +11,9 @@ import type { AppEnv } from '../types/Http';
  * Prefers asymmetric verification against the project's JWKS endpoint
  * (cached after first fetch); falls back to the legacy HS256 shared secret.
  */
+/** Deterministic dev user id (valid uuid) used only when DEV_AUTH_BYPASS is on. */
+export const DEV_USER_ID = '00000000-0000-4000-8000-000000000001';
+
 let jwks: ReturnType<typeof createRemoteJWKSet> | null = null;
 
 function getJwks() {
@@ -22,8 +25,10 @@ function getJwks() {
 
 export async function authMiddleware(c: Context<AppEnv>, next: Next) {
   // Local development escape hatch only — refused in production (config/env.ts).
+  // Use a real UUID so plan/budget/rate-limit DB lookups (uuid columns) exercise
+  // their real code paths in dev instead of erroring on an invalid uuid literal.
   if (config.DEV_AUTH_BYPASS) {
-    c.set('userId', 'dev-user-000');
+    c.set('userId', DEV_USER_ID);
     c.set('email', null);
     return next();
   }

@@ -7,6 +7,7 @@ import { serializeNodes } from '../services/PromptSerializer';
 import { NODE_TYPES, type PromptNode, type TaskType } from '../types/Prompt';
 import { logger } from '../utils/logger';
 import { extractJson } from '../utils/json';
+import { numberChunks } from '../utils/chunkRefs';
 import { assembleDraft, draftResponseSchema, normalizeRawNodes, DRAFT_JSON_FEWSHOT, type RawDraftNode } from './draftShared';
 import type { Agent, AgentInput, AgentOutput } from '../types/Agent';
 
@@ -81,16 +82,18 @@ export class DraftingAgent implements Agent {
 
   private buildSystemPrompt(profile: StrategyProfile, input: AgentInput): string {
     const { platform } = input.context;
-    const chunks = (input.context.pkbChunks ?? []).slice(0, 8);
-    const pkbChunks = chunks.filter((c) => c.kind === 'pkb');
-    const mpkbChunks = chunks.filter((c) => c.kind === 'mpkb');
+    // Shared numbering (V1.6): the same [P<n>]/[M<n>] refs are resolved back
+    // to source URLs by ResponseDesign, so both MUST use numberChunks.
+    const numbered = numberChunks(input.context.pkbChunks);
+    const pkbEntries = numbered.filter((n) => n.chunk.kind === 'pkb');
+    const mpkbEntries = numbered.filter((n) => n.chunk.kind === 'mpkb');
 
-    const pkbSection = pkbChunks.length
-      ? pkbChunks.map((c, i) => `[P${i + 1}] ${c.content}`).join('\n')
+    const pkbSection = pkbEntries.length
+      ? pkbEntries.map((n) => `[${n.ref}] ${n.chunk.content}`).join('\n')
       : '(no platform-specific knowledge)';
 
-    const mpkbSection = mpkbChunks.length
-      ? mpkbChunks.map((c, i) => `[M${i + 1}] ${c.content}`).join('\n')
+    const mpkbSection = mpkbEntries.length
+      ? mpkbEntries.map((n) => `[${n.ref}] ${n.chunk.content}`).join('\n')
       : '(no model-behavior knowledge)';
 
     return `You are an expert prompt engineer drafting a prompt FOR the "${platform.display_name}" platform (the prompt's audience is that platform's model, not a human).

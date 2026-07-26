@@ -1,0 +1,86 @@
+'use client';
+
+import { Suspense, useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { api } from '@/lib/api';
+import { strings } from '@/lib/strings';
+import { fillVars, type TemplateVar } from '@/lib/templateVars';
+
+interface Shared {
+  assembled: string;
+  nodes: Array<{ type: string; value: string }>;
+  strength_score: number | null;
+  variables: TemplateVar[];
+}
+
+function ShareView() {
+  const params = useSearchParams();
+  const slug = params.get('slug') ?? '';
+  const [shared, setShared] = useState<Shared | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!slug) { setLoading(false); return; }
+    api.getShare(slug)
+      .then((r) => setShared({ assembled: r.assembled, nodes: r.nodes, strength_score: r.strength_score, variables: r.variables ?? [] }))
+      .catch(() => setShared(null))
+      .finally(() => setLoading(false));
+  }, [slug]);
+
+  const filled = useMemo(() => (shared ? fillVars(shared.assembled, values) : ''), [shared, values]);
+
+  if (loading) return <main className="mx-auto max-w-2xl px-4 py-16 text-center text-gray-500">Loading…</main>;
+  if (!shared) return <main className="mx-auto max-w-2xl px-4 py-16 text-center text-gray-500">{strings.share.notFound}</main>;
+
+  return (
+    <main className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+      <h1 className="text-2xl font-bold text-gray-900">{strings.share.publicTitle}</h1>
+      {shared.strength_score != null && (
+        <p className="mt-1 text-sm text-gray-500">Strength {shared.strength_score} / 100</p>
+      )}
+
+      {shared.variables.length > 0 && (
+        <div className="mt-6 rounded-lg border border-gray-200 p-4">
+          <h2 className="text-sm font-semibold text-gray-700">{strings.share.fillTitle}</h2>
+          <div className="mt-3 space-y-2">
+            {shared.variables.map((v) => (
+              <label key={v.name} className="block text-sm">
+                <span className="text-gray-500">{v.name}</span>
+                <input
+                  className="mt-1 w-full rounded border border-gray-300 px-2 py-1.5"
+                  placeholder={v.default ?? ''}
+                  value={values[v.name] ?? ''}
+                  onChange={(e) => setValues((p) => ({ ...p, [v.name]: e.target.value }))}
+                />
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <pre className="mt-6 overflow-x-auto whitespace-pre-wrap rounded-lg border border-gray-200 bg-gray-50 p-4 font-mono text-sm text-gray-800">{filled}</pre>
+
+      <div className="mt-4 flex gap-3">
+        <button
+          onClick={async () => { await navigator.clipboard.writeText(filled); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+        >
+          {copied ? strings.share.copied : strings.share.copyLink}
+        </button>
+        <a href="/build" className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">
+          {strings.share.openInApp}
+        </a>
+      </div>
+    </main>
+  );
+}
+
+export default function SharePage() {
+  return (
+    <Suspense fallback={null}>
+      <ShareView />
+    </Suspense>
+  );
+}

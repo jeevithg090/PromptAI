@@ -109,6 +109,7 @@ export default function TryPage() {
               strength={result.strength}
               whyThisWorks={result.whyThisWorks}
               improvementHints={result.improvementHints}
+              grounding={result.grounding}
             />
           )}
 

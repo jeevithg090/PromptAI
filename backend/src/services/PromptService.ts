@@ -1,5 +1,6 @@
 import { getPool } from '../utils/db';
 import { logger } from '../utils/logger';
+import { parseVars } from '../utils/templateVars';
 import type { PromptNode, TaskType, RubricScores } from '../types/Prompt';
 
 /**
@@ -62,9 +63,13 @@ export async function savePrompt(userId: string, input: SavePromptInput): Promis
   const promptId = crypto.randomUUID();
   const rubricJson = input.rubricScores ? JSON.stringify(input.rubricScores) : null;
 
+  // F2.4: derive template variables from the assembled text (server-side —
+  // never trust a client-sent list).
+  const variables = parseVars(input.assembled ?? '');
+
   await pool.query(
-    `insert into prompts (id, user_id, session_id, platform_id, version, content_ciphertext, strength_score, rubric_scores)
-     values ($1, $2, $3, $4, 1, $5, $6, $7)`,
+    `insert into prompts (id, user_id, session_id, platform_id, version, content_ciphertext, strength_score, rubric_scores, variables)
+     values ($1, $2, $3, $4, 1, $5, $6, $7, $8)`,
     [
       promptId,
       userId,
@@ -73,6 +78,7 @@ export async function savePrompt(userId: string, input: SavePromptInput): Promis
       input.assembled, // content_ciphertext holds assembled string pre-E2EE
       input.strengthScore ?? null,
       rubricJson,
+      JSON.stringify(variables),
     ]
   );
 

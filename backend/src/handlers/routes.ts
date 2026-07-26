@@ -11,6 +11,10 @@ import { Supervisor } from '../services/Supervisor';
 import { design } from '../services/ResponseDesign';
 import { persistSessionMetadata, meterUsage } from '../services/SessionService';
 import { checkMonthlyBudget } from '../services/BudgetService';
+import { getProgress } from '../services/SessionProgress';
+import { createShare, revokeShare, getShare, ShareBlocked, ShareNotFound } from '../services/ShareService';
+import { compare } from '../services/CompareService';
+import { classifyOrFailClosed, ContentSafetyClassifier } from '../guardrails/ContentSafetyClassifier';
 import {
   savePrompt,
   saveVersion,
@@ -22,14 +26,30 @@ import {
   PromptNotFound,
   type SavePromptInput,
 } from '../services/PromptService';
-import { recommend, loadCapabilityMatrix } from '../services/RecommendationService';
+import { recommend, recommendMode, loadCapabilityMatrix, recommendForTask, clearCapabilityCache } from '../services/RecommendationService';
+import { ModelRefreshAgent } from '../agents/ModelRefreshAgent';
+import { OpenRouterFetcher, ModelRecommender } from '../agents';
 import { analyzeTokenUsage } from '../services/TokenOptimizationAdvisor';
 import { redraftNode, NodeLocked, NodeNotFound } from '../services/NodeRedraftService';
+import { chatRefine } from '../services/ChatRefineService';
+import { ChatDraftService } from '../services/ChatDraftService';
+import { debugPrompt } from '../services/PromptDebugService';
+import { reversePrompt } from '../services/ReversePromptService';
+import { migratePrompt } from '../services/MigrationService';
+import { simulateCost } from '../services/CostSimulator';
+import { analyzeAmbiguity } from '../services/AmbiguityService';
+import { lintPrompt } from '../services/StyleLinterService';
+import { runWorkflow } from '../services/WorkflowService';
+import { runPromptTests } from '../services/PromptTestService';
 import { getDemoExample, listDemoExamples } from '../services/DemoService';
+import { loadLibrarySeeds } from '../services/LibrarySeeds';
+import { fetchDocs, DocFetchError } from '../services/DocFetchService';
+import { PlatformProfileAgent } from '../agents/PlatformProfileAgent';
+import { PKBService, loadSeedChunksByPlatform } from '../services/PKBService';
 import { getPool } from '../utils/db';
 import { logger } from '../utils/logger';
 import { config } from '../config/env';
-import { MODALITIES, type RecommendationRequest } from '../types/Recommendation';
+import { MODALITIES, type RecommendationRequest, type TaskRecommendationRequest } from '../types/Recommendation';
 import { feedbackSchema, type FeedbackBody } from '../types/Feedback';
 import { underperformingDimensions } from '../services/OutcomeAnalytics';
 import { analyzeImprovements } from '../services/ContinuousImprovement';
@@ -41,16 +61,21 @@ import {
   CriticAgent,
   AlternativesAgent,
   MemoryExtractionAgent,
+  PromptImportAgent,
   IntentClassificationAgentClass,
   DraftingAgentClass,
   CriticAgentClass,
   AlternativesAgentClass,
+  PromptImportAgentClass,
 } from '../agents';
-import type { PipelineContext, MemoryEntry } from '../types/Agent';
+import type { PipelineContext, MemoryEntry, KnowledgeChunk } from '../types/Agent';
+import { RUBRIC_DIMENSIONS } from '../types/Prompt';
+import { govern } from '../guardrails/TokenGovernor';
 import { generate } from '../services/providers';
-import { type AppEnv, draftBodySchema, clarifyBodySchema, againBodySchema, serializeBodySchema, redraftNodeBodySchema, fanoutBodySchema, demoDraftBodySchema, previewBodySchema, previewVisualBodySchema, platformRequestBodySchema, createTeamBodySchema, addTeamMemberBodySchema } from '../types/Http';
+import { type AppEnv, draftBodySchema, clarifyBodySchema, enhanceBodySchema, compareBodySchema, againBodySchema, serializeBodySchema, redraftNodeBodySchema, chatRefineBodySchema, chatDraftBodySchema, recommendModeBodySchema, debugBodySchema, reverseBodySchema, migrateBodySchema, simulateBodySchema, ambiguityBodySchema, lintBodySchema, workflowRunBodySchema, promptTestsRunBodySchema, customPlatformRequestSchema, type CustomPlatformPayload, fanoutBodySchema, demoDraftBodySchema, previewBodySchema, previewVisualBodySchema, platformRequestBodySchema, createTeamBodySchema, addTeamMemberBodySchema } from '../types/Http';
 import { generatePreview } from '../services/PreviewService';
 import { GeminiImageAdapter } from '../services/providers/GeminiImageAdapter';
+import { GroqSTTAdapter } from '../services/providers/GroqSTTAdapter';
 import { getProvider } from '../services/providers/ProviderRegistry';
 import { storeKey, resolveKey, revokeKey } from '../services/KeyCustody';
 import { getEntitlements, checkGate, getPlanConfig } from '../services/PlanService';
@@ -83,7 +108,10 @@ export function buildApp(): Hono<AppEnv> {
     cors({
       origin: (origin) => {
         if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) return origin;
-        // Allow health and platforms from any origin (public endpoints).
+        // Browser-extension pages (options UI, direct fetches) — the extension is
+        // first-party; the background worker already uses host_permissions.
+        if (origin.startsWith('chrome-extension://') || origin.startsWith('moz-extension://')) return origin;
+        // Otherwise not allowed (public endpoints still work without an Origin).
         return undefined;
       },
       allowHeaders: ['Authorization', 'Content-Type'],
@@ -97,6 +125,49 @@ export function buildApp(): Hono<AppEnv> {
   app.get('/platforms', (c) => {
     c.header('Cache-Control', 'public, max-age=3600');
     return c.json({ platforms: listPlatforms() });
+  });
+
+  /** Doc-curated modes for one platform (V1.2) — public, edge-cacheable. */
+  app.get('/platforms/:id/modes', (c) => {
+    const platform = getPlatform(c.req.param('id'));
+    if (!platform) return c.json({ error: `unknown platform '${c.req.param('id')}'` }, 404);
+    c.header('Cache-Control', 'public, max-age=3600');
+    return c.json({ status: 'ok', platform_id: platform.platform_id, modes: platform.modes });
+  });
+
+  /**
+   * Platform guide (V1.8) — everything a newcomer needs to understand how a
+   * platform is prompted: full registry entry (rules/quirks/modes) + top
+   * doc-grounded lessons (DB, seed-file fallback) + starter library prompts.
+   */
+  app.get('/platforms/:id/guide', async (c) => {
+    const platform = getPlatform(c.req.param('id'));
+    if (!platform) return c.json({ error: `unknown platform '${c.req.param('id')}'` }, 404);
+
+    let lessons;
+    try {
+      lessons = await new PKBService().listByPlatform(platform.platform_id, 8);
+      if (lessons.length === 0) lessons = loadSeedChunksByPlatform(platform.platform_id, 8);
+    } catch (error) {
+      logger.warn({ type: 'guide:pkb_fallback', platformId: platform.platform_id, reason: error instanceof Error ? error.message : String(error) });
+      lessons = loadSeedChunksByPlatform(platform.platform_id, 8);
+    }
+
+    let starters: Array<Record<string, unknown>> = [];
+    try {
+      starters = loadLibrarySeeds()
+        .filter((e) => e.platform_id === platform.platform_id)
+        .slice(0, 4)
+        .map((e) => ({ id: e.id, title: e.title, description: e.description, niche: e.niche, modality: e.modality, idea: e.idea, template: e.template }));
+    } catch { /* starter prompts are optional garnish */ }
+
+    c.header('Cache-Control', 'public, max-age=3600');
+    return c.json({
+      status: 'ok',
+      platform,
+      lessons: lessons.map((l) => ({ content: l.content, source_url: l.sourceUrl, trust_score: l.trustScore })),
+      starter_prompts: starters,
+    });
   });
 
   // Auth endpoints proxy Supabase Auth (§31.2 Step 7) — clients can also call
@@ -376,6 +447,53 @@ export function buildApp(): Hono<AppEnv> {
   });
 
   /**
+   * Share links (F2.4). Creating a share is a publication event → re-run the
+   * safety gate (422 on block). Rate-limited per user/day. Revocable. The
+   * public GET /share/:slug (mounted below, unauthed) returns no owner identity.
+   */
+  const shareDailyCaps = new Map<string, { date: string; count: number }>();
+  authed.post('/prompts/:id/share', async (c) => {
+    const userId = c.get('userId');
+    const promptId = c.req.param('id');
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `${userId}:${today}`;
+    const entry = shareDailyCaps.get(key);
+    const count = entry?.date === today ? entry.count : 0;
+    if (count >= config.SHARE_REQUESTS_PER_DAY) {
+      return c.json({ status: 'share_limit', message: `Daily share limit reached (${config.SHARE_REQUESTS_PER_DAY}).` }, 429);
+    }
+    try {
+      const { slug } = await createShare(userId, promptId);
+      shareDailyCaps.set(key, { date: today, count: count + 1 });
+      const base = config.SHARE_BASE_URL;
+      return c.json({ status: 'ok', slug, url: `${base}/share/${slug}` });
+    } catch (err) {
+      if (err instanceof ShareBlocked) return c.json({ status: 'blocked', reason: err.message }, 422);
+      if (err instanceof ShareNotFound) return c.json({ error: 'prompt not found' }, 404);
+      logger.warn({ type: 'share:create_error', reason: err instanceof Error ? err.message : String(err) });
+      return c.json({ error: 'could not create share link' }, 503);
+    }
+  });
+
+  authed.delete('/prompts/:id/share', async (c) => {
+    const revoked = await revokeShare(c.get('userId'), c.req.param('id'));
+    return c.json({ status: 'ok', revoked });
+  });
+
+  // PUBLIC read — no auth, no owner identity, noindex.
+  app.get('/share/:slug', async (c) => {
+    try {
+      const shared = await getShare(c.req.param('slug'));
+      if (!shared) return c.json({ error: 'not found' }, 404);
+      c.header('X-Robots-Tag', 'noindex');
+      return c.json({ status: 'ok', ...shared });
+    } catch (err) {
+      logger.warn({ type: 'share:read_error', reason: err instanceof Error ? err.message : String(err) });
+      return c.json({ error: 'share unavailable' }, 503);
+    }
+  });
+
+  /**
    * Model & platform recommendation (§15, TA.2). Ranks models for a task and
    * returns the trade-offs — never a single bare winner (§15.2).
    */
@@ -388,13 +506,116 @@ export function buildApp(): Hono<AppEnv> {
     return c.json({ status: 'ok', recommendations });
   });
 
+  /** Rank a platform's modes for a task (V1.2) — deterministic, config-driven. */
+  authed.post('/recommend/mode', async (c) => {
+    const parsed = recommendModeBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'invalid request', issues: parsed.error.issues }, 400);
+    }
+    const platform = getPlatform(parsed.data.platform_id);
+    if (!platform) return c.json({ error: `unknown platform '${parsed.data.platform_id}'` }, 404);
+    const modes = recommendMode(platform, parsed.data.task_type, parsed.data.idea);
+    return c.json({ status: 'ok', platform_id: platform.platform_id, recommendations: modes });
+  });
+
+  /**
+   * Smart Task-Aware Model Recommendation (v2).
+   * Takes a natural language task description and returns the best model(s)
+   * with detailed reasoning, using task-profile-aware scoring.
+   */
+  authed.post('/recommend/task', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const { task, modality, prioritizeQuality, prioritizeCost, prioritizeLatency } = body as Record<string, unknown>;
+    if (!task || typeof task !== 'string') {
+      return c.json({ error: 'task is required (string describing what you want to do)' }, 400);
+    }
+    const result = recommendForTask({
+      task,
+      modality: (modality as any) ?? 'text',
+      prioritizeQuality: typeof prioritizeQuality === 'number' ? prioritizeQuality : undefined,
+      prioritizeCost: typeof prioritizeCost === 'number' ? prioritizeCost : undefined,
+      prioritizeLatency: typeof prioritizeLatency === 'number' ? prioritizeLatency : undefined,
+    });
+    return c.json({ status: 'ok', ...result });
+  });
+
+  /**
+   * Admin: trigger a model capability matrix refresh.
+   * Fetches latest model data from provider docs and updates the config file.
+   * Protected by ADMIN_API_KEY (x-admin-key header).
+   */
+  authed.post('/admin/refresh-models', async (c) => {
+    const provided = c.req.header('x-admin-key');
+    if (!config.ADMIN_API_KEY || !provided || provided !== config.ADMIN_API_KEY) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    try {
+      const agent = new ModelRefreshAgent();
+      const result = await agent.execute({ context: {} as any, params: {} });
+      clearCapabilityCache();
+      return c.json({ status: 'ok', ...result.data });
+    } catch (error) {
+      return c.json({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'refresh failed',
+      }, 500);
+    }
+  });
+
   /**
    * Capability matrix (§15.1, T5.7). Returns the full model-capability matrix
    * plus last_verified for freshness display.
    */
+
+  /**
+   * Admin: trigger an OpenRouter model data fetch.
+   * Fetches 345+ models from openrouter.ai/api/v1/models with live pricing,
+   * reasoning efforts, and capabilities. Updates model-capabilities.json and
+   * caches to config/openrouter-models.json.
+   * Protected by x-admin-key header.
+   */
+  authed.post('/admin/openrouter/fetch', async (c) => {
+    const provided = c.req.header('x-admin-key');
+    if (!config.ADMIN_API_KEY || !provided || provided !== config.ADMIN_API_KEY) {
+      return c.json({ error: 'unauthorized' }, 401);
+    }
+    try {
+      const result = await OpenRouterFetcher.execute({ context: {} as any, params: {} });
+      clearCapabilityCache();
+      return c.json({ status: 'ok', ...result.data });
+    } catch (error) {
+      return c.json({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'fetch failed',
+      }, 500);
+    }
+  });
+
+  /**
+   * LLM-powered model recommendation using live OpenRouter data.
+   * Takes a natural language task and uses Gemini + 345 OpenRouter models
+   * to recommend the best model with reasoning.
+   */
+  authed.post('/recommend/with-openrouter', async (c) => {
+    const body = await c.req.json().catch(() => ({}));
+    const { task, provider_filter } = body as Record<string, unknown>;
+    if (!task || typeof task !== 'string') {
+      return c.json({ error: 'task is required (string describing what you want to do)' }, 400);
+    }
+    try {
+      const result = await ModelRecommender.execute({ context: {} as any, params: { task, provider_filter: provider_filter as string | undefined } });
+      return c.json({ status: 'ok', ...result.data });
+    } catch (error) {
+      return c.json({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'recommendation failed',
+      }, 500);
+    }
+  });
+
   authed.get('/capabilities', async (c) => {
     const matrix = loadCapabilityMatrix();
-    return c.json({ status: 'ok', capabilities: matrix.models, last_verified: matrix.last_verified });
+    return c.json({ status: 'ok', capabilities: matrix.models, task_profiles: matrix.task_profiles, last_verified: matrix.last_verified });
   });
 
   /**
@@ -463,6 +684,8 @@ export function buildApp(): Hono<AppEnv> {
    */
   const visualPreviewSessionCaps = new Map<string, number>();
   const visualPreviewUserDailyCaps = new Map<string, { date: string; count: number }>();
+  // F1.3: per-user daily dictation cap (in-memory, keyed by userId+date).
+  const transcribeUserDailyCaps = new Map<string, { date: string; count: number }>();
 
   authed.post('/preview/visual', async (c) => {
     if (!config.VISUAL_PREVIEW_ENABLED) {
@@ -540,12 +763,101 @@ export function buildApp(): Hono<AppEnv> {
   });
 
   /**
+   * Voice dictation / STT (F1.3). Multipart `audio` upload → Groq Whisper →
+   * transcript. Privacy (§19.1): the audio buffer is never persisted; the
+   * transcript is returned and NEVER logged. Guards: STT_ENABLED (404 off),
+   * mime allowlist (415), 5MB size cap (413), per-user daily cap (429).
+   * Provider outage → 503 (never 500). Metered as a 0-token usage_events row.
+   */
+  const STT_MIME_ALLOW = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/wav', 'audio/wave'];
+  authed.post('/transcribe', async (c) => {
+    if (!config.STT_ENABLED) {
+      return c.json({ error: 'dictation is disabled' }, 404);
+    }
+    const userId = c.get('userId');
+
+    let form: FormData;
+    try {
+      form = await c.req.formData();
+    } catch {
+      return c.json({ error: 'expected multipart/form-data with an "audio" file' }, 400);
+    }
+    const file = form.get('audio');
+    if (!(file instanceof File)) {
+      return c.json({ error: 'missing "audio" file part' }, 400);
+    }
+    const mime = file.type || 'audio/webm';
+    if (!STT_MIME_ALLOW.some((m) => mime.startsWith(m))) {
+      return c.json({ error: `unsupported audio type '${mime}'`, allowed: STT_MIME_ALLOW }, 415);
+    }
+    const buf = Buffer.from(await file.arrayBuffer());
+    if (buf.length > 5 * 1024 * 1024) {
+      return c.json({ error: 'audio too large (max 5MB)' }, 413);
+    }
+
+    // Per-user daily cap — plan-aware (pro gets 4×), no plans-schema change.
+    const ent = await getEntitlements(userId);
+    const dailyCap = ent.planId === 'free' ? config.STT_REQUESTS_PER_DAY : config.STT_REQUESTS_PER_DAY * 4;
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `${userId}:${today}`;
+    const entry = transcribeUserDailyCaps.get(key);
+    const count = entry?.date === today ? entry.count : 0;
+    if (count >= dailyCap) {
+      return c.json({ status: 'stt_limit', message: `Daily dictation limit reached (${dailyCap}).` }, 429);
+    }
+
+    let text: string;
+    let durationMs: number;
+    try {
+      const adapter = new GroqSTTAdapter();
+      const result = await adapter.transcribe({ audio: buf, mimeType: mime });
+      text = result.text;
+      durationMs = result.durationMs;
+    } catch (err) {
+      logger.warn({ type: 'route:transcribe_error', userId, reason: err instanceof Error ? err.message : String(err) });
+      return c.json({ status: 'stt_unavailable', error: 'transcription unavailable — please try again' }, 503);
+    }
+
+    transcribeUserDailyCaps.set(key, { date: today, count: count + 1 });
+
+    // Meter (0-token event; detail carries duration, NEVER the transcript).
+    try {
+      const pool = getPool();
+      pool.query(
+        `insert into usage_events (user_id, session_id, pipeline_step, tokens_used) values ($1, $2, $3, 0) on conflict do nothing`,
+        [userId, null, 'transcribe']
+      ).catch(() => {});
+    } catch {
+      // DB unavailable — skip metering, not fatal.
+    }
+
+    logger.info({ type: 'route:transcribe_ok', userId, durationMs, bytes: buf.length });
+    return c.json({ text });
+  });
+
+  /**
+   * Public client feature flags (F1.3) — lets web/extension/desktop hide the
+   * mic (and other optional surfaces) when a feature is disabled server-side.
+   */
+  app.get('/features', (c) =>
+    c.json({
+      stt: config.STT_ENABLED,
+      visual_preview: config.VISUAL_PREVIEW_ENABLED,
+      demo: config.DEMO_ENABLED,
+    })
+  );
+
+  /**
    * Runs the pipeline for a context and shapes the HTTP response — shared by
    * POST /draft (new session) and POST /draft/:sessionId/clarify (resume with
    * answers). Persists session metadata + meters usage best-effort (§18, §19.1).
    */
-  async function runPipeline(c: Context<AppEnv>, context: PipelineContext) {
-    // BYOK (§9.4, T7.2): resolve connection → API key → bind to agents.
+  /**
+   * BYOK (§9.4, T7.2): resolve the caller's connection → API key, then build a
+   * Supervisor whose agents are bound to that key (or the default provider).
+   * Shared by /draft (runPipeline) and /enhance (F1.1).
+   */
+  async function createSupervisor(context: PipelineContext): Promise<Supervisor> {
     let apiKeyOverride: string | undefined;
     if (context.connectionId) {
       const pool = getPool();
@@ -557,19 +869,23 @@ export function buildApp(): Hono<AppEnv> {
         apiKeyOverride = await resolveKey(connRes.rows[0].secret_ref);
       }
     }
-
     const wrappedGenerate = apiKeyOverride
       ? ((step: string, complexity: any, req: any) => generate(step, complexity, { ...req, apiKeyOverride })) as typeof generate
       : generate;
-
-    const supervisor = new Supervisor({
+    return new Supervisor({
       intent: apiKeyOverride ? new IntentClassificationAgentClass(wrappedGenerate) : IntentClassificationAgent,
       docRetrieval: DocRetrievalAgent,
       clarify: ClarifyingQuestionAgent,
       draft: apiKeyOverride ? new DraftingAgentClass(wrappedGenerate) : DraftingAgent,
       critic: apiKeyOverride ? new CriticAgentClass(wrappedGenerate) : CriticAgent,
       alternatives: apiKeyOverride ? new AlternativesAgentClass(wrappedGenerate) : AlternativesAgent,
+      // Enhance mode (F1.1) — only used when context.mode === 'enhance'.
+      import: apiKeyOverride ? new PromptImportAgentClass(wrappedGenerate) : PromptImportAgent,
     });
+  }
+
+  async function runPipeline(c: Context<AppEnv>, context: PipelineContext) {
+    const supervisor = await createSupervisor(context);
 
     // Pre-flight budget check (§16, §22.4, T3.2) — BEFORE any model call.
     if (config.BUDGET_ENFORCEMENT_ENABLED) {
@@ -659,26 +975,51 @@ export function buildApp(): Hono<AppEnv> {
    * questions or a finished draft, depending on whether the task needs
    * clarification and whether the user asked to "just generate now".
    */
+  /**
+   * Resolve a platform id (V1.1): registry lookup normally, or the
+   * client-supplied validated profile for `custom:` ids — returning its doc
+   * chunks so callers can seed pkbChunks.
+   */
+  const resolvePlatformForRequest = (
+    platformId: string,
+    customPlatform: CustomPlatformPayload | undefined
+  ): { platform?: ReturnType<typeof getPlatform>; customChunks?: KnowledgeChunk[] } => {
+    if (platformId.startsWith('custom:')) {
+      if (!customPlatform || customPlatform.platform.platform_id !== platformId) return {};
+      return {
+        platform: customPlatform.platform as NonNullable<ReturnType<typeof getPlatform>>,
+        customChunks: customPlatform.chunks as KnowledgeChunk[],
+      };
+    }
+    return { platform: getPlatform(platformId) };
+  };
+
   authed.post('/draft', async (c) => {
     const parsed = draftBodySchema.safeParse(await c.req.json().catch(() => ({})));
     if (!parsed.success) {
       return c.json({ error: 'platform_id and idea are required', issues: parsed.error.issues }, 400);
     }
     const body = parsed.data;
-    const platform = getPlatform(body.platform_id);
+    const { platform, customChunks } = resolvePlatformForRequest(body.platform_id, body.custom_platform);
     if (!platform) {
       return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);
     }
 
     // T7.7 plan gating: check platform entitlement before running the pipeline.
-    const ent = await getEntitlements(c.get('userId'));
-    if (!ent.platformAllowed(body.platform_id)) {
-      return c.json({
-        status: 'upgrade_required',
-        feature: 'platform',
-        plan: ent.planId,
-        message: `Platform '${body.platform_id}' requires a paid plan. Upgrade at /account.`,
-      }, 402);
+    // Plan-entitlement denial → 403 plan_restricted (F0.1 contract). This is
+    // deliberately distinct from token-budget exhaustion (429 budget_exceeded,
+    // T3.2) — see docs/api-contracts.md. getEntitlements fails open to free.
+    // Custom platforms (V1.1) are not plan-gated: the user brought their own docs.
+    if (!body.platform_id.startsWith('custom:')) {
+      const ent = await getEntitlements(c.get('userId'));
+      if (!ent.platformAllowed(body.platform_id)) {
+        return c.json({
+          status: 'plan_restricted',
+          feature: 'platform',
+          plan: ent.planId,
+          message: `Platform '${body.platform_id}' requires a paid plan. Upgrade at /account.`,
+        }, 403);
+      }
     }
 
     const context: PipelineContext = {
@@ -690,6 +1031,7 @@ export function buildApp(): Hono<AppEnv> {
       connectionId: body.connection_id,
       projectId: body.project_id,
       memories: body.memories,
+      pkbChunks: customChunks,
     };
     return runPipeline(c, context);
   });
@@ -707,7 +1049,7 @@ export function buildApp(): Hono<AppEnv> {
       return c.json({ error: 'platform_id and idea are required (client-supplied while server is content-stateless, pre-E2EE)', issues: parsed.error.issues }, 400);
     }
     const body = parsed.data;
-    const platform = getPlatform(body.platform_id);
+    const { platform, customChunks } = resolvePlatformForRequest(body.platform_id, body.custom_platform);
     if (!platform) {
       return c.json({ error: `unknown platform '${body.platform_id}' — see GET /platforms` }, 404);
     }
@@ -722,9 +1064,216 @@ export function buildApp(): Hono<AppEnv> {
       connectionId: body.connection_id,
       projectId: body.project_id,
       memories: body.memories,
+      pkbChunks: customChunks,
     };
     return runPipeline(c, context);
   });
+
+  /**
+   * Prompt Enhance mode (F1.1) — improve a FINISHED prompt the user already
+   * has. Parses it into nodes (safety gate 1 on the pasted text), scores it,
+   * runs the Critic's bounded refine loop, and returns before/after strength
+   * with per-dimension deltas. Never presents a worse rewrite ("already_strong").
+   */
+  authed.post('/enhance', async (c) => {
+    const parsed = enhanceBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'text (10–8000 chars) is required; platform_id optional', issues: parsed.error.issues }, 400);
+    }
+    const body = parsed.data;
+
+    // Target platform: given → must exist; omitted → a generic conversational
+    // default (the import agent's platform_hint is surfaced for a targeted re-run).
+    const GENERIC_ENHANCE_PLATFORM = 'openai_chatgpt';
+    const platformId = body.platform_id ?? GENERIC_ENHANCE_PLATFORM;
+    const platform = getPlatform(platformId);
+    if (!platform) {
+      return c.json({ error: `unknown platform '${platformId}' — see GET /platforms` }, 404);
+    }
+
+    // Plan gate (403 plan_restricted) — same contract as /draft (F0.1).
+    const ent = await getEntitlements(c.get('userId'));
+    if (!ent.platformAllowed(platformId)) {
+      return c.json({
+        status: 'plan_restricted',
+        feature: 'platform',
+        plan: ent.planId,
+        message: `Platform '${platformId}' requires a paid plan. Upgrade at /account.`,
+      }, 403);
+    }
+
+    // Pre-flight budget check (429 budget_exceeded) — before any model call.
+    if (config.BUDGET_ENFORCEMENT_ENABLED) {
+      const budget = await checkMonthlyBudget(c.get('userId'));
+      if (!budget.allowed) {
+        return c.json({
+          status: 'budget_exceeded',
+          message: `Monthly token budget reached (${budget.used}/${budget.budget}). Resets on the 1st.`,
+          used: budget.used,
+          budget: budget.budget,
+        }, 429);
+      }
+    }
+
+    const context: PipelineContext = {
+      userId: c.get('userId'),
+      sessionId: crypto.randomUUID(),
+      platform,
+      userIdea: body.text, // the pasted finished prompt
+      mode: 'enhance',
+      justGenerate: true, // enhance never clarifies
+      connectionId: body.connection_id,
+    };
+
+    const supervisor = await createSupervisor(context);
+    const result = await supervisor.run(context);
+
+    await Promise.allSettled([
+      persistSessionMetadata(result.context, result.finalState),
+      meterUsage(result.context, result.trace),
+    ]);
+
+    if (result.finalState === 'blocked_by_safety') {
+      return c.json({
+        status: 'blocked',
+        reason: 'This prompt may violate our acceptable-use policy. You can edit it, or appeal if you believe this is a mistake.',
+        category: result.context.safety?.category,
+        session_id: context.sessionId,
+      }, 422);
+    }
+    if (result.finalState === 'failed') {
+      return c.json({
+        status: 'error',
+        message: 'enhancement unavailable — please try again',
+        session_id: context.sessionId,
+      }, 502);
+    }
+
+    const ctx = result.context;
+    const baseline = ctx.baselineEvaluation ?? ctx.evaluation ?? null;
+    const finalEval = ctx.evaluation ?? null;
+    const before = baseline?.overallStrength ?? 0;
+    const after = finalEval?.overallStrength ?? 0;
+    const dimensionDeltas = baseline && finalEval
+      ? RUBRIC_DIMENSIONS.map((d) => ({ dimension: d, before: baseline.scores[d], after: finalEval.scores[d] }))
+      : [];
+    const improved = after > before;
+
+    // Honesty (F1.1): never present a worse rewrite. If the refine didn't beat
+    // the original, present the original as the result and say "already_strong".
+    const presentation: PipelineContext = { ...ctx };
+    if (!improved && ctx.importedDraft && baseline) {
+      presentation.finalDraft = ctx.importedDraft;
+      presentation.evaluation = baseline;
+      presentation.governorReport = ctx.importedDraft.assembled
+        ? govern(ctx.importedDraft.assembled, ctx.platform)
+        : ctx.governorReport;
+    }
+
+    return c.json({
+      status: 'ok',
+      session_id: context.sessionId,
+      final_state: result.finalState,
+      original: {
+        nodes: ctx.importedDraft?.nodes ?? [],
+        evaluation: baseline,
+      },
+      enhanced: design(presentation),
+      improvement: {
+        before,
+        after,
+        dimension_deltas: dimensionDeltas,
+        note: improved ? 'improved' : 'already_strong',
+      },
+      platform_hint: ctx.platformHint ?? null,
+      pipeline_trace: result.trace,
+    });
+  });
+
+  /**
+   * Live pipeline progress (F2.1). Short-poll (API Gateway buffers responses,
+   * so SSE isn't available). Owner-checked; 404 on unknown/expired/other-user
+   * (memory-only — a cross-instance miss just falls back to the generic spinner).
+   */
+  authed.get('/draft/:sessionId/status', (c) => {
+    const progress = getProgress(c.req.param('sessionId'), c.get('userId'));
+    if (!progress) return c.json({ error: 'no progress for this session' }, 404);
+    return c.json({ status: 'ok', state: progress.state, updated_at: progress.updatedAt });
+  });
+
+  /**
+   * A/B prompt comparison via BYOK (F2.5). Runs two prompts through the user's
+   * OWN connected provider so they can prove an enhancement is better. Gated:
+   * pro plan (403) + active connection (409) + daily cap (429) + safety on both
+   * texts (422). Outputs are EPHEMERAL — never persisted, never logged.
+   */
+  const compareDailyCaps = new Map<string, { date: string; count: number }>();
+  authed.post('/compare', async (c) => {
+    const userId = c.get('userId');
+    const parsed = compareBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'platform_id, prompt_a, prompt_b required', issues: parsed.error.issues }, 400);
+    const body = parsed.data;
+
+    // 1. Plan entitlement (BYOK is a paid feature).
+    const ent = await getEntitlements(userId);
+    if (!ent.byok) {
+      return c.json({ status: 'plan_restricted', feature: 'compare', plan: ent.planId, message: 'A/B compare requires a paid plan with BYOK.' }, 403);
+    }
+
+    // 2. Resolve an active connection (given id, else the most recent).
+    let provider: string | undefined;
+    let secretRef: string | undefined;
+    try {
+      const pool = getPool();
+      const res = body.connection_id
+        ? await pool.query(`select provider, secret_ref from provider_connections where id = $1 and user_id = $2 and status = 'active'`, [body.connection_id, userId])
+        : await pool.query(`select provider, secret_ref from provider_connections where user_id = $1 and status = 'active' order by created_at desc limit 1`, [userId]);
+      if (res.rows.length > 0) { provider = res.rows[0].provider; secretRef = res.rows[0].secret_ref; }
+    } catch {
+      // fall through to no_connection
+    }
+    if (!provider || !secretRef) {
+      return c.json({ status: 'no_connection', message: 'Connect your own provider key in Account to run comparisons.' }, 409);
+    }
+
+    // 3. Daily cap.
+    const today = new Date().toISOString().slice(0, 10);
+    const key = `${userId}:${today}`;
+    const entry = compareDailyCaps.get(key);
+    const count = entry?.date === today ? entry.count : 0;
+    if (count >= config.COMPARE_REQUESTS_PER_DAY) {
+      return c.json({ status: 'compare_limit', message: `Daily compare limit reached (${config.COMPARE_REQUESTS_PER_DAY}).` }, 429);
+    }
+
+    // 4. Safety on BOTH prompts.
+    const safetyCtx = { sessionId: 'compare', userId, platform: { display_name: 'compare' } } as unknown as PipelineContext;
+    for (const text of [body.prompt_a, body.prompt_b]) {
+      const s = await classifyOrFailClosed(new ContentSafetyClassifier(), text, safetyCtx);
+      if (!s.safe) return c.json({ status: 'blocked', reason: s.reason ?? 'blocked by safety' }, 422);
+    }
+
+    // 5. Run both through the user's key. Ephemeral — no persistence, no output logging.
+    let apiKey: string;
+    try {
+      apiKey = await resolveKey(secretRef);
+    } catch {
+      return c.json({ status: 'no_connection', message: 'Could not access your provider key.' }, 409);
+    }
+    try {
+      const result = await compare(provider, apiKey, body.prompt_a, body.prompt_b);
+      compareDailyCaps.set(key, { date: today, count: count + 1 });
+      // Meter a 0-token event (usage count only; NEVER the outputs).
+      try {
+        const pool = getPool();
+        pool.query(`insert into usage_events (user_id, session_id, pipeline_step, tokens_used) values ($1, $2, $3, 0) on conflict do nothing`, [userId, null, 'compare']).catch(() => {});
+      } catch { /* skip metering */ }
+      return c.json({ status: 'ok', a: result.a, b: result.b });
+    } catch (err) {
+      logger.warn({ type: 'compare:provider_error', userId, reason: err instanceof Error ? err.message : String(err) });
+      return c.json({ status: 'provider_error', message: 'Your provider could not complete the comparison — check your key or try again.' }, 502);
+    }
+  });
+
   authed.post('/appeal', (c) => c.json({ status: 'not_implemented_yet', task: 'T2.2/T7.5 (appeals queue)' }, 501));
 
   /**
@@ -734,19 +1283,28 @@ export function buildApp(): Hono<AppEnv> {
   app.get('/library', async (c) => {
     try {
       const pool = getPool();
+      // SR2 fix (F0.5): never expose the contributor's email on a public
+      // endpoint. Surface only whether the author opted into credit.
       const res = await pool.query(
         `select l.id, l.title, l.description, l.modality, l.platform_tags, l.template,
                 l.popularity, l.remix_count, l.version, l.created_at,
-                au.email as attributed_email
+                (l.attributed_user_id is not null) as attributed
          from library_entries l
-         left join app_users au on au.id = l.attributed_user_id
          where l.moderation_status = 'approved'
          order by l.popularity desc, l.created_at desc`
       );
-      return c.json({ status: 'ok', entries: res.rows });
+      return c.json({ status: 'ok', source: 'db', entries: res.rows });
     } catch (error) {
-      logger.warn({ type: 'library:list_error', reason: error instanceof Error ? error.message : String(error) });
-      return c.json({ error: 'library unavailable' }, 503);
+      // DB-degraded fallback (V1.3): serve the curated seed file instead of
+      // failing — the library must exist even before/without community entries.
+      logger.warn({ type: 'library:db_fallback', reason: error instanceof Error ? error.message : String(error) });
+      try {
+        const seeds = loadLibrarySeeds();
+        return c.json({ status: 'ok', source: 'seed', entries: seeds });
+      } catch (seedError) {
+        logger.warn({ type: 'library:seed_error', reason: seedError instanceof Error ? seedError.message : String(seedError) });
+        return c.json({ error: 'library unavailable' }, 503);
+      }
     }
   });
 
@@ -820,10 +1378,13 @@ export function buildApp(): Hono<AppEnv> {
     const id = c.req.param('id');
     try {
       const pool = getPool();
+      // SR2 fix (F0.5): curated public column set — no email, no user_id,
+      // no attributed_user_id (internal ids / PII). Only an `attributed` flag.
       const res = await pool.query(
-        `select l.*, au.email as attributed_email
+        `select l.id, l.title, l.description, l.modality, l.platform_tags, l.template,
+                l.popularity, l.remix_count, l.version, l.created_at,
+                (l.attributed_user_id is not null) as attributed
          from library_entries l
-         left join app_users au on au.id = l.attributed_user_id
          where l.id = $1 and l.moderation_status = 'approved'`,
         [id]
       );
@@ -1065,12 +1626,24 @@ export function buildApp(): Hono<AppEnv> {
       return c.json({ error: 'platform_id and nodes are required', issues: parsed.error.issues }, 400);
     }
     const { platform_id, nodes } = parsed.data;
-    const platform = getPlatform(platform_id);
+    const { platform } = resolvePlatformForRequest(platform_id, parsed.data.custom_platform);
     if (!platform) return c.json({ error: `unknown platform '${platform_id}'` }, 404);
     try {
       const { serializeNodes } = await import('../services/PromptSerializer');
       const assembled = serializeNodes(nodes as any, platform);
-      return c.json({ assembled });
+      // V1.5: ship the deterministic token report with every re-serialize so
+      // the editor's meter shows real numbers, not just client estimates.
+      const governorReport = govern(assembled, platform);
+      return c.json({
+        assembled,
+        governor: {
+          tokenCount: governorReport.tokenCount,
+          maxPromptTokens: governorReport.maxPromptTokens,
+          withinLimit: !governorReport.exceedsPlatformLength,
+          nearLimit: governorReport.nearLimit,
+          suggestions: governorReport.suggestions,
+        },
+      });
     } catch (error) {
       logger.warn({ type: 'serialize:error', reason: error instanceof Error ? error.message : String(error) });
       return c.json({ error: 'serialization error' }, 500);
@@ -1100,6 +1673,212 @@ export function buildApp(): Hono<AppEnv> {
       if (error instanceof NodeNotFound) return c.json({ error: error.message }, 400);
       logger.warn({ type: 'redraft:error', reason: error instanceof Error ? error.message : String(error) });
       return c.json({ error: 'regeneration unavailable — please try again' }, 502);
+    }
+  });
+
+  /**
+   * Chat-first drafting (V1.4): a two-way conversation that produces a scored
+   * prompt, with optional file attachments for context. Presence of `nodes`
+   * makes the turn a refinement of an existing draft.
+   */
+  authed.post('/chat-draft', async (c) => {
+    const parsed = chatDraftBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'invalid request', issues: parsed.error.issues }, 400);
+    }
+    const { platform_id, messages, attachments, nodes, custom_platform } = parsed.data;
+    const { platform, customChunks } = resolvePlatformForRequest(platform_id, custom_platform);
+    if (!platform) return c.json({ error: `unknown platform '${platform_id}'` }, 404);
+
+    // Plan gate for registry platforms (custom platforms are user-supplied, not gated).
+    if (!platform_id.startsWith('custom:')) {
+      const ent = await getEntitlements(c.get('userId'));
+      if (!ent.platformAllowed(platform_id)) {
+        return c.json({ status: 'plan_restricted', feature: 'platform', plan: ent.planId, message: `Platform '${platform_id}' requires a paid plan. Upgrade at /account.` }, 403);
+      }
+    }
+
+    try {
+      const result = await new ChatDraftService().draft({
+        userId: c.get('userId'),
+        platform,
+        messages,
+        attachments,
+        currentNodes: nodes as Array<{ type: string; value: string; locked?: boolean }> | undefined,
+        customChunks,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'chat_draft:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'chat draft unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Workflow Composer (V2.5) — run an inline workflow definition (stateless). */
+  authed.post('/workflows/run', async (c) => {
+    const parsed = workflowRunBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'a workflow with at least one step is required', issues: parsed.error.issues }, 400);
+    try {
+      const result = await runWorkflow(parsed.data);
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'workflow:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: error instanceof Error ? error.message : 'workflow run failed' }, 502);
+    }
+  });
+
+  /** Prompt Regression Suite (V2.3) — run test cases against a prompt (stateless). */
+  authed.post('/prompt-tests/run', async (c) => {
+    const parsed = promptTestsRunBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'prompt and cases are required', issues: parsed.error.issues }, 400);
+    try {
+      const result = await runPromptTests(parsed.data.prompt, parsed.data.cases);
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'prompttest:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'test run failed' }, 502);
+    }
+  });
+
+  /** Prompt Debugger (V2.1) — diagnose why a prompt produced the wrong output. */
+  authed.post('/debug', async (c) => {
+    const parsed = debugBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'prompt, actual_output and expected are required', issues: parsed.error.issues }, 400);
+    const platform = parsed.data.platform_id ? getPlatform(parsed.data.platform_id) : undefined;
+    try {
+      const result = await debugPrompt({
+        prompt: parsed.data.prompt,
+        actualOutput: parsed.data.actual_output,
+        expected: parsed.data.expected,
+        platformName: platform?.display_name,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'debug:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'debug unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Reverse Prompt (V2.2) — infer a prompt from an example output. */
+  authed.post('/reverse', async (c) => {
+    const parsed = reverseBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'output and platform_id are required', issues: parsed.error.issues }, 400);
+    const platform = getPlatform(parsed.data.platform_id);
+    if (!platform) return c.json({ error: `unknown platform '${parsed.data.platform_id}'` }, 404);
+    try {
+      const result = await reversePrompt({ output: parsed.data.output, platform, userId: c.get('userId') });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'reverse:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'reverse unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Model Migration (V2.4) — port a prompt's nodes to another platform. */
+  authed.post('/migrate', async (c) => {
+    const parsed = migrateBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'nodes, source and target platforms are required', issues: parsed.error.issues }, 400);
+    const source = getPlatform(parsed.data.source_platform_id);
+    const target = getPlatform(parsed.data.target_platform_id);
+    if (!source || !target) return c.json({ error: 'unknown source or target platform' }, 404);
+    try {
+      const result = await migratePrompt({
+        nodes: parsed.data.nodes as Array<{ type: string; value: string }>,
+        source,
+        target,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'migrate:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'migration unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Cost & Token Simulator (V2.6) — deterministic per-model estimate. */
+  authed.post('/simulate', async (c) => {
+    const parsed = simulateBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'assembled is required', issues: parsed.error.issues }, 400);
+    const result = simulateCost(parsed.data.assembled, parsed.data.expected_output_tokens);
+    return c.json({ status: 'ok', ...result });
+  });
+
+  /** Ambiguity Heatmap (V2.7) — span-level model's-eye analysis. */
+  authed.post('/analyze/ambiguity', async (c) => {
+    const parsed = ambiguityBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'assembled and platform_id are required', issues: parsed.error.issues }, 400);
+    const platform = getPlatform(parsed.data.platform_id);
+    if (!platform) return c.json({ error: `unknown platform '${parsed.data.platform_id}'` }, 404);
+    try {
+      const result = await analyzeAmbiguity({ assembled: parsed.data.assembled, platform });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'ambiguity:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'analysis unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Style Guide Linter (V2.8) — check a prompt against rules. */
+  authed.post('/lint', async (c) => {
+    const parsed = lintBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) return c.json({ error: 'invalid request', issues: parsed.error.issues }, 400);
+    try {
+      const result = await lintPrompt({
+        assembled: parsed.data.assembled,
+        nodes: parsed.data.nodes as Array<{ type: string; value: string }> | undefined,
+        rules: parsed.data.rules,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'lint:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'lint unavailable — please try again' }, 502);
+    }
+  });
+
+  /**
+   * Custom platform profiling (V1.1): fetch a docs URL (SSRF-guarded), have
+   * the PlatformProfileAgent turn it into a platform profile + doc chunks.
+   * The server stays stateless — the client stores the result and sends it
+   * back as `custom_platform` with draft/refine/serialize requests.
+   */
+  authed.post('/platforms/custom', async (c) => {
+    const parsed = customPlatformRequestSchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'docs_url is required', issues: parsed.error.issues }, 400);
+    }
+    try {
+      const pages = await fetchDocs(parsed.data.docs_url);
+      const agent = new PlatformProfileAgent();
+      const result = await agent.profile(pages, parsed.data.name);
+      return c.json({ status: 'ok', platform: result.platform, chunks: result.chunks, pages_fetched: pages.length });
+    } catch (error) {
+      if (error instanceof DocFetchError) {
+        return c.json({ error: `could not fetch those docs: ${error.message}` }, 400);
+      }
+      logger.warn({ type: 'custom_platform:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'platform profiling unavailable — please try again' }, 502);
+    }
+  });
+
+  /** Conversational refinement — chat about what to change, get back an updated prompt (F2.x). */
+  authed.post('/chat-refine', async (c) => {
+    const parsed = chatRefineBodySchema.safeParse(await c.req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return c.json({ error: 'invalid request', issues: parsed.error.issues }, 400);
+    }
+    const { platform_id, task_type, nodes, messages } = parsed.data;
+    const { platform } = resolvePlatformForRequest(platform_id, parsed.data.custom_platform);
+    if (!platform) return c.json({ error: `unknown platform '${platform_id}'` }, 404);
+    try {
+      const result = await chatRefine({
+        platform,
+        taskType: task_type,
+        currentNodes: nodes as Array<{ type: string; value: string; locked?: boolean }>,
+        messages,
+      });
+      return c.json({ status: 'ok', ...result });
+    } catch (error) {
+      logger.warn({ type: 'chat_refine:error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'chat refine unavailable — please try again' }, 502);
     }
   });
 
@@ -1722,20 +2501,30 @@ export function buildApp(): Hono<AppEnv> {
     if (existing.rows.length > 0) return c.json({ status: 'ok' });
     // Process event.
     if (event.type === 'checkout.session.completed') {
-      const session = event.data.object as { client_reference_id?: string };
+      // SR2 fix (F0.5): capture stripe_customer_id here so that a later
+      // customer.subscription.deleted can actually downgrade the user (the
+      // downgrade query keys on stripe_customer_id, which was never populated).
+      const session = event.data.object as { client_reference_id?: string; customer?: string };
       const userId = session.client_reference_id;
       if (userId) {
-        await pool.query(`update app_users set plan = 'pro' where id = $1`, [userId]);
+        await pool.query(
+          `update app_users set plan = 'pro', stripe_customer_id = coalesce($2, stripe_customer_id) where id = $1`,
+          [userId, session.customer ?? null]
+        );
       }
     } else if (event.type === 'customer.subscription.deleted') {
       const sub = event.data.object as { customer: string };
       const customer = sub.customer;
       await pool.query(`update app_users set plan = 'free' where stripe_customer_id = $1`, [customer]);
     }
-    // Record event for idempotency.
+    // Record event for idempotency. SR2 fix (F0.5): store only non-PII
+    // metadata (event id + type), NOT the full Stripe object, which can carry
+    // customer email/address/payment metadata beyond our data classification
+    // (§19.1) — the migration comment already mandates "only customer id +
+    // event ids stored".
     await pool.query(
       `insert into billing_events (event_id, type, payload) values ($1, $2, $3) on conflict do nothing`,
-      [event.id, event.type, JSON.stringify(event.data.object)]
+      [event.id, event.type, null]
     );
     return c.json({ status: 'ok' });
   });

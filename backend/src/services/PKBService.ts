@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import path from 'node:path';
 import { getPool } from '../utils/db';
 import { GeminiEmbeddingAdapter } from './providers/GeminiEmbeddingAdapter';
 import { logger } from '../utils/logger';
@@ -40,6 +42,32 @@ export class PKBService {
     return vector;
   }
 
+  /**
+   * Top chunks for one platform by trust score, no embedding needed (V1.8) —
+   * powers the platform guide pages, where there is no query to embed.
+   */
+  async listByPlatform(platformId: string, k = 8): Promise<KnowledgeChunk[]> {
+    const { rows } = await getPool().query<ChunkRow>(
+      `select id, kind, platform_id, model_family, content, source_url, trust_score, ingested_at,
+              null::float as similarity
+         from knowledge_chunks
+        where platform_id = $1
+        order by trust_score desc nulls last, ingested_at desc
+        limit $2`,
+      [platformId, k]
+    );
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      platformId: r.platform_id ?? undefined,
+      modelFamily: r.model_family ?? undefined,
+      content: r.content,
+      sourceUrl: r.source_url ?? '',
+      ingestedAt: r.ingested_at instanceof Date ? r.ingested_at.toISOString() : String(r.ingested_at),
+      trustScore: r.trust_score === null ? 0.5 : Number(r.trust_score),
+    }));
+  }
+
   async retrieve(query: string, filter: RetrieveFilter, k = 5): Promise<KnowledgeChunk[]> {
     const queryVector = await this.embedQuery(query);
     const vectorLiteral = `[${queryVector.join(',')}]`;
@@ -68,4 +96,39 @@ export class PKBService {
       similarity: r.similarity === null ? undefined : Number(r.similarity),
     }));
   }
+}
+
+/**
+ * Seed-file fallback for the platform guide (V1.8): when the DB is
+ * unreachable, serve the curated chunks from config/pkb-seed.json so the
+ * guide's "learn from the docs" section is never empty.
+ */
+interface SeedChunk {
+  kind: 'pkb' | 'mpkb';
+  platform_id?: string;
+  content: string;
+  source_url: string;
+  trust_score?: number;
+}
+
+let seedCache: SeedChunk[] | null = null;
+
+export function loadSeedChunksByPlatform(platformId: string, k = 8): KnowledgeChunk[] {
+  if (!seedCache) {
+    const seedPath = path.resolve(__dirname, '..', '..', '..', 'config', 'pkb-seed.json');
+    seedCache = (JSON.parse(fs.readFileSync(seedPath, 'utf-8')) as { chunks: SeedChunk[] }).chunks;
+  }
+  return seedCache
+    .filter((c) => c.platform_id === platformId)
+    .sort((a, b) => (b.trust_score ?? 0.5) - (a.trust_score ?? 0.5))
+    .slice(0, k)
+    .map((c, i) => ({
+      id: `seed-${platformId}-${i}`,
+      kind: c.kind,
+      platformId: c.platform_id,
+      content: c.content,
+      sourceUrl: c.source_url,
+      ingestedAt: '',
+      trustScore: c.trust_score ?? 0.5,
+    }));
 }

@@ -8,3 +8,4 @@ process.env.NODE_ENV = 'test';
 process.env.GROQ_API_KEY = 'test-key-never-used-for-real-calls';
 process.env.CEREBRAS_API_KEY = 'test-key-never-used-for-real-calls';
 process.env.OPENCODE_API_KEY = 'test-key-never-used-for-real-calls';
+process.env.GEMINI_API_KEY = 'test-key-never-used-for-real-calls';

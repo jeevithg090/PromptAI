@@ -41,6 +41,24 @@ export interface GovernorPresentation {
   suggestions: string[];
 }
 
+/** One doc passage the draft was grounded in, addressable by its [P<n>]/[M<n>] citation (V1.6). */
+export interface GroundingSource {
+  /** Citation token as used in node rationales, e.g. "P1", "M2". */
+  ref: string;
+  kind: 'pkb' | 'mpkb';
+  url: string;
+  /** Hostname of url — precomputed for display chips. */
+  domain: string;
+  /** First ~200 chars of the passage, for citation popovers. */
+  snippet: string;
+}
+
+/** Doc-grounded "why" (V1.6) — additive next to whyThisWorks (string[]), which the extension still consumes. */
+export interface GroundingPresentation {
+  sources: GroundingSource[];
+  lessons: Array<{ lesson: string; ref: string | null }>;
+}
+
 export interface DesignedResponse {
   platformId: string;
   platformName: string;
@@ -52,6 +70,8 @@ export interface DesignedResponse {
   strength?: StrengthPresentation;
   /** Grounded "why this works" lessons, drawn from the PKB/MPKB the draft was built on (§10.5). */
   whyThisWorks: string[];
+  /** Same lessons with their sources resolved to URLs (V1.6); absent when nothing was retrieved. */
+  grounding?: GroundingPresentation;
   /** The Critic's flagged issues, surfaced as improvement hints. */
   improvementHints: string[];
   governor: GovernorPresentation;

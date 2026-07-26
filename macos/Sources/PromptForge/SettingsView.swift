@@ -17,7 +17,9 @@ struct SettingsView: View {
       .tabItem { Label("API Key", systemImage: "key") }
 
       Form {
-        Text("Hotkey configuration will appear here.")
+        LabeledContent("Open New Draft", value: HotkeyManager.shared.displayString)
+        Text("Press this shortcut from any app to open a new draft. Works system-wide without Accessibility permission.")
+          .font(.caption)
           .foregroundStyle(.secondary)
       }
       .padding()

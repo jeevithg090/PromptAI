@@ -10,6 +10,8 @@
 
 # GLOBAL CONTEXT BLOCK (prepend to every task prompt)
 
+> **⚠️ SUPERSEDED 2026-07-11 (F0.4).** This Global Context Block predates Phases 4–8 and is now stale: it claims `web/`, `extension/`, `admin/` "DO NOT EXIST YET" (they all exist) and cites 24 suites / 160 tests (now 44 suites / 328 tests). It is kept **for historical reference only** — do not use it to brief new work. **For all current/final-phase work use the Global Context Block v2 in `final-task-prompt.md`.** The task prompts below (P-T3.x … P-T8.x, P-TA.x) remain accurate for the individual tasks they describe.
+
 ## What this project is
 
 PromptForge (placeholder brand) is a **reverse-prompting assistant**: the user types a rough idea ("an image of a horse running"), and the system interviews them briefly, then drafts an *excellent*, platform-tailored prompt (for Midjourney, ChatGPT, Claude, Gemini, Stable Diffusion, etc.), scores it against an 8-dimension quality rubric (0–100 "strength score"), explains why it works, and lets the user edit it node-by-node. It ships as a web app, a browser extension, and later a macOS app.

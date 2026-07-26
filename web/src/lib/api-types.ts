@@ -87,10 +87,42 @@ export interface Modality {
   label: string;
 }
 
+export interface PlatformMode {
+  mode_id: string;
+  name: string;
+  aliases: string[];
+  best_for: string[];
+  avoid_for: string[];
+  notes: string;
+  docs_url?: string;
+}
+
 export interface Platform {
   platform_id: string;
   display_name: string;
   modalities: string[];
+  max_prompt_tokens?: number;
+  modes?: PlatformMode[];
+}
+
+export interface ModeRecommendation {
+  mode: PlatformMode;
+  score: number;
+  reason: string;
+}
+
+// Doc-grounded rationale (V1.6).
+export interface GroundingSource {
+  ref: string;
+  kind: 'pkb' | 'mpkb';
+  url: string;
+  domain: string;
+  snippet: string;
+}
+
+export interface GroundingPresentation {
+  sources: GroundingSource[];
+  lessons: Array<{ lesson: string; ref: string | null }>;
 }
 
 export interface DesignedResponse {
@@ -101,10 +133,33 @@ export interface DesignedResponse {
   nodes: DesignedNode[];
   strength?: StrengthPresentation;
   whyThisWorks: string[];
+  grounding?: GroundingPresentation;
   improvementHints: string[];
   governor: GovernorPresentation;
   defaultedNodeTypes: NodeType[];
   refinementCount: number;
+}
+
+// Enhance mode (F1.1) — improve a finished prompt.
+export interface RubricEvaluationLite {
+  overallStrength: number;
+  scores: Record<RubricDimension, 1 | 2 | 3>;
+  issues: string[];
+}
+
+export interface EnhanceResponse {
+  status: 'ok';
+  session_id: string;
+  final_state: string;
+  original: { nodes: DesignedNode[]; evaluation: RubricEvaluationLite | null };
+  enhanced: DesignedResponse | null;
+  improvement: {
+    before: number;
+    after: number;
+    dimension_deltas: Array<{ dimension: RubricDimension; before: 1 | 2 | 3; after: 1 | 2 | 3 }>;
+    note: 'improved' | 'already_strong';
+  };
+  platform_hint: string | null;
 }
 
 export interface DraftResponseOk {
@@ -153,7 +208,15 @@ export type DraftResponseRateLimited = {
   message: string;
 }
 
-export type DraftResponse = DraftResponseOk | DraftResponseClarifying | DraftResponseBlocked | DraftResponseBudgetExceeded | DraftResponseError | DraftResponseRateLimited;
+// Plan-entitlement denial (403, F0.1) — distinct from budget_exceeded (429).
+export interface DraftResponsePlanRestricted {
+  status: 'plan_restricted';
+  feature: string;
+  plan: string;
+  message: string;
+}
+
+export type DraftResponse = DraftResponseOk | DraftResponseClarifying | DraftResponseBlocked | DraftResponseBudgetExceeded | DraftResponseError | DraftResponseRateLimited | DraftResponsePlanRestricted;
 
 export interface SessionSummary {
   id: string;
@@ -192,6 +255,21 @@ export interface VisualPreviewResponse {
   mime: string;
   disclaimer: string;
 }
+
+// Chat-refine (conversational alternative to node regeneration).
+export interface ChatRefineMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export type ChatRefineResponse =
+  | { status: 'ok'; type: 'question'; message: string }
+  | { status: 'ok'; type: 'prompt'; message: string; nodes: DesignedNode[]; assembled: string };
+
+// Chat-first drafting (V1.4).
+export type ChatDraftResponse =
+  | { status: 'ok'; type: 'question'; message: string }
+  | { status: 'ok'; type: 'draft'; message: string; response: DesignedResponse };
 
 export interface LibrarySeedItem {
   id: string;

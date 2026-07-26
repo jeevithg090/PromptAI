@@ -58,7 +58,13 @@ const envSchema = z.object({
 
   // Embeddings provider — Google Gemini (§6 PKB; OpenCode Zen has no
   // embeddings endpoint). Free-tier key from https://aistudio.google.com.
+  // Also powers the native chat adapter (provider 'gemini') and GroundingService.
   GEMINI_API_KEY: optional(z.string()),
+
+  // Thinking-token budget for the native Gemini chat adapter. 0 = thinking off
+  // (deterministic, low-latency JSON — the default). Raise for reasoning-heavy
+  // steps. Applies only to provider 'gemini' (finalplan §A1).
+  GEMINI_THINKING_BUDGET: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(0).default(0)),
 
   // Cloudflare — R2 (encrypted blobs/media, §19/§14) + KV (registry edge cache, §5.1).
   // Not consumed yet: R2/KV client wiring lands in T5.5 (registry cache) and T7.1 (blobs).
@@ -98,6 +104,8 @@ const envSchema = z.object({
   STRATEGY_PROFILES_PATH: optional(z.string()),
   MODEL_CAPABILITIES_PATH: optional(z.string()),
   DEMO_EXAMPLES_PATH: optional(z.string()),
+  LIBRARY_SEEDS_PATH: optional(z.string()),
+  MODEL_PRICING_PATH: optional(z.string()),
 
   // CORS allowlist for web/extension origins — comma-separated (T4.1/T5.4).
   ALLOWED_ORIGINS: z.preprocess(
@@ -114,6 +122,19 @@ const envSchema = z.object({
   // Demo/try-it-now flow (T4.3).
   DEMO_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
   DEMO_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(5)),
+
+  // Voice dictation / STT (F1.3). Groq Whisper is the backend fallback; the key
+  // is GROQ_API_KEY (already configured). Default daily cap is a per-user abuse
+  // control; plans may raise it (PlanService).
+  STT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  STT_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(50)),
+
+  // Share links (F2.4).
+  SHARE_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(20)),
+  SHARE_BASE_URL: z.preprocess((v) => (v === '' || v === undefined ? 'http://localhost:3000' : v), z.string().url()),
+
+  // A/B compare (F2.5).
+  COMPARE_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(5)),
 
   // PKB retrieval (T5.2).
   PKB_MIN_SIMILARITY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(0).max(1).default(0.45)),
