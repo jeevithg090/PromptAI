@@ -362,6 +362,12 @@
   border-top: 1px solid var(--pf-border);
 }
 
+.pf-hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #5c564c;
+}
+
 /* ── Recommendation panel ── */
 .pf-recommend { margin-top: 8px; }
 .pf-rec-toggle { font-size: 13px; padding: 4px 0; }

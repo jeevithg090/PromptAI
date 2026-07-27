@@ -176,6 +176,14 @@ export function detect(): PlatformContext {
   const platformId = pattern?.id ?? 'generic';
   const selectors = pattern?.selectors ?? { input: [] };
   const inputElement = findInput(selectors);
+  // Ordered selector list for re-querying the input at insert time (the live
+  // inputElement reference can go stale after the site re-renders). ProseMirror
+  // / CodeMirror editors are appended so contenteditable sites still resolve.
+  const inputSelectors = [
+    ...selectors.input,
+    ...(selectors.prosemirror ? [selectors.prosemirror] : []),
+    ...(selectors.codemirror ? [selectors.codemirror] : []),
+  ];
   const inputType = detectInputType(inputElement);
   const sourceText = extractText(inputElement);
 
@@ -189,6 +197,7 @@ export function detect(): PlatformContext {
     platformId,
     inputType,
     inputElement,
+    inputSelectors,
     sourceText,
     conversationTitle,
     detectedModel,

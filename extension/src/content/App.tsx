@@ -22,6 +22,9 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
   // draft for yet — fall back to a supported id so the picker + API id are valid.
   const detectedId = ALL_PLATFORMS.includes(initialCtx.platformId) ? initialCtx.platformId : 'chatgpt';
   const [platformId, setPlatformId] = useState(detectedId);
+  // Capture the host site's input selectors once so insertion targets the real
+  // page input (not the overlay) even after this component re-renders.
+  const inputSelectorsRef = useRef<string[]>(initialCtx.inputSelectors);
   const [idea, setIdea] = useState(initialEnhanceText ?? initialCtx.sourceText);
   const [step, setStep] = useState<OverlayStep>({ phase: 'initial' });
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -30,6 +33,14 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
   const [recording, setRecording] = useState(false);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  // Web app origin for the "Open in editor" link — configurable via the options
+  // page so a deployed extension points at the deployed web app, not localhost.
+  const [webOrigin, setWebOrigin] = useState('http://localhost:3000');
+  useEffect(() => {
+    chrome.storage?.sync.get('webOrigin').then(({ webOrigin: w }) => {
+      if (typeof w === 'string' && w) setWebOrigin(w.replace(/\/$/, ''));
+    }).catch(() => {});
+  }, []);
 
   // Dictation (F1.3): record in the content UI, transcribe via the background
   // worker (content script stays fetch/credential-free).
@@ -201,9 +212,25 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
   }, []);
 
   const handleInsert = useCallback(
-    (text: string) => {
-      insertText(text, [], true); // TODO: pass platform selectors + ToS gate
-      onClose();
+    async (text: string): Promise<boolean> => {
+      const result = insertText(text, inputSelectorsRef.current, true);
+      if (result.ok) {
+        onClose();
+        return true;
+      }
+      // Couldn't reach the site's input box — copy to clipboard so the draft is
+      // never lost. The result step surfaces the fallback notice to the user.
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+      }
+      return false;
     },
     [onClose],
   );
@@ -316,6 +343,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
               onInsert={handleInsert}
               platformId={platformId}
               callApi={callApi}
+              webOrigin={webOrigin}
             />
           </>
         )}

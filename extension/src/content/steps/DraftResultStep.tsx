@@ -6,9 +6,12 @@ type CallApi = (path: string, body: unknown) => Promise<{ status: number; data: 
 
 interface DraftResultStepProps {
   response: DesignedResponse;
-  onInsert: (text: string) => void;
+  /** Returns true if inserted into the page, false if it fell back to clipboard. */
+  onInsert: (text: string) => boolean | Promise<boolean>;
   platformId: string;
   callApi: CallApi;
+  /** Origin of the PromptForge web app for the "Open in editor" link. */
+  webOrigin: string;
 }
 
 interface RefineTurn {
@@ -16,9 +19,10 @@ interface RefineTurn {
   content: string;
 }
 
-export function DraftResultStep({ response: initialResponse, onInsert, platformId, callApi }: DraftResultStepProps) {
+export function DraftResultStep({ response: initialResponse, onInsert, platformId, callApi, webOrigin }: DraftResultStepProps) {
   const [showNodes, setShowNodes] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [insertFellBack, setInsertFellBack] = useState(false);
 
   // The result is now editable in place (finalplan B3, two-way loop): chat-refine
   // and per-node redraft replace the displayed response; feedback tunes future drafts.
@@ -234,7 +238,13 @@ export function DraftResultStep({ response: initialResponse, onInsert, platformI
 
       {/* ── Actions ── */}
       <div className="pf-result-actions">
-        <button className="pf-btn pf-btn-primary" onClick={() => onInsert(response.assembled)}>
+        <button
+          className="pf-btn pf-btn-primary"
+          onClick={async () => {
+            const ok = await onInsert(response.assembled);
+            setInsertFellBack(!ok);
+          }}
+        >
           Insert into page
         </button>
         <button className="pf-btn pf-btn-secondary" onClick={handleCopy}>
@@ -242,13 +252,18 @@ export function DraftResultStep({ response: initialResponse, onInsert, platformI
         </button>
         <a
           className="pf-btn pf-btn-link"
-          href={`http://localhost:3000/build?platform=${response.platformId}`}
+          href={`${webOrigin}/build?platform=${response.platformId}`}
           target="_blank"
           rel="noopener noreferrer"
         >
           Open in editor
         </a>
       </div>
+      {insertFellBack && (
+        <p className="pf-hint">
+          Couldn&apos;t find this page&apos;s input box — the prompt was copied to your clipboard instead.
+        </p>
+      )}
 
       {/* ── Feedback (tunes future drafts, finalplan B3) ── */}
       <div className="pf-feedback">
