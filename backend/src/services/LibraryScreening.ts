@@ -21,7 +21,10 @@ export async function screenSubmission(
   assembledTemplate: string
 ): Promise<ScreeningResult> {
   // Safety screening.
-  const mockContext = { sessionId: 'library-screening', userId: 'system', platform: { display_name: 'screening' } } as unknown as PipelineContext;
+  // sessionId/userId land in audit rows whose columns are uuid — use the nil uuid,
+  // not human-readable strings (which throw "invalid input syntax for type uuid").
+  const NIL_UUID = '00000000-0000-0000-0000-000000000000';
+  const mockContext = { sessionId: NIL_UUID, userId: NIL_UUID, platform: { display_name: 'screening' } } as unknown as PipelineContext;
   const safety = await classifyOrFailClosed(new ContentSafetyClassifier(), `${title}\n${description}\n${assembledTemplate}`, mockContext);
   if (!safety.safe) {
     return { approved: false, moderationStatus: 'rejected', reason: safety.reason ?? 'Failed safety screening' };

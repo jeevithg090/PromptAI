@@ -1,7 +1,7 @@
 /**
  * Typed API client — mirrors the backend HTTP contract.
  * Single `baseUrl` from env, settable bearer token, typed methods for every route.
- * No retries, 30s timeout via AbortController.
+ * No retries, 120s timeout via AbortController (drafts run a multi-step LLM pipeline).
  */
 import type {
   DraftResponse, DesignedResponse, DesignedNode, Recommendation, Platform,
@@ -30,7 +30,7 @@ export class ApiClient {
 
   private async request<T>(method: string, path: string, body?: unknown, extraHeaders?: Record<string, string>): Promise<T> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 30_000);
+    const timer = setTimeout(() => controller.abort(), 120_000);
     const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extraHeaders };
     if (this._token) {
       headers['Authorization'] = `Bearer ${this._token}`;
@@ -64,7 +64,7 @@ export class ApiClient {
   /** Voice dictation (F1.3) — multipart audio → transcript. Not JSON, so it bypasses request(). */
   async transcribe(blob: Blob, filename = 'clip.webm'): Promise<{ text: string }> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 30_000);
+    const timer = setTimeout(() => controller.abort(), 120_000);
     const headers: Record<string, string> = {};
     if (this._token) headers['Authorization'] = `Bearer ${this._token}`;
     const form = new FormData();
@@ -434,6 +434,44 @@ export class ApiClient {
 
   preview(body: PreviewBody): Promise<PreviewResponse> {
     return this.request('POST', '/preview', body);
+  }
+
+  // ── Projects (workspace organization) ──
+  projectsList(): Promise<{ status: string; projects: Array<{ id: string; name: string; description: string | null; default_platform: string | null; created_at: string }> }> {
+    return this.request('GET', '/projects');
+  }
+  createProject(body: { name: string; description?: string; default_platform?: string }): Promise<{ status: string; id: string; created_at: string }> {
+    return this.request('POST', '/projects', body);
+  }
+  updateProject(id: string, body: { name?: string; description?: string; default_platform?: string }): Promise<{ status: string }> {
+    return this.request('PATCH', `/projects/${id}`, body);
+  }
+  deleteProject(id: string): Promise<{ status: string }> {
+    return this.request('DELETE', `/projects/${id}`);
+  }
+
+  // ── Teams (collaboration) ──
+  teamsList(): Promise<{ status: string; teams: Array<{ id: string; name: string; owner_id: string; created_at: string }> }> {
+    return this.request('GET', '/teams');
+  }
+  createTeam(body: { name: string }): Promise<{ status: string; id: string; created_at: string }> {
+    return this.request('POST', '/teams', body);
+  }
+  addTeamMember(teamId: string, body: { user_id: string; role?: string }): Promise<{ status: string }> {
+    return this.request('POST', `/teams/${teamId}/members`, body);
+  }
+  removeTeamMember(teamId: string, userId: string): Promise<{ status: string }> {
+    return this.request('DELETE', `/teams/${teamId}/members/${userId}`);
+  }
+
+  // ── Library contribution (F: community submissions) ──
+  submitToLibrary(body: { title: string; description: string; modality: string; platform_tags?: string[]; template: unknown; credit?: boolean }): Promise<{ status: string; id: string; moderation_status: string; reason?: string }> {
+    return this.request('POST', '/library/submit', body);
+  }
+
+  // ── Billing (plan upgrade via Stripe) ──
+  billingCheckout(): Promise<{ status: string; url: string }> {
+    return this.request('POST', '/billing/checkout');
   }
 
   visualPreview(sessionId: string, body: VisualPreviewBody): Promise<VisualPreviewResponse> {

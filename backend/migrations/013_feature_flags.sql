@@ -19,3 +19,13 @@ insert into feature_flags (key, value) values
   ('provider_google_enabled', 'true'),
   ('provider_mock_enabled', 'true')
 on conflict (key) do nothing;
+
+-- Grants for the admin control plane role (moved here from 012 so the table
+-- exists first; guarded so it is a no-op if the role hasn't been created).
+do $$
+begin
+  if exists (select from pg_catalog.pg_roles where rolname = 'admin_readonly_plus') then
+    grant select, insert, update on feature_flags to admin_readonly_plus;
+  end if;
+end
+$$;

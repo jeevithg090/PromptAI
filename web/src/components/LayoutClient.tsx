@@ -93,8 +93,10 @@ function NavBar() {
         <div className="ml-auto flex items-center gap-1.5">
           {user ? (
             <>
-              <Link href="/history" className={`${NAV_LINK} hidden sm:inline-block`}>{strings.navHistory}</Link>
-              <Link href="/prompts" className={`${NAV_LINK} hidden sm:inline-block`}>{strings.prompts.navLink}</Link>
+              <Link href="/history" className={`${NAV_LINK} hidden lg:inline-block`}>{strings.navHistory}</Link>
+              <Link href="/prompts" className={`${NAV_LINK} hidden lg:inline-block`}>{strings.prompts.navLink}</Link>
+              <Link href="/projects" className={`${NAV_LINK} hidden lg:inline-block`}>Projects</Link>
+              <Link href="/teams" className={`${NAV_LINK} hidden lg:inline-block`}>Teams</Link>
               <Link href="/account" className={NAV_LINK}>{strings.navAccount}</Link>
               <button onClick={() => signOut()} className="pf-btn pf-btn-ghost !px-3 !py-1.5">{strings.navSignOut}</button>
             </>

@@ -1425,7 +1425,7 @@ export function buildApp(): Hono<AppEnv> {
           description,
           modality,
           platform_tags ?? [],
-          template,
+          JSON.stringify(template), // template column is jsonb
           screening.moderationStatus,
         ]
       );
@@ -1885,14 +1885,17 @@ export function buildApp(): Hono<AppEnv> {
   /** Bootstrap the caller's app_users row (idempotent). */
   authed.post('/me/bootstrap', async (c) => {
     const userId = c.get('userId');
-    // Real email/name come from the JWT claims (name/email are the only plaintext
-    // PII we store, §19.1); null when absent (e.g. dev-bypass) → columns stay null.
-    const email = c.get('email') ?? null;
+    // Real email/name come from the JWT claims (the only plaintext PII we store,
+    // §19.1). app_users.email and .name are NOT NULL, so when a claim is absent
+    // (dev-bypass carries no email) we fall back to a synthetic dev value derived
+    // from the user id — this keeps the row insertable so downstream FKs (prompts,
+    // sessions, usage_events) resolve. In production the JWT always carries email.
+    const email = c.get('email') ?? `${userId}@dev.local`;
     try {
       const pool = getPool();
       await pool.query(
-        `insert into app_users (id, email, display_name) values ($1, $2, $3) on conflict (id) do nothing`,
-        [userId, email, null]
+        `insert into app_users (id, email, name) values ($1, $2, $3) on conflict (id) do nothing`,
+        [userId, email, email]
       );
       return c.json({ status: 'ok' });
     } catch (error) {
@@ -2237,7 +2240,7 @@ export function buildApp(): Hono<AppEnv> {
         [userId]
       );
       const prompts = await pool.query(
-        `select id, version, task_type, platform_id, strength_score, created_at
+        `select id, version, platform_id, strength_score, created_at
          from prompts where user_id = $1 order by created_at`,
         [userId]
       );
@@ -2316,8 +2319,8 @@ export function buildApp(): Hono<AppEnv> {
       const pool = getPool();
       const res = await pool.query(
         `select id, name, owner_id, created_at from teams
-         where owner_id = $1
-         or id in (select team_id from team_members where user_id = $1)
+         where owner_id = $1::uuid
+         or id in (select team_id from team_members where user_id = $1::text)
          order by created_at desc`,
         [userId]
       );
@@ -2402,7 +2405,7 @@ export function buildApp(): Hono<AppEnv> {
     const pool = getPool();
     const month = new Date().toISOString().slice(0, 7); // "2026-07"
     const res = await pool.query(
-      `select coalesce(sum(input_tokens + output_tokens), 0) as used
+      `select coalesce(sum(tokens_used), 0) as used
        from usage_events where user_id = $1 and created_at >= $2`,
       [userId, `${month}-01T00:00:00Z`]
     );

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
 import seeds from '@/data/library-seeds.json';
+import LibrarySubmit from '@/components/LibrarySubmit';
 
 /**
  * Public prompt library (V1.3): curated seeds across 8 niches merged with
@@ -29,7 +30,26 @@ interface CommunityEntry {
   description: string | null;
   modality: string;
   platform_tags: string[] | null;
-  template: string;
+  template: unknown; // jsonb: a plain string (seeds) OR a node array [{type, value}] (submissions)
+}
+
+/** Flatten a stored template (string, node array, or object) to displayable text.
+ *  Community submissions store `[{type, value}]`; seeds store a plain string.
+ *  Rendering the raw object as a React child throws, so always coerce to string. */
+function templateToString(t: unknown): string {
+  if (typeof t === 'string') return t;
+  if (Array.isArray(t)) {
+    return t
+      .map((n) => (n && typeof n === 'object' && 'value' in n ? String((n as { value: unknown }).value ?? '') : String(n)))
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (t && typeof t === 'object') {
+    const v = (t as { value?: unknown }).value;
+    if (typeof v === 'string') return v;
+    try { return JSON.stringify(t); } catch { return ''; }
+  }
+  return t == null ? '' : String(t);
 }
 
 const NICHES = ['all', 'marketing', 'coding', 'art', 'writing', 'education', 'product-ux', 'data', 'video'];
@@ -56,7 +76,7 @@ export default function LibraryPage() {
           modality: e.modality,
           platform_id: e.platform_tags?.[0] ?? '',
           idea: e.title,
-          template: e.template,
+          template: templateToString(e.template), // stored as jsonb (string OR node array) — flatten to text
           community: true,
         }));
         setCommunity(entries);
@@ -84,8 +104,13 @@ export default function LibraryPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900">{strings.libraryTitle}</h1>
-      <p className="mt-1 text-sm text-gray-500">{strings.librarySubtitle}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{strings.libraryTitle}</h1>
+          <p className="mt-1 text-sm text-gray-500">{strings.librarySubtitle}</p>
+        </div>
+        <LibrarySubmit />
+      </div>
 
       {/* Niche pills */}
       <div className="mt-5 flex flex-wrap gap-2">

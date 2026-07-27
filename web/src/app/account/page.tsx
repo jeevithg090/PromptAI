@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { strings, getLocale, setLocale, LOCALES } from '@/lib/strings';
 import { launchTour } from '@/components/Tour';
 import StyleGuideEditor from '@/components/StyleGuideEditor';
+import BillingSection from '@/components/BillingSection';
 import { useRequireAuth } from '@/components/AuthProvider';
 import { useEncryption } from '@/components/EncryptionProvider';
 import { api } from '@/lib/api';
@@ -208,6 +209,9 @@ export default function AccountPage() {
           <label className="block text-sm font-medium text-gray-700">{strings.accountEmail}</label>
           <p className="mt-1 text-sm text-gray-900">{user?.email ?? '—'}</p>
         </div>
+
+        {/* Plan & usage + upgrade (billing) */}
+        <BillingSection />
 
         {/* Language + onboarding (F2.6) */}
         <div>

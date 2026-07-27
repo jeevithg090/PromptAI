@@ -1,0 +1,12 @@
+-- 021_prompt_versions_nodes_json_nullable.sql
+-- Completes the T7.1 content_ciphertext transition that 009 deferred.
+--
+-- 009 added prompt_versions.content_ciphertext and noted that a follow-up
+-- migration would drop the NOT NULL on the legacy plaintext nodes_json column
+-- "after client migration confirms". That follow-up was never applied (the 010
+-- slot was reused for memory_tasktype), so new saves — which write
+-- content_ciphertext and leave nodes_json NULL — failed the NOT NULL constraint
+-- with "null value in column nodes_json violates not-null constraint".
+--
+-- New writes use content_ciphertext; nodes_json stays only for legacy rows.
+alter table prompt_versions alter column nodes_json drop not null;

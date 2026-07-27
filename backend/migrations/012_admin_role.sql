@@ -35,8 +35,7 @@ grant select on platforms to admin_readonly_plus;
 grant insert, update on platforms to admin_readonly_plus;
 grant select on model_capability_records to admin_readonly_plus;
 grant insert, update on model_capability_records to admin_readonly_plus;
-grant select on feature_flags to admin_readonly_plus;
-grant insert, update on feature_flags to admin_readonly_plus;
+-- feature_flags grants live in 013 (table is created there, after this file runs).
 
 -- Audit log insert (every admin action is logged):
 grant insert on audit_log to admin_readonly_plus;

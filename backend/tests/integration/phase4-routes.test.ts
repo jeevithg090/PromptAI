@@ -268,7 +268,7 @@ describe('DB-backed web routes with a fake pool (T4.2/T4.7)', () => {
     expect(Array.isArray(body.export.sessions)).toBe(true);
   });
 
-  it('POST /me/bootstrap upserts idempotently and passes the JWT email (null under dev-bypass)', async () => {
+  it('POST /me/bootstrap upserts idempotently and passes the JWT email (dev fallback under dev-bypass)', async () => {
     const query = jest.fn().mockResolvedValue({ rows: [] });
     setPoolForTesting({ query } as unknown as Pool);
     const res = await app.request('/me/bootstrap', { method: 'POST', headers: authed });
@@ -277,7 +277,10 @@ describe('DB-backed web routes with a fake pool (T4.2/T4.7)', () => {
     const insertCall = query.mock.calls.find(([sql]) => (sql as string).includes('app_users'));
     const params = insertCall?.[1] as unknown[];
     expect(params[0]).toBe('00000000-0000-4000-8000-000000000001'); // id
-    expect(params[1]).toBeNull(); // email — null under dev-bypass (no hardcoded placeholder)
+    // email/name are NOT NULL columns; dev-bypass has no email claim, so bootstrap
+    // synthesizes a non-null `<userId>@dev.local` so the row (and downstream FKs) insert.
+    expect(params[1]).toBe('00000000-0000-4000-8000-000000000001@dev.local'); // email
+    expect(params[2]).toBe('00000000-0000-4000-8000-000000000001@dev.local'); // name
   });
 });
 
