@@ -26,6 +26,12 @@ app.use('*', bodyLimit({ maxSize: 100 * 1024, onError: (c) => c.json({ error: 'p
 
 app.route('/', healthRouter);
 
+// Every /admin/* route requires a valid Supabase JWT AND an allow-listed
+// admin identity (email allowlist or admin_roles row). /admin/health is
+// intentionally excluded so container/uptime probes still work; the health
+// router is mounted above this guard.
+app.use('/admin/*', adminAuth);
+
 app.route('/', dashboardRouter);
 app.route('/', featuresRouter);
 app.route('/', registryRouter);
