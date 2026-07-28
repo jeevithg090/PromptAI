@@ -6,7 +6,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useRouter } from 'next/navigation';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase, supabaseConfigured } from '@/lib/supabase';
-import { api } from '@/lib/api';
+import { api, adminApi } from '@/lib/api';
 
 export interface AuthContextValue {
   user: User | null;
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Bootstrap backend user row after login
   const bootstrapBackend = useCallback(async (token: string) => {
     api.setToken(token);
+    adminApi.setToken(token);
     try {
       await api.bootstrap();
     } catch {
@@ -70,6 +71,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         bootstrapBackend(s.access_token);
       } else {
         api.setToken(null);
+        adminApi.setToken(null);
       }
     });
 

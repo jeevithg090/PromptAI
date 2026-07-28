@@ -480,3 +480,63 @@ export class ApiClient {
 }
 
 export const api = new ApiClient();
+
+// ─── Admin API client ─────────────────────────────────────────────────────
+// The admin service (admin/) is a physically separate deployable (§21.3).
+// It has no decryption capability; the only surface used here is the
+// library moderation queue. Base URL is env-configurable so the same web
+// build can point at localhost:3002 in dev or the deployed admin URL in prod.
+
+export type PendingLibraryEntry = {
+  id: string;
+  user_id: string | null;
+  title: string;
+  description: string | null;
+  modality: string | null;
+  platform_tags: string[] | null;
+  template: unknown;
+  popularity: number | null;
+  remix_count: number | null;
+  version: number | null;
+  created_at: string;
+  moderation_status?: string;
+  submitted_email?: string | null;
+};
+
+export class AdminApiClient {
+  baseUrl: string;
+  private _token: string | null = null;
+
+  constructor(baseUrl?: string) {
+    this.baseUrl = baseUrl ?? process.env.NEXT_PUBLIC_ADMIN_API_URL ?? 'http://localhost:3002';
+  }
+
+  setToken(token: string | null) {
+    this._token = token;
+  }
+
+  private async request<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (this._token) headers['Authorization'] = `Bearer ${this._token}`;
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (!res.ok) {
+      const payload = await res.json().catch(() => ({ error: res.statusText }));
+      throw { status: res.status, message: payload.error ?? res.statusText } as ApiError;
+    }
+    return (await res.json()) as T;
+  }
+
+  listPending(): Promise<PendingLibraryEntry[]> {
+    return this.request('GET', '/admin/library/pending');
+  }
+
+  moderate(id: string, action: 'approve' | 'reject', note?: string): Promise<{ status: string; id: string; moderation_status: string }> {
+    return this.request('POST', `/admin/library/${id}/moderate`, { action, note });
+  }
+}
+
+export const adminApi = new AdminApiClient();
