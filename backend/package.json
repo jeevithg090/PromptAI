@@ -24,7 +24,7 @@
   "dependencies": {
     "@aws-sdk/client-ssm": "^3.1084.0",
     "@hono/node-server": "^1.13.0",
-    "@supabase/supabase-js": "^2.45.0",
+    "@supabase/supabase-js": "^2.111.0",
     "dotenv": "^17.4.2",
     "hono": "^4.6.0",
     "jose": "^4.15.9",
