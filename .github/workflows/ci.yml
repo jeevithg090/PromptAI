@@ -69,7 +69,7 @@ jobs:
         run: npm run build
 
       - name: Upload build artifact (dist + config)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: lambda-build
           # config/ lives at the repo root, one level above backend/
