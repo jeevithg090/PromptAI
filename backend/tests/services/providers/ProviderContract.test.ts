@@ -99,4 +99,23 @@ describe('ProviderAdapter contract (§9.1)', () => {
       await expect(make().generate({ ...sampleRequest, apiKeyOverride: 'test-key' })).rejects.toThrow(/request failed/);
     });
   });
+
+  // Groq retired its Llama chat models on 2026-08-16; the gpt-oss replacements
+  // are reasoning models and must run at low effort to keep the speed budget.
+  describe('GroqAdapter reasoning effort', () => {
+    const okBody = { choices: [{ message: { content: 'ok' }, finish_reason: 'stop' }] };
+    const sentBody = (spy: jest.SpyInstance) => JSON.parse((spy.mock.calls[0][1] as RequestInit).body as string);
+
+    it('sends reasoning_effort low for openai/gpt-oss models', async () => {
+      const spy = mockFetchOnce(okBody);
+      await new GroqAdapter().generate({ ...sampleRequest, model: 'openai/gpt-oss-120b', apiKeyOverride: 'test-key' });
+      expect(sentBody(spy).reasoning_effort).toBe('low');
+    });
+
+    it('omits reasoning_effort for other models', async () => {
+      const spy = mockFetchOnce(okBody);
+      await new GroqAdapter().generate({ ...sampleRequest, apiKeyOverride: 'test-key' });
+      expect(sentBody(spy)).not.toHaveProperty('reasoning_effort');
+    });
+  });
 });

@@ -196,16 +196,16 @@ large-context where it isn't. The entire table lives in
 
 | Pipeline step | Class | Routed to | Why |
 |---|---|---|---|
-| `intent_classification` | small | Groq · `llama-3.1-8b-instant` | Sub-second, trivially structured output |
-| `clarifying_questions` | small | Groq · `llama-3.1-8b-instant` | Short, templated generation |
+| `intent_classification` | small | Groq · `openai/gpt-oss-20b` | Sub-second, trivially structured output |
+| `clarifying_questions` | small | Groq · `openai/gpt-oss-20b` | Short, templated generation |
 | `drafting` | large | Gemini · `gemini-flash-latest` | 1M context, strict JSON, doc grounding |
 | `critic` | large | Gemini · `gemini-flash-latest` | Must hold rubric + docs + draft at once |
 | `prompt_import` | large | Gemini · `gemini-flash-latest` | Parsing arbitrary pasted prompts |
 | `chat_draft` / `chat_refine` | large | Gemini · `gemini-flash-latest` | Multi-turn context retention |
 | `platform_profile` | large | Gemini · `gemini-flash-latest` | Reads and profiles whole doc sites |
 | `debug` / `reverse` / `migrate` / `ambiguity` | large | Cerebras · `gpt-oss-120b` | Analytical reasoning over one artifact |
-| `alternatives` / `judge` / `lint_tone` | small | Groq · `llama-3.1-8b-instant` | High call volume, narrow scope |
-| `memory_extraction` / `preview` | small | Groq · `llama-3.1-8b-instant` | Background, latency-sensitive |
+| `alternatives` / `judge` / `lint_tone` | small | Groq · `openai/gpt-oss-20b` | High call volume, narrow scope |
+| `memory_extraction` / `preview` | small | Groq · `openai/gpt-oss-20b` | Background, latency-sensitive |
 | `transcription` | small | Groq · `whisper-large-v3-turbo` | Speech-to-text |
 | `image_preview` | small | Gemini · `imagen-3.0-generate-001` | Visual preview generation |
 
