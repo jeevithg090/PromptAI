@@ -5,4 +5,5 @@
  */
 export * from './forge.ts';
 export * from './events.ts';
+export * from './me.ts';
 export * from './native.ts';

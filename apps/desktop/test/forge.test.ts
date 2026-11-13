@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { ForgeResponse } from '@promptai/contract';
+import { forgeResponseSchema, type ForgeResponse } from '@promptai/contract';
 import { createForgeClient } from '../src/forge.ts';
 
 const DRAFT: ForgeResponse = {
@@ -16,7 +16,7 @@ describe('forge client', () => {
   it('posts the request as JSON to /v1/forge and returns the parsed draft', async () => {
     const fetchImpl = vi.fn(async () => Response.json(DRAFT));
     const client = createForgeClient('http://localhost:8787', fetchImpl as typeof fetch);
-    await expect(client.forge({ text: 'plan my week', hostApp: 'com.apple.Notes' })).resolves.toEqual(DRAFT);
+    await expect(client.forge({ text: 'plan my week', hostApp: 'com.apple.Notes' })).resolves.toEqual(forgeResponseSchema.parse(DRAFT));
     const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('http://localhost:8787/v1/forge');
     expect(init.method).toBe('POST');

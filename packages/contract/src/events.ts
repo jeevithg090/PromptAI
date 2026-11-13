@@ -17,6 +17,23 @@ export const eventSchema = z.object({
 });
 export type AppEvent = z.input<typeof eventSchema>;
 
+/**
+ * Event types the Phase 1 clients send. Props stay content-free: ids, counts,
+ * enums and timings, never text the user wrote. `decisionId` ties an outcome
+ * to the draft's decision row.
+ */
+export const EVENT_TYPES = [
+  'brief.shown',
+  'brief.inserted',
+  'brief.copied',
+  'brief.dismissed',
+  'chip.flipped',
+  'outcome.rated',
+  'dictation.started',
+  'dictation.failed',
+] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+
 export const eventBatchSchema = z.object({
   events: z.array(z.unknown()).min(1).max(100),
 });

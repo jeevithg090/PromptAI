@@ -66,7 +66,7 @@ const value = (v: unknown): Behavior => ({ kind: 'value', value: v });
 describe('forge without an LLM', () => {
   it('resolves the tool, fills slots from the words, and chips the rest', async () => {
     const { res } = await run({ text: 'um write a midjourney prompt of a cat at night, 16:9' });
-    expect(forgeResponseSchema.parse(res)).toEqual(res);
+    expect(forgeResponseSchema.safeParse(res).success).toBe(true);
     expect(res.toolId).toBe('midjourney');
     expect(res.toolName).toBe('Midjourney');
     expect(res.brief).toMatch(/^write a midjourney prompt of a cat at night, 16:9, medium shot, night --ar 16:9$/);

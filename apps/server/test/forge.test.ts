@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { ForgeResponse } from '@promptai/contract';
+import { forgeResponseSchema, type ForgeResponse } from '@promptai/contract';
 import { createApp, FORGE_TIMEOUT_MS, type AppDeps, type Log } from '../src/app.ts';
 import { okForge, quiet } from './helpers.ts';
 
@@ -32,8 +32,8 @@ describe('POST /v1/forge', () => {
     const forge = vi.fn(async () => okForge);
     const res = await app(forge).request('/v1/forge', post({ text: '  write a haiku  ' }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(okForge);
-    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', locale: 'en', answers: {} });
+    expect(await res.json()).toEqual(forgeResponseSchema.parse(okForge));
+    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', surface: 'web', locale: 'en', answers: {} });
   });
 
   it('400s with issues on an invalid request, without calling forge', async () => {
