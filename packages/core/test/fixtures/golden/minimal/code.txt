@@ -1,0 +1,13 @@
+# fixture: minimal  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: A cozy reading nook illustration.
+
+When you finish, show the commands you ran and their output.
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Coding agent (Agent Brief) makes code/text/data, brief asks for image
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

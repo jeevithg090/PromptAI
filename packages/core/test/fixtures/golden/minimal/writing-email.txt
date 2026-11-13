@@ -1,0 +1,12 @@
+# fixture: minimal  target: writing-email  card: 2026-11-13.1  ok: true
+
+## field: body
+a cozy reading nook illustration
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Email makes text, brief asks for image
+warning needs_llm /subject | No subject line yet; add one before you send.
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

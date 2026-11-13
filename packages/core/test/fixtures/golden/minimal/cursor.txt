@@ -1,7 +1,7 @@
-# fixture: minimal  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: minimal  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-A cozy reading nook illustration.
+Goal: A cozy reading nook illustration.
 
 ## issues
 warning deliverable_mismatch /intent/deliverable/kind | Cursor Agent makes code/text/data, brief asks for image

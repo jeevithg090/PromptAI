@@ -1,0 +1,36 @@
+# fixture: product-shot  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Focus: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+
+Environment (visual): setting on a light oak table beside a folded linen napkin; camera close-up product shot, 35mm lens, shallow depth of field; lighting soft morning window light from the left; mood calm, homey; medium photorealistic product photography
+
+Constraints:
+- The mug handle faces right
+
+Do not:
+- text
+- watermark
+- people
+- harsh shadows
+
+Done when:
+- Mug is the clear focal point
+- Glaze texture is visible
+
+When you finish, show the commands you ran and their output.
+
+Assumptions (tell me if any is wrong before changing code):
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+
+This is for Etsy shoppers browsing on phones.
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Coding agent (Agent Brief) makes code/text/data, brief asks for image
+
+## coverage
+rendered 18 of 21 applicable (0 declared not applicable), rate 0.857
+dropped: /style/descriptors/0, /style/descriptors/1, /style/descriptors/2

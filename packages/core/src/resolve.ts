@@ -5,9 +5,12 @@ import { findWord, normalize } from './text.ts';
 /** The id of the fallback card in catalog/families/. */
 export const GENERIC_CARD_ID = 'generic';
 
-/** Names a person might say: display name without its "(...)" qualifier, plus aliases. The bare id is not one ("move the cursor"). */
+/**
+ * Names a person might say: display name without its "(...)" qualifier (unless the
+ * card opts out because it is an everyday word), plus aliases. The bare id is not one ("move the cursor").
+ */
 function spokenNames(card: Card): string[] {
-  return [card.display_name.replace(/\s*\([^)]*\)\s*$/, ''), ...card.aliases];
+  return card.match_display_name ? [card.display_name.replace(/\s*\([^)]*\)\s*$/, ''), ...card.aliases] : card.aliases;
 }
 
 /**

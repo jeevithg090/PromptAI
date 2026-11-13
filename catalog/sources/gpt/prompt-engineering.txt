@@ -1,0 +1,7 @@
+source: https://developers.openai.com/api/docs/guides/prompt-engineering
+fetched_from: https://developers.openai.com/api/docs/guides/prompt-engineering.md
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Markdown headers and lists can be helpful to mark distinct sections of a prompt, and to communicate hierarchy to the model. They can also potentially make your prompts more readable during development. XML tags can help delineate where one piece of content (like a supporting document used for reference) begins and ends. XML attributes can also be used to define metadata about content in the prompt that can be referenced by your instructions.
+In general, a developer message will contain the following sections, usually in this order (though the exact optimal content and order may vary by which model you are using):

@@ -4,6 +4,11 @@ display_name: Gemini Omni Flash video (Veo successor in the Gemini API)
 vendor: Google
 version: "2026-11-10.1"
 verified_at: "2026-11-10"
+review_by: "2027-02-10"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "API target: the request body is shown for the user to send. Terms not yet reviewed by counsel."
 sources:
   - https://ai.google.dev/gemini-api/docs/omni
   - https://ai.google.dev/gemini-api/docs/video
@@ -78,6 +83,7 @@ fields:
   - name: prompt
     type: text
     required: true
+    label: Prompt
     whitespace: collapse_lines
     description: "Scene, camera, lighting, mood, then audio; timed beats use the guide's [a-bs] timecode syntax."
     template: |
@@ -102,6 +108,7 @@ fields:
 
   - name: request
     type: json
+    label: API request (JSON)
     whitespace: preserve
     description: "POST /v1beta/interactions body."
     body:

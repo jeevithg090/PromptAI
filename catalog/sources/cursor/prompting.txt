@@ -1,0 +1,6 @@
+source: https://cursor.com/docs/agent/prompting.md
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Use @ mentions when you know which files are relevant. If you're not sure which files matter, skip it — Agent finds relevant files through its own search.
+Type `@` in the chat input to attach specific context to your prompt. Start typing after `@` and Cursor shows matching suggestions.

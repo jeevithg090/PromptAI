@@ -1,0 +1,7 @@
+source: https://support.google.com/docs/answer/12014036
+fetched_from: https://support.google.com/docs/answer/12014036?hl=en
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+To add formatting to plain text documents, you can use a markup language called Markdown. For example, to create a heading, start a line with a hashtag followed by a space, like "# Heading". You can use Markdown to quickly add formatting elements to your Google Docs, Slides, and Drawings. With Markdown, you can format text to add:
+Right-click and select Paste from Markdown. The Markdown will be converted to Google Docs content and be pasted.

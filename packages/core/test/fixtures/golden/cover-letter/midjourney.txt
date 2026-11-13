@@ -1,4 +1,4 @@
-# fixture: cover-letter  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: cover-letter  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me, confident, warm, plain-spoken mood

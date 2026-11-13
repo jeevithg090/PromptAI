@@ -1,0 +1,11 @@
+# fixture: minimal  target: writing-doc  card: 2026-11-13.1  ok: true
+
+## field: text
+a cozy reading nook illustration
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Document makes text, brief asks for image
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

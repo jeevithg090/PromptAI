@@ -1,0 +1,29 @@
+# Hinglish in Latin script (blueprint §7, w2-multilingual): Indian grouping,
+# Hindi number and scale words, and Hinglish commands. "naya line" is a
+# built-in cleanup rule; "naya paragraph" is here. Data only.
+locale: hi-Latn
+
+fillers: [hmm, hm]
+
+replacements:
+  - { from: naya paragraph, to: "\n\n" }
+  - { from: chat gpt, to: ChatGPT }
+  - { from: mid journey, to: Midjourney }
+
+numbers:
+  grouping: indian
+  # Hindi number words convert only before a scale word ("paanch lakh" -> 5,00,000),
+  # so "do" (two) and "teen" (three) are never read alone
+  words: { ek: 1, do: 2, teen: 3, chaar: 4, char: 4, paanch: 5, panch: 5, chhe: 6, saat: 7, aath: 8, nau: 9, das: 10, bees: 20, pachaas: 50 }
+  scales: { sau: 100, hazaar: 1000, hazar: 1000, lakh: 100000, crore: 10000000, karod: 10000000 }
+
+commands:
+  insert: ["insert [karo|kar do]", "daal do", "paste [karo|kar do]"]
+  copy: ["copy [karo|kar do]"]
+  just_draft: ["[bas|just] draft [karo|kar do]", "aise hi draft karo"]
+  cancel: ["cancel [karo|kar do]", "rehne do", "chhodo"]
+  refine:
+    - { say: "tone {x} karo", instruction: "Change the tone to {x}." }
+    - { say: "tone {x} kar do", instruction: "Change the tone to {x}." }
+    - { say: "change [the] tone to {x}", instruction: "Change the tone to {x}." }
+    - { say: "{x} banao", instruction: "Make it {x}." }

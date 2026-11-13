@@ -1,0 +1,162 @@
+card_format: 1
+id: gemini
+display_name: Gemini
+vendor: Google
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
+sources:
+  - https://support.google.com/gemini/answer/15235603
+claims:
+  - id: four-areas
+    text: "The brief is built from the four areas Google names for a good prompt."
+    quote: "The main areas to consider when writing good Gem instructions are the same as writing good prompts."
+    source: https://support.google.com/gemini/answer/15235603
+  - id: persona
+    text: "A persona line says what role to play and for whom."
+    quote: "Persona Tell your Gem what role to play and how to respond."
+    source: https://support.google.com/gemini/answer/15235603
+  - id: task
+    text: "The task comes first, in the user's words."
+    quote: "Task Tell the Gem what you want Gemini to do or create."
+    source: https://support.google.com/gemini/answer/15235603
+  - id: context
+    text: "Background and pasted material go under Context."
+    quote: "Context Provide as much background as possible."
+    source: https://support.google.com/gemini/answer/15235603
+  - id: format
+    text: "The output format, length and sections are stated explicitly."
+    quote: "Format Be specific when specifying desired structure."
+    source: https://support.google.com/gemini/answer/15235603
+tos:
+  insert_allowed: true
+  note: "Insert pastes into the Gemini app's prompt box and never sends. Terms not yet reviewed by counsel."
+model:
+  id: user-selected
+  note: "The Gemini app picks the model; the card writes one message."
+surface: paste
+accepts: [text, code, data, image]
+family: text.chat
+aliases: [google gemini, gemini app, gemini.google.com]
+
+slots:
+  - id: audience
+    label: Audience
+    impact: 2
+    to: audience
+    default: a general audience
+    options: [a general audience, beginners, experts, children, my team]
+  - id: tone
+    label: Tone
+    impact: 1
+    to: style.tone
+    default: clear and direct
+    options: [professional, friendly, encouraging, concise, playful, academic]
+  - id: format
+    label: Format
+    impact: 1
+    to: output.format
+    default: markdown
+    options: [markdown, plain prose, bullet list, table, json, code]
+
+negation:
+  strategy: inline
+
+ignores:
+  /params/aspect_ratio: "Stated nowhere: the Gemini app picks image shape from the words."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    label: Prompt
+    description: "Persona, Task, Context and Format, the four areas of Google's prompting tips."
+    template: |
+      {%- if brief.role or brief.audience or brief.style.tone %}Persona: {% if brief.role %}You are {{ brief.role }}.{% else %}You are a helpful expert.{% endif %}{% if brief.audience %} You are writing for {{ brief.audience }}.{% endif %}{% if brief.style.tone %} Tone: {{ brief.style.tone | join: ", " }}.{% endif %}
+
+      {% endif -%}
+      Task: {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Subject: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.intent.deliverable.description %}
+      Deliverable: {{ brief.intent.deliverable.description }}
+      {%- endif %}
+      {%- if brief.context or brief.inputs or brief.facets %}
+
+      Context:
+      {%- for c in brief.context %}
+      - {{ c }}
+      {%- endfor %}
+      {%- for ns in brief.facets %}{% for kv in ns[1] %}
+      - {{ ns[0] }} {{ kv[0] | replace: "_", " " }}: {{ kv[1] | join: ", " }}
+      {%- endfor %}{% endfor %}
+      {%- for d in brief.inputs %}
+      - {{ d.label | default: d.id }} ({{ d.role | replace: "_", " " }}{% if d.ref %}: {{ d.ref }}{% endif %}){% if d.content %}:
+      """
+      {{ d.content }}
+      """{% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.sections %}
+
+      Outline:
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. {{ s.label }}: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.output.format or brief.output.length or brief.output.structure or brief.output.language or brief.output.schema %}
+
+      Format:
+      {%- if brief.output.format %}
+      - {{ brief.output.format }}
+      {%- endif %}
+      {%- if brief.output.length %}
+      - Length: {% if brief.output.length.target %}about {{ brief.output.length.target }} {% endif %}{% if brief.output.length.min %}at least {{ brief.output.length.min }} {% endif %}{% if brief.output.length.max %}at most {{ brief.output.length.max }} {% endif %}{{ brief.output.length.unit }}
+      {%- endif %}
+      {%- if brief.output.structure %}
+      - Sections, in order: {{ brief.output.structure | join: "; " }}
+      {%- endif %}
+      {%- if brief.output.language %}
+      - Language: {{ brief.output.language }}
+      {%- endif %}
+      {%- if brief.output.schema %}
+      - Return only JSON that validates against this JSON Schema: {{ brief.output.schema | json }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.style.descriptors or brief.style.references %}
+      {%- if brief.style.descriptors %}
+      Style: {{ brief.style.descriptors | join: ", " }}
+      {%- endif %}
+      {%- if brief.style.references %}
+      References: {{ brief.style.references | join: "; " }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.constraints or neg.items %}
+
+      Rules:
+      {%- for c in brief.constraints %}
+      - {% if c.kind == "prefer" %}Preferred, not required: {% endif %}{{ c.text }}
+      {%- endfor %}
+      {%- if neg.items %}
+      - Leave out: {{ neg.items | join: ", " }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.examples %}
+
+      Examples:
+      {%- for e in brief.examples %}
+      - {% if e.input %}{{ e.input }} -> {% endif %}{{ e.output }}{% if e.note %} ({{ e.note }}){% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria %}
+
+      Done when:
+      {{ brief.success_criteria | bullets }}
+      {%- endif %}
+      {%- if assumed %}
+
+      Assumptions (say so first if one is wrong for the task):
+      {{ assumed | bullets }}
+      {%- endif %}

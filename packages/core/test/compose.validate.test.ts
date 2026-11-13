@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { BriefSchema, parseBrief } from '../src/compose/ir.ts';
 import { CardSchema, parseCard } from '../src/compose/card.ts';
 import { render } from '../src/compose/render.ts';
-import { allCards, cardYaml, fixtureIds, loadCard, loadFixture, toolIds, INVALID_DIR } from './helpers.ts';
+import { allCards, cardYaml, familyIds, fixtureIds, loadCard, loadFixture, toolIds, INVALID_DIR, LAUNCH_TOOLS } from './helpers.ts';
 
 const manifest: Record<string, string> = JSON.parse(readFileSync(`${INVALID_DIR}_manifest.json`, 'utf8'));
 
@@ -30,8 +30,21 @@ describe('invalid brief rejected by Zod and by the renderer', () => {
 });
 
 it('every catalog card validates', () => {
-  expect(toolIds()).toHaveLength(8);
-  for (const id of [...toolIds(), 'generic']) expect(() => parseCard(cardYaml(id)), id).not.toThrow();
+  expect(toolIds()).toHaveLength(14);   // the 10 launch tools plus 4 extras
+  expect(familyIds()).toEqual(['chat', 'code', 'generic', 'image', 'search', 'writing-doc', 'writing-email']);
+  for (const id of [...toolIds(), ...familyIds()]) expect(() => parseCard(cardYaml(id)), id).not.toThrow();
+});
+
+it('the 10 launch cards exist and declare who reads their text', () => {
+  for (const id of LAUNCH_TOOLS) expect(toolIds(), id).toContain(id);
+  const audience = Object.fromEntries(allCards().map((c) => [c.id, c.audience]));
+  expect(audience).toMatchObject({ gmail: 'human_recipient', 'google-docs': 'shared_doc', notion: 'shared_doc', 'writing-email': 'human_recipient', 'writing-doc': 'shared_doc' });
+  for (const id of LAUNCH_TOOLS) {
+    const c = loadCard(id);
+    expect(c.claims.length, `${id} has sourced claims`).toBeGreaterThan(0);
+    expect(c.tos.insert_allowed, id).toBe(true);
+    expect(c.review_by > c.verified_at, id).toBe(true);
+  }
 });
 
 it('broken cards are rejected with useful messages', () => {
@@ -48,6 +61,12 @@ it('broken cards are rejected with useful messages', () => {
     ['three pick slots', (c) => { c.slots.push({ id: 'x', label: 'X', impact: 3, to: 'audience' }, { id: 'y', label: 'Y', impact: 3, to: 'role' }); }, /at most 2/],
     ['duplicate slot ids', (c) => { c.slots.push({ ...c.slots[0] }); }, /duplicate slot/],
     ['invalid slot pattern', (c) => { c.slots[0].pattern = '('; }, /invalid pattern/],
+    ['unknown audience', (c) => { c.audience = 'everyone'; }, /Invalid option|expected one of/i],
+    ['missing tos', (c) => { delete c.tos; }, /tos|Invalid input/i],
+    ['review_by not after verified_at', (c) => { c.review_by = c.verified_at; }, /review_by/],
+    ['claim citing a source the card does not list', (c) => { c.claims[0].source = 'https://example.com/other'; }, /source must be one of/],
+    ['duplicate claim ids', (c) => { c.claims.push({ ...c.claims[0] }); }, /duplicate claim/],
+    ['labelled fields but an unlabelled insert field', (c) => { delete c.fields[0].label; c.fields.push({ name: 'extra', type: 'text', template: 'x', label: 'Extra' }); }, /insert field needs one/],
   ];
   for (const [label, mutate, re] of broken) {
     const c = structuredClone(good); mutate(c);

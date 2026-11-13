@@ -4,6 +4,11 @@ display_name: FLUX 3 Image (BFL API)
 vendor: Black Forest Labs
 version: "2026-11-10.1"
 verified_at: "2026-11-10"
+review_by: "2027-02-10"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "API target: the request body is shown for the user to send. Terms not yet reviewed by counsel."
 sources:
   - https://docs.bfl.ml/flux_3/flux3_image_generate.md
   - https://docs.bfl.ml/guides/prompting_unified_technical.md
@@ -88,6 +93,7 @@ fields:
   - name: prompt
     type: text
     required: true
+    label: Prompt
     whitespace: single_line
     description: "Natural-language prompt, subject first; quote any text to render."
     template: |
@@ -102,6 +108,7 @@ fields:
 
   - name: request
     type: json
+    label: API request (JSON)
     whitespace: preserve
     # Vendor request schema, extracted verbatim from components.schemas.Flux3ImageInputs of the BFL OpenAPI
     # (fetched 2026-11-10). Do not edit by hand; re-extract. Inline because core reads no files.

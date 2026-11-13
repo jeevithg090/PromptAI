@@ -2,11 +2,29 @@ card_format: 1
 id: claude
 display_name: Claude
 vendor: Anthropic
-version: "2026-11-10.1"
-verified_at: "2026-11-10"
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
 sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - https://platform.claude.com/docs/en/api/messages
+claims:
+  - id: xml-tags
+    text: "Each kind of content gets its own XML tag: <task>, <context>, <constraints>, <documents>."
+    quote: "XML tags help Claude parse complex prompts unambiguously, especially when your prompt mixes instructions, context, examples, and variable inputs."
+    source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - id: documents-first
+    text: "Long documents go at the top of the user turn, before the task."
+    quote: "Place your long documents and inputs near the top of your prompt, above your query, instructions, and examples."
+    source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - id: say-what-to-do
+    text: "Exclusions are listed once, plainly; the rest of the brief says what to do."
+    quote: "Tell Claude what to do instead of what not to do"
+    source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+tos:
+  insert_allowed: true
+  note: "Insert pastes into Claude's message box and never sends. Terms not yet reviewed by counsel."
 model:
   id: claude-opus-5-5
   note: "Default Opus per the Claude API skill (cached 2026-10-06). The API (version 2026-10-21) rejects temperature/top_p/top_k, so the card sends none."
@@ -198,6 +216,7 @@ fields:
 
   - name: paste
     type: text
+    label: Message
     description: "Single message for claude.ai, which has no system field (what forge inserts)."
     template: |
       {{ out.system }}

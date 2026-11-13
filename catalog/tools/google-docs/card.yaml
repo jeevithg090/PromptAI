@@ -1,0 +1,66 @@
+card_format: 1
+id: google-docs
+display_name: Google Docs
+vendor: Google
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+# other people read a shared document: profile, fact and goal memories never appear in it (blueprint §10)
+audience: shared_doc
+sources:
+  - https://support.google.com/docs/answer/12014036
+claims:
+  - id: plain-paste
+    text: "Markdown becomes formatting only through Paste from Markdown, so Insert pastes plain text with headings on their own lines."
+    quote: "Right-click and select Paste from Markdown."
+    source: https://support.google.com/docs/answer/12014036
+  - id: markdown-is-opt-in
+    text: "Markdown in Docs is an explicit formatting choice, not something a plain paste triggers."
+    quote: "To add formatting to plain text documents, you can use a markup language called Markdown."
+    source: https://support.google.com/docs/answer/12014036
+tos:
+  insert_allowed: true
+  note: "Insert pastes at the cursor and never shares or publishes. Terms not yet reviewed by counsel."
+model:
+  id: none
+  note: "Not an AI target: the text goes into a document others read. Without the compose model, the text is the user's own cleaned words."
+surface: paste
+accepts: [text]
+family: writing.doc
+aliases: [gdocs, google doc, docs.google.com]
+
+negation:
+  strategy: drop
+  note: "Document text states what the writer said; exclusions have no place in it."
+
+ignores:
+  /audience: "Readers of the document; not written into it."
+  /role: "The writer writes as themselves."
+  /style: "Tone shapes the words; it is not written into the document."
+  /context: "Background for PromptAI only."
+  /constraints: "Rules for the writer, not document text."
+  /success_criteria: "Checked by PromptAI, not written into the document."
+  /output: "The document text is the output."
+  /examples: "Not document text."
+  /intent/deliverable/description: "Covered by the text."
+
+fields:
+  - name: text
+    type: text
+    required: true
+    label: Text
+    whitespace: preserve
+    description: "Plain text: an optional title line, the user's words, then any sections with their heading on its own line."
+    template: |
+      {%- if brief.subject %}{{ brief.subject }}
+
+      {% endif -%}
+      {{ brief.goal }}
+      {%- for s in brief.sections %}
+
+      {{ s.label }}
+      {{ s.text }}
+      {%- endfor %}
+
+notes:
+  - "For formatted output, copy the text and use Edit > Paste from Markdown; Insert keeps to plain text."

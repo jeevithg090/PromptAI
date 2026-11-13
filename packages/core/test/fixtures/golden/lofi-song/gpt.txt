@@ -1,4 +1,4 @@
-# fixture: lofi-song  target: gpt  card: 2026-11-10.1  ok: true
+# fixture: lofi-song  target: gpt  card: 2026-11-13.1  ok: true
 
 ## field: instructions
 # Identity

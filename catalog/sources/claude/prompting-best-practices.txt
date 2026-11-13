@@ -1,0 +1,8 @@
+source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+fetched_from: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices.md
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+XML tags help Claude parse complex prompts unambiguously, especially when your prompt mixes instructions, context, examples, and variable inputs. Wrapping each type of content in its own tag (for example, `<instructions>`, `<context>`, `<input>`) reduces misinterpretation.
+* **Put long-form data at the top:** Place your long documents and inputs near the top of your prompt, above your query, instructions, and examples. This improves performance across all models.
+1. **Tell Claude what to do instead of what not to do**

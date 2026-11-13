@@ -1,0 +1,71 @@
+card_format: 1
+id: writing-email
+display_name: Email
+vendor: PromptAI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+# a person reads this text: profile, fact and goal memories never appear in it (blueprint §10, destination rule)
+audience: human_recipient
+tos:
+  insert_allowed: true
+  note: "Family card for mail apps without their own card; fills the compose window and never sends."
+sources:
+  - https://support.google.com/mail/answer/2819488
+claims:
+  - id: subject-and-message
+    text: "An email has a subject and a message; the card returns them as two fields."
+    quote: "Add a subject."
+    source: https://support.google.com/mail/answer/2819488
+  - id: user-sends
+    text: "Sending is the user's click; Insert only fills the draft."
+    quote: "At the bottom of the message, click Send."
+    source: https://support.google.com/mail/answer/2819488
+model:
+  id: none
+  note: "Family card (writing.email). Not an AI target: the text is the email a person reads, the user's own cleaned words until a compose model exists."
+surface: paste
+accepts: [text]
+family: writing.email
+aliases: [microsoft outlook, outlook.com, apple mail, superhuman mail, proton mail, yahoo mail, com.apple.mail, com.microsoft.outlook]
+match_display_name: false   # "write an email" is a task for an AI, not a request to fill a mail app
+
+negation:
+  strategy: drop
+  note: "An email states what the sender wrote; exclusions have no place in it."
+
+requires:
+  - id: subject
+    label: Subject line
+    any_of: [/subject]
+    message: "No subject line yet; add one before you send."
+
+ignores:
+  /audience: "The recipient reads the email; there is no audience line in it."
+  /role: "The sender writes as themselves."
+  /style: "Tone shapes the words; it is not written into the email."
+  /context: "Background for PromptAI only; an email states what the sender wrote."
+  /constraints: "Rules for the writer, not text for the recipient."
+  /success_criteria: "Checked by PromptAI, not written into the email."
+  /output: "The email is the output."
+  /examples: "Not part of an email."
+  /intent/deliverable/description: "Covered by the message."
+
+fields:
+  - name: subject
+    type: text
+    label: Subject
+    whitespace: single_line
+    template: "{{ brief.subject }}"
+
+  - name: body
+    type: text
+    required: true
+    label: Message
+    whitespace: preserve
+    template: |
+      {{ brief.goal }}
+      {%- for s in brief.sections %}
+
+      {{ s.text }}
+      {%- endfor %}

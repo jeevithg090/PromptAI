@@ -2,12 +2,30 @@ card_format: 1
 id: gpt
 display_name: GPT (OpenAI Responses API / ChatGPT)
 vendor: OpenAI
-version: "2026-11-10.1"
-verified_at: "2026-11-10"
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
 sources:
   - https://developers.openai.com/api/docs/guides/prompt-engineering
   - https://developers.openai.com/api/docs/guides/text
   - https://developers.openai.com/api/docs/guides/prompt-guidance
+claims:
+  - id: markdown-sections
+    text: "Markdown headings mark the prompt's sections, so the card writes # Identity, # Instructions and # Task."
+    quote: "Markdown headers and lists can be helpful to mark distinct sections of a prompt, and to communicate hierarchy to the model."
+    source: https://developers.openai.com/api/docs/guides/prompt-engineering
+  - id: xml-for-data
+    text: "Pasted data and documents go inside XML tags so the model sees where each begins and ends."
+    quote: "XML tags can help delineate where one piece of content (like a supporting document used for reference) begins and ends."
+    source: https://developers.openai.com/api/docs/guides/prompt-engineering
+  - id: section-order
+    text: "Identity comes first, then instructions, examples and context."
+    quote: "In general, a developer message will contain the following sections, usually in this order"
+    source: https://developers.openai.com/api/docs/guides/prompt-engineering
+tos:
+  insert_allowed: true
+  note: "Insert pastes into ChatGPT's message box and never sends. Terms not yet reviewed by counsel."
 model:
   id: gpt-6.1-sol
   note: "OpenAI's GPT-6 guide (2026-11-10) lists gpt-6-astra, gpt-6.1-sol (balanced), gpt-6.1-terra, gpt-6-luna. Sol does not support effort 'none'."
@@ -156,6 +174,7 @@ fields:
 
   - name: chatgpt_paste
     type: text
+    label: Message
     description: "Single message for the ChatGPT app, which has no separate developer field."
     template: |
       {{ out.instructions }}

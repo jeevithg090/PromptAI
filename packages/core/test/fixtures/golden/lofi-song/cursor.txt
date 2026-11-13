@@ -1,11 +1,11 @@
-# fixture: lofi-song  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: lofi-song  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-A gentle lo-fi song to study to, about rain on a library window.
+Goal: A gentle lo-fi song to study to, about rain on a library window.
 Focus: rain on a library window late at night
 Deliverable: a 2-minute study song
 
-Environment: genre lo-fi hip hop; mood mellow, nostalgic; instrumentation dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass; vocals breathy female vocals, mostly hummed; bpm 78; title Library Rain
+Environment (music): genre lo-fi hip hop; mood mellow, nostalgic; instrumentation dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass; vocals breathy female vocals, mostly hummed; bpm 78; title Library Rain
 
 Steps:
 1. Intro: (rain and vinyl crackle)
@@ -15,8 +15,10 @@ Every drop a word I haven't found
 Stay a while, ooh
 4. Outro: (piano fades with the rain)
 
-Constraints:
-- Leave out: autotune, heavy 808s, rap verses
+Do not:
+- autotune
+- heavy 808s
+- rap verses
 
 Done when:
 - Loopable, no sudden loud moments

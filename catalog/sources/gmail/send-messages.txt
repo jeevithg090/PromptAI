@@ -1,0 +1,8 @@
+source: https://support.google.com/mail/answer/2819488
+fetched_from: https://support.google.com/mail/answer/2819488?hl=en
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+In the "To" field, add recipients. You can also add recipients in the "Cc" and "Bcc" fields. To hide a suggested recipient, right-click their profile photo, and click Hide suggestion. To find a hidden suggested recipient, enter their name, and click Show hidden suggestions.
+Add a subject.
+At the bottom of the message, click Send.

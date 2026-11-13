@@ -1,0 +1,5 @@
+source: https://cursor.com/docs/rules.md
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Stored in `.cursor/rules`, version-controlled and scoped to your codebase.

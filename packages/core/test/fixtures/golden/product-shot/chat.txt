@@ -1,0 +1,35 @@
+# fixture: product-shot  target: chat  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+
+Audience: Etsy shoppers browsing on phones
+Style: clean, minimal props, warm neutral palette
+
+Details:
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+
+Rules:
+- The mug handle faces right
+- Leave out: text, watermark, people, harsh shadows
+
+Done when:
+- Mug is the clear focal point
+- Glaze texture is visible
+
+Assumptions (say so first if one is wrong for the task):
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+
+## issues
+warning param_unsupported /params/aspect_ratio | AI chat assistant has no setting for "aspect_ratio"; not sent
+
+## coverage
+rendered 21 of 21 applicable (0 declared not applicable), rate 1
+dropped: none

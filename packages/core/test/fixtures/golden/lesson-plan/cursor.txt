@@ -1,7 +1,7 @@
-# fixture: lesson-plan  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: lesson-plan  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Goal: Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
 Deliverable: a 45-minute lesson plan with a hands-on activity
 
 Context:
@@ -18,11 +18,11 @@ Constraints:
 - Timings must add up to 45 minutes
 - Include one support for English learners
 
-Output: markdown (Objectives; Materials; Timeline; Differentiation; Assessment)
-
 Done when:
 - Every timeline step has minutes
 - Uses only the listed materials
+
+Output: markdown (Objectives; Materials; Timeline; Differentiation; Assessment)
 
 This is for a 7th-grade science teacher (me) who will teach from the plan.
 

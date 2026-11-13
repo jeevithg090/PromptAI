@@ -1,0 +1,22 @@
+# fixture: product-shot  target: notion  card: 2026-11-13.1  ok: true
+
+## field: text
+# a handmade speckled ceramic mug with a matte sage-green glaze
+
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Notion makes text, brief asks for image
+warning param_unsupported /params/aspect_ratio | Notion has no setting for "aspect_ratio"; not sent
+warning negation_unsupported /avoid/0 | Notion cannot exclude "text"
+warning negation_unsupported /avoid/1 | Notion cannot exclude "watermark"
+warning negation_unsupported /avoid/2 | Notion cannot exclude "people"
+warning negation_unsupported /avoid/3 | Notion cannot exclude "harsh shadows"
+info not_applicable /audience | Readers of the page; not written into it.
+info not_applicable /style | Tone shapes the words; it is not written into the page.
+info not_applicable /constraints | Rules for the writer, not page text.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the page.
+
+## coverage
+rendered 2 of 14 applicable (7 declared not applicable), rate 0.143
+dropped: /facets/visual.setting, /facets/visual.camera/0, /facets/visual.camera/1, /facets/visual.camera/2, /facets/visual.lighting, /facets/visual.mood, /facets/visual.medium, /avoid/0, /avoid/1, /avoid/2, /avoid/3, /params/aspect_ratio

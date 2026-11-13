@@ -1,0 +1,24 @@
+# fixture: product-shot  target: search  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Topic: a handmade speckled ceramic mug with a matte sage-green glaze
+This is for Etsy shoppers browsing on phones.
+
+The mug handle faces right.
+Leave out: text, watermark, people, harsh shadows.
+
+A good answer:
+- Mug is the clear focal point
+- Glaze texture is visible
+
+Assumptions (say so first if one is wrong):
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | AI search makes text/data, brief asks for image
+
+## coverage
+rendered 12 of 21 applicable (0 declared not applicable), rate 0.571
+dropped: /style/descriptors/0, /style/descriptors/1, /style/descriptors/2, /facets/visual.setting, /facets/visual.camera/0, /facets/visual.camera/1, /facets/visual.camera/2, /facets/visual.mood, /facets/visual.medium

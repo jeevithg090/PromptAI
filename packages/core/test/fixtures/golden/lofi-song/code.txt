@@ -1,0 +1,33 @@
+# fixture: lofi-song  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: A gentle lo-fi song to study to, about rain on a library window.
+Focus: rain on a library window late at night
+Deliverable: a 2-minute study song
+
+Environment (music): genre lo-fi hip hop; mood mellow, nostalgic; instrumentation dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass; vocals breathy female vocals, mostly hummed; bpm 78; title Library Rain
+
+Steps:
+1. Intro: (rain and vinyl crackle)
+2. Verse: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. Chorus: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. Outro: (piano fades with the rain)
+
+Do not:
+- autotune
+- heavy 808s
+- rap verses
+
+Done when:
+- Loopable, no sudden loud moments
+
+When you finish, show the commands you ran and their output.
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Coding agent (Agent Brief) makes code/text/data, brief asks for audio
+
+## coverage
+rendered 24 of 25 applicable (0 declared not applicable), rate 0.96
+dropped: /output/length/target

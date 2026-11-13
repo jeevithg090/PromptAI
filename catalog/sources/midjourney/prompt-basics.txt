@@ -1,0 +1,7 @@
+source: https://docs.midjourney.com/hc/en-us/articles/32023408776205-Prompt-Basics
+fetched_from: https://docs.midjourney.com/api/v2/help_center/en-us/articles/32023408776205.json
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Short and simple prompts typically generate the best images with Midjourney. Use phrases that clearly describe what you want to see. Think of it like giving a quick snapshot of your idea. Avoid making long lists or detailed instructions; these can confuse the process.
+Describe what you do want instead of what you don’t. If you mention a party with “no cake,” a cake might still appear. For excluding items, read about the no parameter.

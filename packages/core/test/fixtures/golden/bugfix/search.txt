@@ -1,0 +1,32 @@
+# fixture: bugfix  target: search  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Topic: the paginate() helper in the orders API
+
+paginate (edit target: src/lib/paginate.ts)
+
+test (reference: src/lib/paginate.test.ts)
+
+Failing test output (source data):
+"""
+expected pageCount 3, received 4 (total=30, pageSize=10)
+"""
+
+Keep the public signature of paginate() unchanged.
+Do not add dependencies.
+Preferably, Smallest diff that fixes the bug.
+
+Output format: Unified diff, then a 2-sentence explanation.
+
+A good answer:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | AI search makes text/data, brief asks for code
+warning param_unsupported /params/effort | AI search has no setting for "effort"; not sent
+
+## coverage
+rendered 12 of 16 applicable (0 declared not applicable), rate 0.75
+dropped: /facets/code.language, /facets/code.runtime, /facets/code.test_runner, /params/effort

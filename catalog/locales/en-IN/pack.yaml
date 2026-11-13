@@ -1,0 +1,28 @@
+# Indian English locale pack (blueprint §7): Indian digit grouping (1,00,000)
+# and lakh/crore. Data only.
+locale: en-IN
+
+fillers: [hmm, hm, mhm]
+
+replacements:
+  - { from: chat gpt, to: ChatGPT }
+  - { from: chat g p t, to: ChatGPT }
+  - { from: mid journey, to: Midjourney }
+  - { from: open ai, to: OpenAI }
+  - { from: git hub, to: GitHub }
+
+numbers:
+  grouping: indian
+  # number words convert only before a scale word: "five lakh" -> 5,00,000
+  words: { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, twenty: 20, fifty: 50 }
+  scales: { thousand: 1000, lakh: 100000, lakhs: 100000, crore: 10000000, crores: 10000000 }
+
+commands:
+  insert: ["insert [it|that|this]", "paste [it|that|this]", "[go ahead and] insert [it]"]
+  copy: ["copy [it|that|this]", "copy to clipboard"]
+  just_draft: ["just draft [it]", "draft it as is", "skip the questions"]
+  cancel: ["cancel [that|this|it]", "never mind", "stop"]
+  refine:
+    - { say: "change [the] tone to {x}", instruction: "Change the tone to {x}." }
+    - { say: "make it {x}", instruction: "Make it {x}." }
+    - { say: "make the tone {x}", instruction: "Change the tone to {x}." }

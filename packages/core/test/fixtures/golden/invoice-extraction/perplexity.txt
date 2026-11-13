@@ -1,0 +1,30 @@
+# fixture: invoice-extraction  target: perplexity  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+Invoice text (source data):
+"""
+ACME Supplies Ltd
+Invoice #A-1042  Date: 03/11/2026
+Bill to: Riverbend Cafe
+2 x Espresso grinder burr set @ 45.00
+Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+Due in 30 days
+"""
+
+Use null for any field that is not present; never guess.
+Dates as ISO 8601 (YYYY-MM-DD)
+
+Output format: Json.
+
+Assumptions (say so first if one is wrong):
+- Dates are day/month/year (UK vendor)
+
+## issues
+info not_applicable /role | Perplexity answers as itself; a persona adds little to a search.
+info not_applicable /params/effort | Pro Search and Research modes are chosen in the UI.
+
+## coverage
+rendered 16 of 28 applicable (2 declared not applicable), rate 0.571
+dropped: /output/schema/type, /output/schema/required/1, /output/schema/required/2, /output/schema/required/3, /output/schema/properties/vendor/type/0, /output/schema/properties/invoice_number/type/0, /output/schema/properties/invoice_date/type/0, /output/schema/properties/currency/type/0, /output/schema/properties/total/type/0, /examples/0/input, /examples/0/output, /examples/0/note

@@ -2,11 +2,29 @@ card_format: 1
 id: cursor
 display_name: Cursor Agent
 vendor: Anysphere
-version: "2026-11-10.1"
-verified_at: "2026-11-10"
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-01-13"
+audience: private_ai
 sources:
   - https://cursor.com/docs/agent/prompting.md
   - https://cursor.com/docs/rules.md
+claims:
+  - id: at-mentions
+    text: "Files the user names are attached with @path, so the agent reads them first."
+    quote: "Type `@` in the chat input to attach specific context to your prompt."
+    source: https://cursor.com/docs/agent/prompting.md
+  - id: mentions-optional
+    text: "With no files named, the brief leaves scope to the agent's own search instead of guessing paths."
+    quote: "Use @ mentions when you know which files are relevant."
+    source: https://cursor.com/docs/agent/prompting.md
+  - id: project-rules
+    text: "A standing rule is written as a project rule file under .cursor/rules."
+    quote: "Stored in `.cursor/rules`, version-controlled and scoped to your codebase."
+    source: https://cursor.com/docs/rules.md
+tos:
+  insert_allowed: true
+  note: "Agent Brief: prefilled into Agent chat, never submitted; Cursor's own approvals govern what the agent runs. Terms not yet reviewed by counsel."
 model:
   id: user-selected
   note: "Model is picked in Cursor's model picker; the card renders the chat message and an optional project rule file."
@@ -28,6 +46,18 @@ slots:
     to: output.format
     default: code with a short explanation
     options: [code only, code with a short explanation, step-by-step walkthrough, diff]
+  - id: check
+    label: Done check
+    impact: 2
+    to: facets.agent.check
+    default: the existing tests pass
+    options: [the existing tests pass, a new failing test now passes, typecheck and lint are clean, the app builds and runs]
+  - id: stop_before
+    label: Stop and ask before
+    impact: 2
+    to: facets.agent.stop_before
+    default: deleting files, adding dependencies or pushing
+    options: [deleting files, adding dependencies or pushing, any change outside the named files, running migrations or deploying, every change]
 
 params:
   save_rule:
@@ -51,9 +81,10 @@ fields:
   - name: agent_message
     type: text
     required: true
-    description: "Message for Agent chat: task, @-mentioned files, constraints, acceptance checks."
+    label: Agent message
+    description: "Agent Brief dialect: goal, allowed scope (@-mentioned files), forbidden actions, done-when checks and stop-and-ask points."
     template: |
-      {{ brief.goal | sentence }}
+      Goal: {{ brief.goal | sentence }}
       {%- if brief.subject and brief.subject != brief.goal %}
       Focus: {{ brief.subject }}
       {%- endif %}
@@ -63,7 +94,7 @@ fields:
       {%- assign files = brief.inputs | where: "ref" %}
       {%- if files.size > 0 %}
 
-      Files: {% for f in files %}{% if f.kind == "code" or f.kind == "file" %}@{{ f.ref }}{% else %}{{ f.ref }}{% endif %} ({{ f.role | replace: "_", " " }}{% if f.label %}: {{ f.label }}{% endif %}){% unless forloop.last %}, {% endunless %}{% endfor %}
+      Scope: {% for f in files %}{% if f.kind == "code" or f.kind == "file" %}@{{ f.ref }}{% else %}{{ f.ref }}{% endif %} ({{ f.role | replace: "_", " " }}{% if f.label %}: {{ f.label }}{% endif %}){% unless forloop.last %}, {% endunless %}{% endfor %}
       {%- endif %}
       {%- assign pasted = brief.inputs | where: "content" %}
       {%- for d in pasted %}
@@ -73,15 +104,15 @@ fields:
       {{ d.content }}
       ```
       {%- endfor %}
-      {%- if brief.facets %}
-
-      Environment: {% for ns in brief.facets %}{% for kv in ns[1] %}{{ kv[0] | replace: "_", " " }} {{ kv[1] | join: ", " }}{% unless forloop.last %}; {% endunless %}{% endfor %}{% unless forloop.last %}; {% endunless %}{% endfor %}
-      {%- endif %}
       {%- if brief.context %}
 
       Context:
       {{ brief.context | bullets }}
       {%- endif %}
+      {%- for ns in brief.facets %}{% if ns[0] != "agent" %}
+
+      Environment ({{ ns[0] }}): {% for kv in ns[1] %}{{ kv[0] | replace: "_", " " }} {{ kv[1] | join: ", " }}{% unless forloop.last %}; {% endunless %}{% endfor %}
+      {%- endif %}{% endfor %}
       {%- if brief.sections %}
 
       Steps:
@@ -89,15 +120,42 @@ fields:
       {{ forloop.index }}. {{ s.label }}: {{ s.text }}
       {%- endfor %}
       {%- endif %}
-      {%- if brief.constraints or neg.items %}
+      {%- assign musts = brief.constraints | where: "kind", "must" %}
+      {%- assign prefers = brief.constraints | where: "kind", "prefer" %}
+      {%- assign nots = brief.constraints | where: "kind", "must_not" %}
+      {%- if musts.size > 0 or prefers.size > 0 %}
 
       Constraints:
-      {%- for c in brief.constraints %}
-      - {% if c.kind == "prefer" %}Preferred: {% endif %}{{ c.text }}
+      {%- for c in musts %}
+      - {{ c.text }}
       {%- endfor %}
-      {%- if neg.items %}
-      - Leave out: {{ neg.items | join: ", " }}
+      {%- for c in prefers %}
+      - Preferred: {{ c.text }}
+      {%- endfor %}
       {%- endif %}
+      {%- if nots.size > 0 or neg.items %}
+
+      Do not:
+      {%- for c in nots %}
+      - {{ c.text }}
+      {%- endfor %}
+      {%- for n in neg.items %}
+      - {{ n }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria or brief.facets.agent.check %}
+
+      Done when:
+      {%- for s in brief.success_criteria %}
+      - {{ s }}
+      {%- endfor %}
+      {%- if brief.facets.agent.check %}
+      - {{ brief.facets.agent.check }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.facets.agent.stop_before %}
+
+      Stop and ask before {{ brief.facets.agent.stop_before }}.
       {%- endif %}
       {%- if brief.output.format or brief.output.structure %}
 
@@ -112,11 +170,6 @@ fields:
       {%- for e in brief.examples %}
       - {% if e.input %}{{ e.input }} -> {% endif %}{{ e.output }}{% if e.note %} ({{ e.note }}){% endif %}
       {%- endfor %}
-      {%- endif %}
-      {%- if brief.success_criteria %}
-
-      Done when:
-      {{ brief.success_criteria | bullets }}
       {%- endif %}
       {%- if assumed %}
 
@@ -133,11 +186,13 @@ fields:
 
   - name: rule_path
     type: text
+    label: Rule file path
     whitespace: single_line
     template: "{% if p.save_rule %}.cursor/rules/{{ brief.intent.task_family | replace: '.', '-' }}.mdc{% endif %}"
 
   - name: rule_file
     type: text
+    label: Project rule (.mdc)
     description: "Project rule (.mdc with description/globs/alwaysApply frontmatter), only when save_rule is set."
     template: |
       {%- if p.save_rule -%}
@@ -153,3 +208,6 @@ fields:
 
       {{ brief.constraints | map: "text" | bullets }}
       {%- endif %}
+
+notes:
+  - "Agent Brief dialect (w2-agentic-execution §7): prefilled into the agent's input and never submitted. The host agent's approvals decide what runs, so PromptAI says plainly that the agent will act."

@@ -1,0 +1,16 @@
+# fixture: lesson-plan  target: image  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Image generator makes image, brief asks for text
+info not_applicable /audience | Image models have no notion of audience.
+info not_applicable /context | Not applicable.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into description.
+info not_applicable /output | Image output.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 1 of 9 applicable (13 declared not applicable), rate 0.111
+dropped: /sections/0/label, /sections/0/text, /sections/1/label, /sections/1/text, /sections/2/label, /sections/2/text, /sections/3/label, /sections/3/text

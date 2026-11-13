@@ -1,15 +1,20 @@
-# fixture: product-shot  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: product-shot  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Goal: Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
 Focus: a handmade speckled ceramic mug with a matte sage-green glaze
 Deliverable: hero image for an Etsy listing
 
-Environment: setting on a light oak table beside a folded linen napkin; camera close-up product shot, 35mm lens, shallow depth of field; lighting soft morning window light from the left; mood calm, homey; medium photorealistic product photography
+Environment (visual): setting on a light oak table beside a folded linen napkin; camera close-up product shot, 35mm lens, shallow depth of field; lighting soft morning window light from the left; mood calm, homey; medium photorealistic product photography
 
 Constraints:
 - The mug handle faces right
-- Leave out: text, watermark, people, harsh shadows
+
+Do not:
+- text
+- watermark
+- people
+- harsh shadows
 
 Done when:
 - Mug is the clear focal point

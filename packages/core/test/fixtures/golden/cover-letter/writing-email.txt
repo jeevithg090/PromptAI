@@ -1,0 +1,19 @@
+# fixture: cover-letter  target: writing-email  card: 2026-11-13.1  ok: true
+
+## field: body
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me
+
+## issues
+warning param_unsupported /params/effort | Email has no setting for "effort"; not sent
+warning needs_llm /subject | No subject line yet; add one before you send.
+info not_applicable /audience | The recipient reads the email; there is no audience line in it.
+info not_applicable /role | The sender writes as themselves.
+info not_applicable /context | Background for PromptAI only; an email states what the sender wrote.
+info not_applicable /style | Tone shapes the words; it is not written into the email.
+info not_applicable /constraints | Rules for the writer, not text for the recipient.
+info not_applicable /output | The email is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the email.
+
+## coverage
+rendered 1 of 8 applicable (18 declared not applicable), rate 0.125
+dropped: /inputs/0/label, /inputs/0/content, /inputs/1/label, /inputs/1/ref, /assumptions/0/text, /assumptions/0/why, /params/effort
