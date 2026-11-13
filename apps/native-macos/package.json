@@ -1,0 +1,15 @@
+{
+  "name": "@promptai/native-macos",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node -e \"process.platform === 'darwin' ? require('node:child_process').execFileSync('sh', ['build.sh'], { stdio: 'inherit' }) : console.log('pf-native: macOS only, skipping build')\"",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@promptai/contract": "workspace:*",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
+}
