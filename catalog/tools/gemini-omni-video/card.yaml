@@ -27,7 +27,7 @@ slots:
     impact: 2
     to: facets.visual.camera
     default: static
-    options: [static, slow pan, tracking shot, aerial drone, zoom in]
+    options: [static, slow pan, tracking shot, drone shot, zoom in]
   - id: aspect_ratio
     label: Aspect ratio
     impact: 1

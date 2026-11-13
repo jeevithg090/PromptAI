@@ -107,14 +107,26 @@ it('every catalog card renders every fixture without hard errors', () => {
   }
 });
 
-it('tool-specific values live only in cards: no tool names in src/', () => {
-  const names = ['midjourney', 'suno', 'claude', 'anthropic', 'openai', 'gpt', 'flux', 'bfl', 'omni', 'veo', 'cursor', 'github', '--ar', '--no'];
+/** src/*.ts with comments stripped (comments may mention tools and APIs). */
+function sources(): Array<[string, string]> {
   const dir = fileURLToPath(new URL('../src/', import.meta.url));
   const files = readdirSync(dir, { recursive: true, encoding: 'utf8' }).filter((f) => f.endsWith('.ts'));
   expect(files.length).toBeGreaterThan(3);
-  for (const f of files) {
-    const src = readFileSync(`${dir}${f}`, 'utf8').toLowerCase()
-      .replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');      // comments may mention tools
-    for (const n of names) expect(src.includes(n), `${f} mentions "${n}"`).toBe(false);
+  return files.map((f) => [f, readFileSync(`${dir}${f}`, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')]);
+}
+
+it('tool-specific values live only in cards: no tool names in src/', () => {
+  const names = ['midjourney', 'suno', 'claude', 'anthropic', 'openai', 'gpt', 'flux', 'bfl', 'omni', 'veo', 'cursor', 'github', '--ar', '--no'];
+  for (const [f, src] of sources()) {
+    for (const n of names) expect(src.toLowerCase().includes(n), `${f} mentions "${n}"`).toBe(false);
+  }
+});
+
+it('core does no I/O: no fs, network, clock, timers, env, DOM or randomness in src/', () => {
+  // the tsconfig loads Node types for the tests, so the type checker cannot enforce this for src/
+  const banned = [/from ['"](?:node:|fs|path|os|http|https|net|child_process)/, /\brequire\(/, /\bprocess\./, /\bfetch\(/, /\bDate\b/, /\bperformance\./,
+    /\bset(?:Timeout|Interval|Immediate)\b/, /\b(?:window|document|navigator|localStorage)\./, /\bglobalThis\b/, /\bMath\.random\b/, /\bimport\.meta\b/];
+  for (const [f, src] of sources()) {
+    for (const re of banned) expect(re.test(src), `${f} matches ${re}`).toBe(false);
   }
 });

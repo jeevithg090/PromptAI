@@ -13,7 +13,7 @@ model:
 surface: mixed
 accepts: [code, text, data]
 family: code.agent
-aliases: [cursor ai, ask cursor, com.todesktop.230313mzl4w4u92]
+aliases: [cursor ai, ask cursor, in cursor, com.todesktop.230313mzl4w4u92]
 
 slots:
   - id: language

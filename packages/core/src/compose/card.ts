@@ -83,8 +83,8 @@ export const CardSchema = z.object({
   model: z.object({ id: Str, note: z.string().optional() }).strict(),
   /** how the output reaches the tool */
   surface: z.enum(['paste', 'api', 'file', 'mixed']),
-  /** deliverable kinds this tool can produce */
-  accepts: z.array(z.string()).min(1),
+  /** deliverable kinds this tool can produce; the first is forge's brief deliverable (same pattern as the Brief IR) */
+  accepts: z.array(z.string().regex(/^[a-z_]+$/)).min(1),
   /** Brief IR task family forge uses for this tool, e.g. "image.generate" */
   family: z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)*$/),
   /** other names people say or host apps report (bundle ids); resolveTool matches these and display_name */
