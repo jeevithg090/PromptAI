@@ -30,7 +30,7 @@ msgid "{o} (suggested)"
 msgstr "{o} (suggested)"
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Account"
 msgstr "Account"
 
@@ -89,7 +89,7 @@ msgstr "Briefs you keep show up here"
 msgid "Cancel"
 msgstr "Cancel"
 
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Capture"
 msgstr "Capture"
 
@@ -112,6 +112,7 @@ msgid "Code"
 msgstr "Code"
 
 #: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Commands"
 msgstr "Commands"
 
@@ -146,7 +147,7 @@ msgstr "Copied to the clipboard."
 
 #: src/DraftSheet.tsx
 #: src/places/Library.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Copy"
 msgstr "Copy"
 
@@ -272,12 +273,12 @@ msgstr "Dictation on the web is coming once our speech provider is chosen. Type 
 msgid "Did it work?"
 msgstr "Did it work?"
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Dismiss the draft"
 msgstr "Dismiss the draft"
 
 #: src/DraftSheet.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Draft"
 msgstr "Draft"
 
@@ -286,7 +287,7 @@ msgstr "Draft"
 msgid "Draft a brief"
 msgstr "Draft a brief"
 
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Draft sheet"
 msgstr "Draft sheet"
 
@@ -339,7 +340,7 @@ msgstr "Forget “{0}”"
 msgid "Forgotten"
 msgstr "Forgotten"
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Go to"
 msgstr "Go to"
 
@@ -396,7 +397,7 @@ msgid "Incognito for this session"
 msgstr "Incognito for this session"
 
 #: src/DraftSheet.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Insert"
 msgstr "Insert"
 
@@ -470,7 +471,7 @@ msgid "Keep your briefs and what PromptAI learns about you."
 msgstr "Keep your briefs and what PromptAI learns about you."
 
 #: src/places/Library.tsx
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Library"
 msgstr "Library"
 
@@ -481,6 +482,10 @@ msgstr "Listening"
 #: src/DraftSheet.tsx
 msgid "Listening…"
 msgstr "Listening…"
+
+#: src/shell/App.tsx
+msgid "Loading"
+msgstr "Loading"
 
 #: src/places/Library.tsx
 msgid "Loading your Library"
@@ -498,7 +503,7 @@ msgstr "Month"
 msgid "No"
 msgstr "No"
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "No matching command"
 msgstr "No matching command"
 
@@ -556,7 +561,7 @@ msgid "Press ⌘V where you want it."
 msgstr "Press ⌘V where you want it."
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Privacy"
 msgstr "Privacy"
 
@@ -642,7 +647,7 @@ msgid "Sign in"
 msgstr "Sign in"
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 #: src/shell/SignInDialog.tsx
 msgid "Sign in or sign up"
 msgstr "Sign in or sign up"
@@ -744,11 +749,11 @@ msgstr "To draft a brief, PromptAI sends the words you type or say to {providers
 msgid "Try again"
 msgstr "Try again"
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Turn incognito off"
 msgstr "Turn incognito off"
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Turn incognito on"
 msgstr "Turn incognito on"
 
@@ -805,7 +810,7 @@ msgid "Yes"
 msgstr "Yes"
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "You"
 msgstr "You"
 

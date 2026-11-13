@@ -30,7 +30,7 @@ msgid "{o} (suggested)"
 msgstr ""
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Account"
 msgstr ""
 
@@ -89,7 +89,7 @@ msgstr ""
 msgid "Cancel"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Capture"
 msgstr ""
 
@@ -112,6 +112,7 @@ msgid "Code"
 msgstr ""
 
 #: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Commands"
 msgstr ""
 
@@ -146,7 +147,7 @@ msgstr ""
 
 #: src/DraftSheet.tsx
 #: src/places/Library.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Copy"
 msgstr ""
 
@@ -272,12 +273,12 @@ msgstr ""
 msgid "Did it work?"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Dismiss the draft"
 msgstr ""
 
 #: src/DraftSheet.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Draft"
 msgstr ""
 
@@ -286,7 +287,7 @@ msgstr ""
 msgid "Draft a brief"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Draft sheet"
 msgstr ""
 
@@ -339,7 +340,7 @@ msgstr ""
 msgid "Forgotten"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Go to"
 msgstr ""
 
@@ -396,7 +397,7 @@ msgid "Incognito for this session"
 msgstr ""
 
 #: src/DraftSheet.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Insert"
 msgstr ""
 
@@ -470,7 +471,7 @@ msgid "Keep your briefs and what PromptAI learns about you."
 msgstr ""
 
 #: src/places/Library.tsx
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "Library"
 msgstr ""
 
@@ -480,6 +481,10 @@ msgstr ""
 
 #: src/DraftSheet.tsx
 msgid "Listening…"
+msgstr ""
+
+#: src/shell/App.tsx
+msgid "Loading"
 msgstr ""
 
 #: src/places/Library.tsx
@@ -498,7 +503,7 @@ msgstr ""
 msgid "No"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "No matching command"
 msgstr ""
 
@@ -556,7 +561,7 @@ msgid "Press ⌘V where you want it."
 msgstr ""
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Privacy"
 msgstr ""
 
@@ -642,7 +647,7 @@ msgid "Sign in"
 msgstr ""
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 #: src/shell/SignInDialog.tsx
 msgid "Sign in or sign up"
 msgstr ""
@@ -744,11 +749,11 @@ msgstr ""
 msgid "Try again"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Turn incognito off"
 msgstr ""
 
-#: src/shell/App.tsx
+#: src/shell/Palette.tsx
 msgid "Turn incognito on"
 msgstr ""
 
@@ -805,7 +810,7 @@ msgid "Yes"
 msgstr ""
 
 #: src/places/You.tsx
-#: src/shell/App.tsx
+#: src/shell/places.ts
 msgid "You"
 msgstr ""
 

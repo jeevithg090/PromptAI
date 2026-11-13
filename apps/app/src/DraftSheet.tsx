@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
+import { lazy, Suspense, useContext, useEffect, useRef, useState, type KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { plural, t } from '@lingui/core/macro';
 import type { Assumption, ForgeResponse } from '@promptai/contract';
 import { Badge } from '@astryxdesign/core/Badge';
@@ -19,10 +19,10 @@ import { VStack } from '@astryxdesign/core/VStack';
 import { useStatusAnnouncer } from './announce.ts';
 import type { PanelState, PromptAIBridge, Rating } from './bridge.ts';
 import { blockingIssues, chipOptions, markUnsourced, unresolvedPicks } from './chips.ts';
-import { ReportDialog } from './ReportDialog.tsx';
 import { AppServicesContext } from './shell/services.ts';
 
 const HOLD_KEYS = '⌃⌥Space';
+const ReportDialog = lazy(() => import('./ReportDialog.tsx').then((m) => ({ default: m.ReportDialog })));
 
 /** What a screen reader hears on each status change; never the streaming text. */
 function announcement(s: PanelState): string | null {
@@ -394,7 +394,11 @@ function ReportAction({ draft }: { draft: ForgeResponse }) {
         tooltip={decisionId ? undefined : t`This draft wasn't recorded by the server, so it can't be reported.`}
         onClick={() => setOpen(true)}
       />
-      {open && decisionId && <ReportDialog decisionId={decisionId} onClose={() => setOpen(false)} />}
+      {open && decisionId && (
+        <Suspense>
+          <ReportDialog decisionId={decisionId} onClose={() => setOpen(false)} />
+        </Suspense>
+      )}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ForgeResponse } from '@promptai/contract';
 import type { PanelState, PromptAIBridge } from './bridge.ts';
@@ -6,6 +6,8 @@ import { chipOptions, markUnsourced, unresolvedPicks } from './chips.ts';
 import { DraftSheet } from './DraftSheet.tsx';
 import { createWebBridge } from './web-bridge.ts';
 import { createHttpApi } from './api/client.ts';
+import { createFakeApi } from './api/fake.ts';
+import { AppServicesContext, type AppServices } from './shell/services.ts';
 
 const NOTES = { bundleId: 'com.apple.Notes', name: 'Notes', pid: 41 };
 const DRAFT: ForgeResponse = {
@@ -23,11 +25,11 @@ const DRAFT: ForgeResponse = {
 const base = { target: NOTES, transcript: 'write a launch email', draft: DRAFT };
 const ready = (answers: Record<string, string> = {}, extra: Partial<PanelState> = {}): PanelState => ({ phase: 'ready', ...base, answers, ...extra }) as PanelState;
 
-function fakeBridge(platform: 'desktop' | 'web' = 'desktop') {
+function fakeBridge(platform: 'desktop' | 'web' = 'desktop', opts: { insertAtCursor?: boolean; services?: AppServices } = {}) {
   let listener: (s: PanelState) => void = () => {};
   const bridge = {
     platform,
-    caps: { insertAtCursor: platform === 'desktop', dictation: platform === 'desktop' },
+    caps: { insertAtCursor: opts.insertAtCursor ?? platform === 'desktop', dictation: platform === 'desktop' },
     onState: (l: (s: PanelState) => void) => {
       listener = l;
       return () => {};
@@ -39,7 +41,15 @@ function fakeBridge(platform: 'desktop' | 'web' = 'desktop') {
     dismiss: vi.fn(async () => {}),
     rate: vi.fn(async () => {}),
   } satisfies PromptAIBridge;
-  render(<DraftSheet bridge={bridge} />);
+  render(
+    opts.services ? (
+      <AppServicesContext.Provider value={opts.services}>
+        <DraftSheet bridge={bridge} />
+      </AppServicesContext.Provider>
+    ) : (
+      <DraftSheet bridge={bridge} />
+    ),
+  );
   const push = (s: PanelState) => act(() => listener(s));
   return { bridge, push };
 }
@@ -202,3 +212,71 @@ describe('browser fallback', () => {
     await screen.findByText('Copied to the clipboard.');
   });
 });
+
+describe('receipt, channels and checks', () => {
+  const services = (over: Partial<AppServices> = {}): AppServices => ({
+    api: createFakeApi(),
+    kind: 'guest',
+    incognito: false,
+    canSignIn: true,
+    openSignIn: vi.fn(),
+    saveBrief: vi.fn(async () => {}),
+    ...over,
+  });
+  const done = (extra: Partial<PanelState> = {}) => ({ phase: 'done', ...base, answers: { length: 'Short' }, outcome: 'pasted', app: NOTES, ...extra }) as PanelState;
+
+  it('asks "Did it work?" once, with equal answers', () => {
+    const { bridge, push } = fakeBridge();
+    push(done());
+    expect(screen.getByText('Did it work?')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'It didn’t' }));
+    expect(bridge.rate).toHaveBeenCalledWith('didnt_work');
+    push(done({ rated: 'didnt_work' } as Partial<PanelState>));
+    expect(screen.queryByText('Did it work?')).toBeNull();
+    expect(screen.getByText('Thanks for telling us.')).toBeTruthy();
+  });
+
+  it('offers sign-up to a guest, Save to an account, and nothing in incognito', async () => {
+    const guest = services();
+    fakeBridge('desktop', { services: guest }).push(done());
+    fireEvent.click(screen.getByRole('button', { name: 'Sign up' }));
+    expect(guest.openSignIn).toHaveBeenCalledWith(DRAFT);
+    cleanup();
+
+    const account = services({ kind: 'account' });
+    fakeBridge('desktop', { services: account }).push(done());
+    fireEvent.click(screen.getByRole('button', { name: 'Save to Library' }));
+    await screen.findByRole('button', { name: 'Saved to Library' });
+    expect(account.saveBrief).toHaveBeenCalledWith(DRAFT);
+    cleanup();
+
+    fakeBridge('desktop', { services: services({ kind: 'account', incognito: true }) }).push(done());
+    expect(screen.queryByRole('button', { name: 'Save to Library' })).toBeNull();
+    expect(screen.queryByText('Sign up to keep this')).toBeNull();
+  });
+
+  it('mas-lite: no Insert; ⌘↵ copies and the receipt says to press ⌘V', () => {
+    const { bridge, push } = fakeBridge('desktop', { insertAtCursor: false });
+    push(ready({ length: 'Short' }));
+    expect(screen.queryByRole('button', { name: 'Insert' })).toBeNull();
+    cmdEnter();
+    expect(bridge.copy).toHaveBeenCalled();
+    expect(bridge.insert).not.toHaveBeenCalled();
+  });
+
+  it('keeps Insert off while an issue blocks it, and shows every issue as text', () => {
+    const { bridge, push } = fakeBridge();
+    const draft = { ...DRAFT, issues: [{ code: 'too_long', message: 'Over the 4,000-character limit', severity: 'block' as const }] };
+    push({ phase: 'ready', ...base, draft, answers: { length: 'Short' } });
+    expect(screen.getByText('Blocks insert: Over the 4,000-character limit')).toBeTruthy();
+    expect(insertButton().getAttribute('aria-disabled')).toBe('true');
+    cmdEnter();
+    expect(bridge.insert).not.toHaveBeenCalled();
+  });
+
+  it('cannot report a draft the server did not record', () => {
+    fakeBridge('desktop', { services: services() }).push(ready({ length: 'Short' }));
+    expect(screen.getByRole('button', { name: 'Report this output' }).getAttribute('aria-disabled')).toBe('true');
+  });
+});
+

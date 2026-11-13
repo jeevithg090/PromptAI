@@ -104,6 +104,13 @@ body {
 .pa-shell-head a {
   -webkit-app-region: no-drag;
 }
+/* Narrow (a phone, the 520 px desktop panel): the places get a row of their own under the brand and ⌘K. */
+@media (max-width: 560px) {
+  .pa-shell-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
 .pa-shell-main {
   flex: 1 1 auto;
   min-height: 0;

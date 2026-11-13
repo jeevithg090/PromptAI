@@ -118,14 +118,12 @@ export function createFakeApi(opts: FakeApiOptions = {}): ApiClient & { state: F
       return createChallenge({ algorithm: 'SHA-256', cost: 1, keyPrefix: '0', deriveKey, hmacSignatureSecret: HMAC });
     },
     async guest(altcha) {
-      let payload: { challenge: never; solution: never };
+      let verified = false;
       try {
-        payload = JSON.parse(atob(altcha));
-      } catch {
-        throw new ApiError(400, 'the server answered 400', 'invalid_altcha');
-      }
-      const result = await verifySolution({ ...payload, deriveKey, hmacSignatureSecret: HMAC });
-      if (!result.verified) throw new ApiError(400, 'the server answered 400', 'invalid_altcha');
+        const payload = JSON.parse(atob(altcha)) as { challenge: never; solution: never };
+        verified = (await verifySolution({ ...payload, deriveKey, hmacSignatureSecret: HMAC })).verified;
+      } catch {}
+      if (!verified) throw new ApiError(400, 'the server answered 400', 'invalid_altcha');
       state.token = `guest-${crypto.randomUUID()}`;
       return { token: state.token, expiresAt: iso(new Date(now().getTime() + 86_400_000)), quota: { forgesPerDay: 20, dictationMinutesPerDay: 10 } };
     },

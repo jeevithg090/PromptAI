@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { t } from '@lingui/core/macro';
-import type { ConsentEntry, ConsentPurpose, MemoryItem, Profile } from '@promptai/contract';
+import type { ConsentPurpose, MemoryItem, Profile } from '@promptai/contract';
 import { AlertDialog } from '@astryxdesign/core/AlertDialog';
 import { Badge } from '@astryxdesign/core/Badge';
 import { Banner } from '@astryxdesign/core/Banner';
@@ -14,16 +14,8 @@ import { RadioList, RadioListItem } from '@astryxdesign/core/RadioList';
 import { Switch } from '@astryxdesign/core/Switch';
 import { Text } from '@astryxdesign/core/Text';
 import { useStatusAnnouncer } from '../announce.ts';
+import { latestConsent, PRIVACY_CONSENT_VERSION } from '../consent.ts';
 import { AppServicesContext } from '../shell/services.ts';
-
-/** The ledger is append-only; the latest entry per purpose wins. */
-export function latestConsent(consents: ConsentEntry[], purpose: ConsentPurpose): boolean | null {
-  let latest: ConsentEntry | null = null;
-  for (const c of consents) if (c.purpose === purpose && (!latest || c.at >= latest.at)) latest = c;
-  return latest ? latest.granted : null;
-}
-
-export const PRIVACY_CONSENT_VERSION = 'privacy-2026-11';
 
 interface YouProps {
   profile: Profile | null;
@@ -131,21 +123,21 @@ export function You({ profile, email, reloadProfile, incognito, setIncognito, on
               description={t`Nothing from this session is kept in your Library. Turns off when you close PromptAI.`}
               value={incognito}
               onChange={setIncognito}
-              labelSpacing="spread"
+              labelPosition="start" labelSpacing="spread"
             />
             <Switch
               label={t`Personalize for me`}
               description={t`PromptAI learns your defaults, words and skill from what you keep. Pause it any time.`}
               value={personalize}
               changeAction={(on) => setConsent('personalize', on)}
-              labelSpacing="spread"
+              labelPosition="start" labelSpacing="spread"
             />
             <Switch
               label={t`Help improve defaults for everyone`}
               description={t`Adds counts from your choices, never your words, to the defaults other people start with.`}
               value={improve}
               changeAction={(on) => setConsent('improve_defaults', on)}
-              labelSpacing="spread"
+              labelPosition="start" labelSpacing="spread"
             />
             <RadioList label={t`History location`} value="synced" onChange={() => {}}>
               <RadioListItem value="synced" label={t`Synced to your account`} description={t`Encrypted at rest on PromptAI’s servers.`} />
