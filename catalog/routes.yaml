@@ -1,0 +1,74 @@
+# Model routes for the LLM functions (docs/blueprint/BLUEPRINT.md §6 "Routing", §11 "Budget").
+#
+# @promptai/ai validates this file (routesSchema in packages/ai/src/routes.ts) and maps it onto
+# Vercel AI Gateway options in one adapter (packages/ai/src/gateway.ts). Every call is sent with
+# zero data retention on, so only ZDR providers can serve it, and with no sampling parameters
+# (Claude API version 2026-10-21 rejects temperature, top_p and top_k), so this file has none.
+# Model ids are AI Gateway ids (https://ai-gateway.vercel.sh/v1/models).
+version: 1
+
+# $ cap per call by role, thinking included (§6 "Unit economics"). A function's capUsd may be lower.
+caps:
+  cheap: 0.005
+  standard: 0.02
+  frontier: 0.04
+
+# List price on AI Gateway in $ per million tokens (checked 2026-11-13), and the thinking modes
+# each model accepts. A function may list a model only if the model accepts its thinking mode.
+models:
+  anthropic/claude-haiku-5.5:
+    price: { in: 0.10, out: 0.50 }       # prompts up to 100K tokens ($0.50 / $2.50 beyond)
+    thinking: [adaptive, off]             # adaptive by default at effort medium; off only at effort high or below
+  anthropic/claude-sonnet-5.5:
+    price: { in: 2.00, out: 10.00 }
+    thinking: [adaptive, between_tools]   # rejects {type: disabled}; between_tools only at effort high or below
+  openai/gpt-6-luna:
+    price: { in: 0.10, out: 0.50 }
+    thinking: [adaptive, off]
+
+# One route per LLM function. `models` is the gateway's ordered fallback list (tried on failure,
+# never on a refusal). `maxOutputTokens` counts thinking. Timeouts are first guesses; S4 tunes
+# them to p95.
+functions:
+  understand:            # the IntentFrame. Chips must render within 800 ms, so no thinking.
+    role: cheap
+    models: [anthropic/claude-haiku-5.5]
+    thinking: { mode: off, effort: low }
+    maxOutputTokens: 1000
+    timeoutMs: 4000
+    capUsd: 0.005
+  compose:               # the one LLM pass over the brief; core's repair() uses this route
+    role: standard
+    models: [anthropic/claude-sonnet-5.5]
+    thinking: { mode: between_tools, effort: medium }
+    maxOutputTokens: 1200
+    timeoutMs: 12000
+    capUsd: 0.02
+  verify:                # "must" items; a different family from compose
+    role: cheap
+    models: [openai/gpt-6-luna]
+    thinking: { mode: off, effort: low }
+    maxOutputTokens: 400
+    timeoutMs: 5000
+    capUsd: 0.005
+  clean:                 # Clean mode, after S8
+    role: cheap
+    models: [anthropic/claude-haiku-5.5]
+    thinking: { mode: off, effort: low }
+    maxOutputTokens: 600
+    timeoutMs: 3000
+    capUsd: 0.005
+  answer:                # coach Q&A (2a)
+    role: standard
+    models: [anthropic/claude-sonnet-5.5, anthropic/claude-haiku-5.5]
+    thinking: { mode: adaptive, effort: medium }
+    maxOutputTokens: 1500
+    timeoutMs: 20000
+    capUsd: 0.02
+  learn:                 # batch proposals (2a)
+    role: cheap
+    models: [anthropic/claude-haiku-5.5, openai/gpt-6-luna]
+    thinking: { mode: adaptive, effort: medium }
+    maxOutputTokens: 2000
+    timeoutMs: 30000
+    capUsd: 0.005
