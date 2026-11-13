@@ -1,0 +1,159 @@
+# The rebuild's gates (docs/gates.md): G0 verify, build, G1 goldens, G-P,
+# axe, the Electron smoke test, zizmor and gitleaks. The legacy workflows
+# (ci.yml, desktop.yml, ...) cover backend/, web/, extension/ and desktop/.
+#
+# Supply chain (blueprint §13): every action is pinned to a full commit SHA,
+# credentials are not persisted, the token is read-only, and pnpm installs
+# from the lockfile with minimumReleaseAge (pnpm-workspace.yaml).
+name: rebuild
+
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "catalog/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+      - "biome.jsonc"
+      - "knip.jsonc"
+      - ".dependency-cruiser.cjs"
+      - ".github/workflows/rebuild.yml"
+  push:
+    # Pull requests already run on their branches; pushes run where work lands.
+    branches: [main, "phase-*/**"]
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "catalog/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+      - "biome.jsonc"
+      - "knip.jsonc"
+      - ".dependency-cruiser.cjs"
+      - ".github/workflows/rebuild.yml"
+
+permissions: {}
+
+concurrency:
+  group: rebuild-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: G0 verify, build and G1
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      # Nothing in this job launches Electron.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: G0 (typecheck, Biome, dependency-cruiser and licences, Knip, tests)
+        run: pnpm verify
+      - run: pnpm build
+      - name: G1 goldens
+        run: pnpm gates:g1
+
+  web-gates:
+    name: G-P (web) and axe
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Install Chromium for Playwright
+        run: pnpm --filter @promptai/gates exec playwright install --with-deps chromium
+      - name: G-P privacy canary (web)
+        run: pnpm gates:gp web
+      - name: axe (both themes, 320/390/1280 px)
+        run: pnpm gates:axe
+
+  desktop:
+    name: Electron smoke and G-P (desktop)
+    runs-on: macos-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Electron smoke test (Playwright, fake pf-native)
+        # Builds apps/app and apps/desktop first; the real pf-native is not needed.
+        run: pnpm --filter @promptai/desktop test:smoke
+      - name: G-P privacy canary (desktop)
+        run: pnpm gates:gp electron
+
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: zizmorcore/zizmor-action@45d7276c9ca790aabd705e31ca99c6185c3e76dd # v0.8.1
+        with:
+          # The legacy workflows are out of scope until they are retired.
+          inputs: .github/workflows/rebuild.yml
+          version: 1.32.0
+          advanced-security: false
+          annotations: true
+
+  gitleaks:
+    name: gitleaks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      # The MIT CLI, not gitleaks-action (whose licence is not open source).
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install gitleaks (pinned version, checksum verified)
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/gitleaks.tar.gz" "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/gitleaks.tar.gz" | sha256sum --check --strict
+          tar -xzf "$RUNNER_TEMP/gitleaks.tar.gz" -C "$RUNNER_TEMP" gitleaks
+      - name: Scan the full history
+        run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner .'

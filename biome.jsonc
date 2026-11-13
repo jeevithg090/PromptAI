@@ -23,8 +23,8 @@
     }
   },
   // Baseline: findings that existed when the gate was added (2026-11-13),
-  // lowered to "info" in the one file each was found in, so they still print
-  // but don't fail `pnpm lint` (which runs with --error-on-warnings). This
+  // lowered to "info" in the one file each was found in, so they don't fail
+  // `pnpm lint` (--error-on-warnings); `pnpm exec biome lint` lists them. This
   // list only shrinks: fix the finding, then delete its entry.
   "overrides": [
     {
