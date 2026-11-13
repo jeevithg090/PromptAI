@@ -187,6 +187,19 @@ export const events = pgTable(
   (t) => [index('events_pid').on(t.pid)],
 );
 
+/** Where a decision was made. Content-free: ids and enums only. */
+export type DecisionContext = {
+  toolId: string;
+  hostApp: string | null;
+  surface: (typeof SURFACES)[number];
+  locale: string;
+  cardVersion: string | null;
+};
+/** A chip the draft showed. Values and options come from the card or the user's own counts and memories. */
+export type ShownChip = { slotId: string; value: string; source: string; kind: 'assumption' | 'pick'; options: string[] };
+/** The user's flips: slot id -> the value picked and when (the latest flip per slot wins). */
+export type ChosenChips = Record<string, { value: string; at: string }>;
+
 /** One row per decision point (today: each forge draft). Outcome events update outcome, rating and chosen. */
 export const decisions = pgTable(
   'decisions',
@@ -195,12 +208,9 @@ export const decisions = pgTable(
     pid: uuid('pid').notNull(),
     point: text('point').notNull(),
     sessionId: uuid('session_id'),
-    /** Content-free: tool, host app, surface, locale, card version. */
-    context: jsonb('context').notNull(),
-    /** The chips shown: slot id, value, source, kind and options. */
-    shown: jsonb('shown').notNull().default(sql`'[]'::jsonb`),
-    /** slot id -> value after the user's flips. */
-    chosen: jsonb('chosen').notNull().default(sql`'{}'::jsonb`),
+    context: jsonb('context').$type<DecisionContext>().notNull(),
+    shown: jsonb('shown').$type<ShownChip[]>().notNull().default(sql`'[]'::jsonb`),
+    chosen: jsonb('chosen').$type<ChosenChips>().notNull().default(sql`'{}'::jsonb`),
     outcome: text('outcome', { enum: OUTCOMES }),
     outcomeAt: at('outcome_at'),
     rating: text('rating'),

@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import { createEventStore, isTransientDbError, type EventStore, type StoredEvent } from '../src/event-store.ts';
-import { eventId, okForge, pgError, pglite, quiet, storedEvents } from './helpers.ts';
+import { as, eventId, okForge, pgError, pglite, quiet, storedEvents, stubCaller } from './helpers.ts';
 
 const at = '2026-11-13T10:00:00.123Z';
 const post = (body: unknown) => ({ method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
-const appWith = (events: EventStore) => createApp({ forge: async () => okForge, events, log: quiet });
+const pid = stubCaller.pid!;
 const failing = (err: unknown): EventStore => ({
   insert: async () => {
     throw err;
@@ -17,6 +17,7 @@ describe('POST /v1/events', () => {
   beforeEach(async () => {
     db = await pglite();
   });
+  const appWith = (events: EventStore) => createApp({ forge: async () => okForge, events, db: db.orm, auth: as(stubCaller), log: quiet });
 
   it('stores valid events, rejects invalid ones, and treats a duplicate as accepted', async () => {
     const app = appWith(db.store);
@@ -58,7 +59,7 @@ describe('POST /v1/events', () => {
     expect(body.accepted).toEqual([good.id]);
     expect(body.rejected.map((r) => r.id)).toEqual(bad.map((e) => e.id));
     // Each of these really is refused by Postgres when it reaches the store.
-    for (const e of bad) await expect(db.store.insert([e])).rejects.toThrow();
+    for (const e of bad) await expect(db.store.insert([e], pid)).rejects.toThrow();
   });
 
   it('400s on a malformed batch', async () => {
@@ -94,8 +95,13 @@ describe('createEventStore', () => {
     const params: unknown[][] = [];
     const store = createEventStore({ query: async (_text, p) => void params.push(p ?? []) });
     const ids = [eventId(0xab, 3).toUpperCase(), eventId(0xab, 1), eventId(0xab, 2)];
-    await store.insert(ids.map((id) => ({ id, type: 'a', at, props: {} })));
-    expect(params[0]?.filter((_, i) => i % 4 === 0)).toEqual([ids[1], ids[2], ids[0]]);
+    await store.insert(
+      ids.map((id) => ({ id, type: 'a', at, props: {} })),
+      pid,
+    );
+    // $1 is the owner's pid; each row then takes four parameters, id first.
+    expect(params[0]?.[0]).toBe(pid);
+    expect(params[0]?.slice(1).filter((_, i) => i % 4 === 0)).toEqual([ids[1], ids[2], ids[0]]);
   });
 });
 

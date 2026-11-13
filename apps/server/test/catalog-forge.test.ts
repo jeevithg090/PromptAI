@@ -6,6 +6,7 @@ import { forge, type Clock } from '@promptai/core';
 import { forgeResponseSchema } from '@promptai/contract';
 import { createApp } from '../src/app.ts';
 import { loadCatalog } from '../src/catalog.ts';
+import { account, as, pglite } from './helpers.ts';
 
 /** The real catalog through the real core forge, as main.ts wires it. */
 const CATALOG = path.resolve(import.meta.dirname, '../../../catalog');
@@ -23,7 +24,9 @@ const clock: Clock = {
 async function appWithCatalog() {
   const cards = await loadCatalog(CATALOG);
   const events = { insert: async () => {} };
-  return { cards, app: createApp({ forge: (req) => forge(req, { cards, clock }), events, log: () => {} }) };
+  const db = (await pglite()).orm;
+  const auth = as(await account(db));
+  return { cards, app: createApp({ forge: (req) => forge(req, { cards, clock }), events, db, auth, log: () => {} }) };
 }
 
 async function post(app: Awaited<ReturnType<typeof appWithCatalog>>['app'], body: unknown) {

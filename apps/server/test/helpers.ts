@@ -1,9 +1,39 @@
+import { randomUUID } from 'node:crypto';
 import { PGlite } from '@electric-sql/pglite';
+import { drizzle } from 'drizzle-orm/pglite';
 import type { ForgeResponse } from '@promptai/contract';
+import { migrate, profiles, schema, type Db } from '@promptai/db';
 import type { Log } from '../src/app.ts';
-import { createEventStore, isTransientDbError, migrate, type EventStore, type StoredEvent } from '../src/event-store.ts';
+import type { Authenticate, Caller } from '../src/auth.ts';
+import { createEventStore, isTransientDbError, type EventStore, type StoredEvent } from '../src/event-store.ts';
 
 export const quiet: Log = () => {};
+
+/** An age-confirmed account that exists only in memory, for tests whose routes write no rows keyed to the profile id. */
+export const stubCaller: Caller = {
+  id: '01990000-0000-7000-8000-000000000001',
+  pid: '01990000-0000-4000-8000-000000000001',
+  kind: 'account',
+  authUserId: '01990000-0000-4000-8000-0000000000aa',
+  deviceHash: null,
+  handle: null,
+  trustLevel: 0,
+  ageConfirmed: true,
+  createdAt: new Date('2026-11-01T00:00:00Z'),
+  updatedAt: new Date('2026-11-01T00:00:00Z'),
+  deletedAt: null,
+};
+
+/** Authenticates every request as `caller`, for tests about something other than auth. */
+export const as =
+  (caller: Caller): Authenticate =>
+  async () => ({ ok: true, caller });
+
+/** A real, age-confirmed account profile. */
+export async function account(db: Db, values: Partial<typeof profiles.$inferInsert> = {}): Promise<Caller> {
+  const [p] = await db.insert(profiles).values({ kind: 'account', authUserId: randomUUID(), ageConfirmed: true, ...values }).returning();
+  return p!;
+}
 
 export const okForge: ForgeResponse = {
   toolId: 'generic',
@@ -15,11 +45,12 @@ export const okForge: ForgeResponse = {
   usage: { llmCalls: 0, ms: 0 },
 };
 
-/** A fresh in-memory PGlite with the migrations applied. */
+/** A fresh in-memory PGlite with the migrations applied: the raw client, drizzle over it, and the event store. */
 export async function pglite() {
   const db = new PGlite();
-  await migrate(db);
-  return { db, store: createEventStore(db) };
+  const orm: Db = drizzle({ client: db, schema });
+  await migrate(orm);
+  return { db, orm, store: createEventStore(db) };
 }
 
 /** An error shaped like node-postgres's, carrying a SQLSTATE. */
@@ -48,10 +79,10 @@ export type Fault = { when: 'none' } | { when: 'before' | 'after'; code: '40P01'
 
 export function faulty(real: EventStore, nextFault: (events: readonly StoredEvent[]) => Fault): EventStore {
   return {
-    async insert(events) {
+    async insert(events, pid) {
       const fault = nextFault(events);
       if (fault.when === 'before') throw pgError(fault.code);
-      await real.insert(events);
+      await real.insert(events, pid);
       if (fault.when === 'after') throw pgError(fault.code);
     },
   };
@@ -63,9 +94,9 @@ export function faulty(real: EventStore, nextFault: (events: readonly StoredEven
  */
 export function ackingTransient(store: EventStore): EventStore {
   return {
-    async insert(events) {
+    async insert(events, pid) {
       try {
-        await store.insert(events);
+        await store.insert(events, pid);
       } catch (err) {
         if (!isTransientDbError(err)) throw err;
       }

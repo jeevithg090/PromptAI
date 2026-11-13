@@ -1,4 +1,3 @@
-import { readdir, readFile } from 'node:fs/promises';
 import type { eventSchema } from '@promptai/contract';
 
 /**
@@ -12,25 +11,25 @@ export interface Sql {
 export type StoredEvent = ReturnType<typeof eventSchema.parse>;
 
 export interface EventStore {
-  /** Stores events idempotently by id: an id already stored is skipped, not an error. */
-  insert(events: readonly StoredEvent[]): Promise<void>;
+  /** Stores the caller's events idempotently by id: an id already stored is skipped, not an error. */
+  insert(events: readonly StoredEvent[], pid: string): Promise<void>;
 }
 
 export function createEventStore(sql: Sql): EventStore {
   return {
-    async insert(events) {
+    async insert(events, pid) {
       if (events.length === 0) return;
       // Sorted by id so concurrent batches that overlap take their row locks in
       // the same order and cannot deadlock each other.
       const key = (e: StoredEvent) => e.id.toLowerCase();
       const sorted = [...events].sort((a, b) => (key(a) < key(b) ? -1 : key(a) > key(b) ? 1 : 0));
-      const params: unknown[] = [];
+      const params: unknown[] = [pid];
       const rows = sorted.map((e, i) => {
         params.push(e.id, e.type, e.at, JSON.stringify(e.props));
-        const p = i * 4;
-        return `($${p + 1}::uuid, $${p + 2}, $${p + 3}::timestamptz, $${p + 4}::jsonb)`;
+        const p = 1 + i * 4;
+        return `($${p + 1}::uuid, $1::uuid, $${p + 2}, $${p + 3}::timestamptz, $${p + 4}::jsonb)`;
       });
-      await sql.query(`insert into events (id, type, at, props) values ${rows.join(', ')} on conflict (id) do nothing`, params);
+      await sql.query(`insert into events (id, pid, type, at, props) values ${rows.join(', ')} on conflict (id) do nothing`, params);
     },
   };
 }
@@ -45,6 +44,9 @@ const SOCKET_ERRORS = new Set(['ECONNREFUSED', 'ECONNRESET', 'ETIMEDOUT', 'EPIPE
  */
 export function isTransientDbError(err: unknown): boolean {
   if (!(err instanceof Error)) return false;
+  // Drizzle wraps the driver's error, SQLSTATE and all, in `cause`. Judge the
+  // cause alone: the wrapper's message embeds the query's parameters.
+  if (err.cause instanceof Error) return isTransientDbError(err.cause);
   const code = (err as { code?: unknown }).code;
   if (typeof code === 'string') {
     // Class 08 is connection_exception; 57P01 is admin_shutdown (restart or failover).
@@ -52,15 +54,4 @@ export function isTransientDbError(err: unknown): boolean {
   }
   // node-postgres reports a dropped or timed-out connection without a code.
   return /^Connection terminated|timeout exceeded when trying to connect|connection error/.test(err.message);
-}
-
-const MIGRATIONS = new URL('../migrations/', import.meta.url);
-
-/**
- * Applies every migration in order to a fresh database (tests, local PGlite).
- * No bookkeeping table: the real runner arrives with packages/db (blueprint §12).
- */
-export async function migrate(sql: Sql): Promise<void> {
-  const files = (await readdir(MIGRATIONS)).filter((f) => f.endsWith('.sql')).sort();
-  for (const f of files) await sql.query(await readFile(new URL(f, MIGRATIONS), 'utf8'));
 }

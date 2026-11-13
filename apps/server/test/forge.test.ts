@@ -1,12 +1,23 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { forgeResponseSchema, type ForgeResponse } from '@promptai/contract';
+import type { Db } from '@promptai/db';
 import { createApp, FORGE_TIMEOUT_MS, type AppDeps, type Log } from '../src/app.ts';
-import { okForge, quiet } from './helpers.ts';
+import type { Caller } from '../src/auth.ts';
+import { account, as, okForge, pglite, quiet } from './helpers.ts';
 
 const noEvents: AppDeps['events'] = { insert: async () => {} };
 
+let db: Db;
+let caller: Caller;
+beforeAll(async () => {
+  db = (await pglite()).orm;
+});
+beforeEach(async () => {
+  caller = await account(db);
+});
+
 function app(forge: AppDeps['forge'], log: Log = quiet) {
-  return createApp({ forge, events: noEvents, log });
+  return createApp({ forge, events: noEvents, db, auth: as(caller), log });
 }
 
 const post = (body: unknown) => ({
@@ -32,8 +43,8 @@ describe('POST /v1/forge', () => {
     const forge = vi.fn(async () => okForge);
     const res = await app(forge).request('/v1/forge', post({ text: '  write a haiku  ' }));
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual(forgeResponseSchema.parse(okForge));
-    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', surface: 'web', locale: 'en', answers: {} });
+    expect(await res.json()).toEqual({ ...forgeResponseSchema.parse(okForge), decisionId: expect.any(String) });
+    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', surface: 'web', locale: 'en', answers: {} }, { counts: [], memories: [], toolUsage: [] });
   });
 
   it('400s with issues on an invalid request, without calling forge', async () => {
