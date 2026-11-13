@@ -1,5 +1,5 @@
 {
-  "id": "eae3e046-6522-4f3e-a8c2-5121200c15ca",
+  "id": "680341ee-76fd-41fa-a412-77539aa869de",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -92,7 +92,7 @@
           "value": "kind in ('brief', 'recipe')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.artifacts": {
       "name": "artifacts",
@@ -251,7 +251,7 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.audit_log": {
       "name": "audit_log",
@@ -329,7 +329,7 @@
           "value": "actor in ('user', 'system', 'admin')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.catalog_items": {
       "name": "catalog_items",
@@ -378,7 +378,7 @@
           "value": "kind in ('tool', 'family')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.consent_ledger": {
       "name": "consent_ledger",
@@ -475,7 +475,7 @@
           "value": "purpose in ('personalize', 'improve_defaults', 'cloud_asr', 'llm_processing', 'page_context', 'train_models')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.decisions": {
       "name": "decisions",
@@ -596,7 +596,7 @@
           "value": "outcome in ('inserted', 'copied', 'dismissed')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.events": {
       "name": "events",
@@ -663,7 +663,7 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.memory_items": {
       "name": "memory_items",
@@ -867,7 +867,7 @@
           "value": "(\"memory_items\".\"deleted_at\" is null) = (\"memory_items\".\"text\" is not null)"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.passages": {
       "name": "passages",
@@ -972,7 +972,7 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.policy_state": {
       "name": "policy_state",
@@ -1031,7 +1031,7 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.profiles": {
       "name": "profiles",
@@ -1159,7 +1159,7 @@
           "value": "char_length(\"profiles\".\"handle\") <= 64"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.reports": {
       "name": "reports",
@@ -1249,7 +1249,7 @@
           "value": "char_length(\"reports\".\"note\") <= 500"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.slot_counts": {
       "name": "slot_counts",
@@ -1352,7 +1352,7 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.subscriptions": {
       "name": "subscriptions",
@@ -1466,7 +1466,7 @@
       },
       "policies": {},
       "checkConstraints": {},
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.tool_usage": {
       "name": "tool_usage",
@@ -1556,7 +1556,7 @@
           "value": "surface in ('desktop', 'web', 'mcp')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     },
     "public.usage_counters": {
       "name": "usage_counters",
@@ -1622,7 +1622,7 @@
           "value": "metric in ('forges', 'dictation_seconds', 'cost_microusd')"
         }
       },
-      "isRLSEnabled": false
+      "isRLSEnabled": true
     }
   },
   "enums": {},

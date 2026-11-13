@@ -11,6 +11,7 @@ CREATE TABLE "artifact_versions" (
 	CONSTRAINT "artifact_versions_kind" CHECK (kind in ('brief', 'recipe'))
 );
 --> statement-breakpoint
+ALTER TABLE "artifact_versions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "artifacts" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -30,6 +31,7 @@ CREATE TABLE "artifacts" (
 	CONSTRAINT "artifacts_share_slug_unique" UNIQUE("share_slug")
 );
 --> statement-breakpoint
+ALTER TABLE "artifacts" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "audit_log" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid,
@@ -40,6 +42,7 @@ CREATE TABLE "audit_log" (
 	CONSTRAINT "audit_actor" CHECK (actor in ('user', 'system', 'admin'))
 );
 --> statement-breakpoint
+ALTER TABLE "audit_log" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "catalog_items" (
 	"id" text PRIMARY KEY NOT NULL,
 	"kind" text NOT NULL,
@@ -49,6 +52,7 @@ CREATE TABLE "catalog_items" (
 	CONSTRAINT "catalog_items_kind" CHECK (kind in ('tool', 'family'))
 );
 --> statement-breakpoint
+ALTER TABLE "catalog_items" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "consent_ledger" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -59,6 +63,7 @@ CREATE TABLE "consent_ledger" (
 	CONSTRAINT "consent_purpose" CHECK (purpose in ('personalize', 'improve_defaults', 'cloud_asr', 'llm_processing', 'page_context', 'train_models'))
 );
 --> statement-breakpoint
+ALTER TABLE "consent_ledger" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "decisions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid NOT NULL,
@@ -76,6 +81,7 @@ CREATE TABLE "decisions" (
 	CONSTRAINT "decisions_outcome" CHECK (outcome in ('inserted', 'copied', 'dismissed'))
 );
 --> statement-breakpoint
+ALTER TABLE "decisions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "events" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid NOT NULL,
@@ -85,6 +91,7 @@ CREATE TABLE "events" (
 	"received_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "events" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "memory_items" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -113,6 +120,7 @@ CREATE TABLE "memory_items" (
 	CONSTRAINT "memory_text" CHECK (("memory_items"."deleted_at" is null) = ("memory_items"."text" is not null))
 );
 --> statement-breakpoint
+ALTER TABLE "memory_items" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "passages" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"catalog_item_id" text NOT NULL,
@@ -123,6 +131,7 @@ CREATE TABLE "passages" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+ALTER TABLE "passages" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "policy_state" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"point" text NOT NULL,
@@ -133,6 +142,7 @@ CREATE TABLE "policy_state" (
 	CONSTRAINT "policy_state_point_pid" UNIQUE NULLS NOT DISTINCT("point","pid")
 );
 --> statement-breakpoint
+ALTER TABLE "policy_state" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "profiles" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid,
@@ -152,6 +162,7 @@ CREATE TABLE "profiles" (
 	CONSTRAINT "profiles_handle_len" CHECK (char_length("profiles"."handle") <= 64)
 );
 --> statement-breakpoint
+ALTER TABLE "profiles" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "reports" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -166,6 +177,7 @@ CREATE TABLE "reports" (
 	CONSTRAINT "reports_note_len" CHECK (char_length("reports"."note") <= 500)
 );
 --> statement-breakpoint
+ALTER TABLE "reports" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "slot_counts" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid NOT NULL,
@@ -180,6 +192,7 @@ CREATE TABLE "slot_counts" (
 	CONSTRAINT "slot_counts_event_id_unique" UNIQUE("event_id")
 );
 --> statement-breakpoint
+ALTER TABLE "slot_counts" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "subscriptions" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"user_id" uuid NOT NULL,
@@ -194,6 +207,7 @@ CREATE TABLE "subscriptions" (
 	CONSTRAINT "subscriptions_provider_subscription_id_unique" UNIQUE("provider_subscription_id")
 );
 --> statement-breakpoint
+ALTER TABLE "subscriptions" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "tool_usage" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"pid" uuid NOT NULL,
@@ -206,6 +220,7 @@ CREATE TABLE "tool_usage" (
 	CONSTRAINT "tool_usage_surface" CHECK (surface in ('desktop', 'web', 'mcp'))
 );
 --> statement-breakpoint
+ALTER TABLE "tool_usage" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "usage_counters" (
 	"user_id" uuid NOT NULL,
 	"day" date NOT NULL,
@@ -215,6 +230,7 @@ CREATE TABLE "usage_counters" (
 	CONSTRAINT "usage_metric" CHECK (metric in ('forges', 'dictation_seconds', 'cost_microusd'))
 );
 --> statement-breakpoint
+ALTER TABLE "usage_counters" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 ALTER TABLE "artifact_versions" ADD CONSTRAINT "artifact_versions_artifact_id_artifacts_id_fk" FOREIGN KEY ("artifact_id") REFERENCES "public"."artifacts"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "artifacts" ADD CONSTRAINT "artifacts_user_id_profiles_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."profiles"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "artifacts" ADD CONSTRAINT "artifacts_head_version_id_artifact_versions_id_fk" FOREIGN KEY ("head_version_id") REFERENCES "public"."artifact_versions"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint

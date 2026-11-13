@@ -52,6 +52,22 @@ describe('migrations', () => {
     const applied = await client.query<{ n: number }>('select count(*)::int as n from drizzle.__drizzle_migrations');
     expect(applied.rows[0]?.n).toBe(2);
   });
+
+  it('turn on row-level security everywhere, so a role that is granted a table (Supabase anon) still sees no rows', async () => {
+    const { client, db } = await fresh();
+    const { rows } = await client.query<{ relname: string; relrowsecurity: boolean }>(
+      `select relname, relrowsecurity from pg_class where relnamespace = 'public'::regnamespace and relkind = 'r' order by relname`,
+    );
+    expect(rows.filter((r) => !r.relrowsecurity)).toEqual([]);
+    expect(rows).toHaveLength(TABLES.length);
+
+    await db.insert(profiles).values({ kind: 'account', authUserId: crypto.randomUUID() });
+    await client.exec(`create role anon; grant select on profiles to anon;`);
+    await client.exec('set role anon');
+    expect((await client.query('select * from profiles')).rows).toEqual([]);
+    await client.exec('reset role');
+    expect((await client.query('select * from profiles')).rows).toHaveLength(1);
+  });
 });
 
 describe('uuidv7', () => {

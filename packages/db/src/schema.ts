@@ -13,6 +13,11 @@
  * deleted memory, artifact or profile keeps its id and `deleted_at`, its
  * content erased. Append-only and immutability rules are triggers in the
  * custom migration (drizzle/0001_append_only.sql).
+ *
+ * Every table has row-level security on and no policies. Only the server
+ * reads these tables, as their owner, which RLS does not restrict; on
+ * Supabase this stops the anon and authenticated roles reaching them
+ * through the Data API.
  */
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
@@ -86,7 +91,7 @@ export const profiles = pgTable(
     check('profiles_handle_len', sql`char_length(${t.handle}) <= 64`),
     uniqueIndex('profiles_live_device').on(t.deviceHash).where(sql`${t.deletedAt} is null`),
   ],
-);
+).enableRLS();
 
 /** Text memories (blueprint §10). A delete erases `text` and sets `deleted_at` (delete wins). */
 export const memoryItems = pgTable(
@@ -123,7 +128,7 @@ export const memoryItems = pgTable(
     check('memory_text', sql`(${t.deletedAt} is null) = (${t.text} is not null)`),
     index('memory_items_user').on(t.userId),
   ],
-);
+).enableRLS();
 
 /** Saved briefs and recipes. Content lives in immutable `artifact_versions`; `head_version_id` points at the current one. */
 export const artifacts = pgTable(
@@ -148,7 +153,7 @@ export const artifacts = pgTable(
     deletedAt: deletedAt(),
   },
   (t) => [index('artifacts_user').on(t.userId)],
-);
+).enableRLS();
 
 /** One immutable snapshot per edit (a trigger refuses UPDATE). Rows are deleted only with their artifact. */
 export const artifactVersions = pgTable(
@@ -166,7 +171,7 @@ export const artifactVersions = pgTable(
     createdAt: createdAt(),
   },
   (t) => [check('artifact_versions_kind', oneOf('kind', ARTIFACT_KINDS)), unique('artifact_versions_seq').on(t.artifactId, t.version)],
-);
+).enableRLS();
 
 /**
  * Content-free product events, written by POST /v1/events. `id` is the
@@ -185,7 +190,7 @@ export const events = pgTable(
     receivedAt: at('received_at').notNull().defaultNow(),
   },
   (t) => [index('events_pid').on(t.pid)],
-);
+).enableRLS();
 
 /** Where a decision was made. Content-free: ids and enums only. */
 export type DecisionContext = {
@@ -219,7 +224,7 @@ export const decisions = pgTable(
     createdAt: createdAt(),
   },
   (t) => [check('decisions_outcome', oneOf('outcome', OUTCOMES)), index('decisions_pid').on(t.pid, t.createdAt)],
-);
+).enableRLS();
 
 /** Learned policy state per decision point: global when pid is null, else per user (bandit posteriors, Phase 3). */
 export const policyState = pgTable(
@@ -233,7 +238,7 @@ export const policyState = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [unique('policy_state_point_pid').on(t.point, t.pid).nullsNotDistinct()],
-);
+).enableRLS();
 
 /** Tool and family cards; catalog-sync is the only writer. */
 export const catalogItems = pgTable(
@@ -246,7 +251,7 @@ export const catalogItems = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [check('catalog_items_kind', oneOf('kind', ['tool', 'family']))],
-);
+).enableRLS();
 
 /** Cited documentation chunks for coach Q&A, searched with Postgres full-text search. */
 export const passages = pgTable(
@@ -263,7 +268,7 @@ export const passages = pgTable(
     createdAt: createdAt(),
   },
   (t) => [index('passages_search').using('gin', t.search), index('passages_item').on(t.catalogItemId)],
-);
+).enableRLS();
 
 /** Daily meters per user (UTC day): forges, dictation seconds and model cost in micro-USD. */
 export const usageCounters = pgTable(
@@ -277,7 +282,7 @@ export const usageCounters = pgTable(
     value: bigint('value', { mode: 'number' }).notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.day, t.metric] }), check('usage_metric', oneOf('metric', USAGE_METRICS))],
-);
+).enableRLS();
 
 /** Billing state mirrored from Stripe webhooks (written once /webhooks/stripe lands). */
 export const subscriptions = pgTable(
@@ -297,7 +302,7 @@ export const subscriptions = pgTable(
     updatedAt: updatedAt(),
   },
   (t) => [index('subscriptions_user').on(t.userId)],
-);
+).enableRLS();
 
 /** Append-only and content-free (triggers refuse UPDATE, DELETE and TRUNCATE). */
 export const auditLog = pgTable(
@@ -311,7 +316,7 @@ export const auditLog = pgTable(
     detail: jsonb('detail').notNull().default(sql`'{}'::jsonb`),
   },
   (t) => [check('audit_actor', oneOf('actor', ['user', 'system', 'admin'])), index('audit_log_pid').on(t.pid, t.at)],
-);
+).enableRLS();
 
 /** Append-only consent history; the latest entry per purpose wins. Rows go only with account erasure. */
 export const consentLedger = pgTable(
@@ -328,7 +333,7 @@ export const consentLedger = pgTable(
     at: at('at').notNull().defaultNow(),
   },
   (t) => [check('consent_purpose', oneOf('purpose', CONSENT_PURPOSES)), index('consent_ledger_latest').on(t.userId, t.purpose, t.at)],
-);
+).enableRLS();
 
 /** "Report this output": a reason code, the reported draft or artifact, and an optional short note. */
 export const reports = pgTable(
@@ -350,7 +355,7 @@ export const reports = pgTable(
     check('reports_target', sql`${t.decisionId} is not null or ${t.artifactId} is not null`),
     check('reports_note_len', sql`char_length(${t.note}) <= 500`),
   ],
-);
+).enableRLS();
 
 /**
  * L1 slot-count observations (blueprint §8), one row per signal; core folds
@@ -372,7 +377,7 @@ export const slotCounts = pgTable(
     eventId: uuid('event_id').unique(),
   },
   (t) => [index('slot_counts_pid').on(t.pid, t.at)],
-);
+).enableRLS();
 
 /** Frecency rows (blueprint §9): which tool was used, from which host app and surface. */
 export const toolUsage = pgTable(
@@ -387,4 +392,4 @@ export const toolUsage = pgTable(
     eventId: uuid('event_id').unique(),
   },
   (t) => [check('tool_usage_surface', oneOf('surface', SURFACES)), index('tool_usage_pid').on(t.pid, t.at)],
-);
+).enableRLS();
