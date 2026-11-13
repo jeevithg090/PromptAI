@@ -1,0 +1,9 @@
+# The rebuild (docs/blueprint/BLUEPRINT.md §4). The legacy apps (backend/, web/,
+# extension/, desktop/) keep their own npm lockfiles until the new stack reaches
+# parity; they are deliberately not workspace members.
+packages:
+  - apps/*
+  - packages/*
+
+# Blueprint §13: never install a version published less than a day ago.
+minimumReleaseAge: 1440
