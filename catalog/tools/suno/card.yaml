@@ -1,0 +1,106 @@
+card_format: 1
+id: suno
+display_name: Suno (Custom mode)
+vendor: Suno
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://help.suno.com/en/articles/13924993
+  - https://help.suno.com/en/articles/13924801
+  - https://suno.com/release-notes/exclude-styles
+model:
+  id: v6
+  note: "'v6 - Suno's latest model' (help center, via spikes/tool-ingest crawl 2026-11-10). No official public API: output is four UI fields to paste."
+surface: paste
+accepts: [audio, music]
+family: music.song
+aliases: [suno ai, suno.com]
+syntax: [sections]   # "[Verse]", "[Chorus]" are structure tags in the lyrics field
+
+slots:
+  - id: genre
+    label: Genre
+    impact: 3
+    to: facets.music.genre
+    options: [pop, lo-fi hip hop, rock, acoustic folk, electronic, R&B]
+  - id: mood
+    label: Mood
+    impact: 2
+    to: facets.music.mood
+    default: uplifting
+    options: [uplifting, mellow, melancholic, energetic, dreamy]
+
+params:
+  instrumental:
+    type: boolean
+    note: "UI toggle; rendered as a field so the user knows to flip it."
+  title:
+    from: [facets.music.title, tool_params.suno.title]
+    type: string
+
+negation:
+  strategy: field
+  note: "Advanced Options > Exclude (help center)."
+
+requires:
+  - any_of: [/sections, /params/instrumental]
+    message: "No lyrics in the brief. Turn on Instrumental, or let the compile step (LLM) write lyrics."
+
+ignores:
+  /goal: "Style field wants sound descriptors, not the purpose."
+  /subject: "The theme belongs in the lyrics; the style field is sound only (without lyrics, needs_llm fires)."
+  /audience: "No audience channel."
+  /role: "No persona channel."
+  /constraints: "No instruction channel; a compile step must fold rules into style or lyrics."
+  /success_criteria: "Used by PromptAI's verifier only."
+  /assumptions: "Shown in PromptAI only."
+  /examples: "Not applicable."
+  /context: "Not applicable."
+  /output: "Length is chosen in the UI (v6: up to 8 minutes)."
+  /intent/deliverable/description: "Covered by style."
+
+fields:
+  - name: style
+    type: text
+    required: true
+    whitespace: single_line
+    description: "Style of Music field: genre, mood, instrumentation, vocals, tempo."
+    template: |
+      {%- assign order = "genre,subgenre,era,mood,instrumentation,vocals,production,key" | split: "," -%}
+      {%- for k in order %}{% if brief.facets.music[k] %}{{ brief.facets.music[k] | join: ", " }}, {% endif %}{% endfor %}
+      {%- if brief.facets.music.bpm %}{{ brief.facets.music.bpm }} BPM, {% endif %}
+      {%- if brief.style.tone %}{{ brief.style.tone | join: ", " }}, {% endif %}
+      {%- if brief.style.descriptors %}{{ brief.style.descriptors | join: ", " }}, {% endif %}
+      {%- if brief.style.references %}reminiscent of {{ brief.style.references | join: ", " }}{% endif %}
+      {%- unless brief.facets.music %}{{ brief.subject | default: brief.goal }}{% endunless %}
+    max_chars: 1000
+    limit_source: "unverified: third-party API docs say 1000 chars for v4.5+; not on Suno's help pages"
+
+  - name: lyrics
+    type: text
+    whitespace: collapse_lines
+    description: "Lyrics field with section tags; tags guide but do not force structure."
+    template: |
+      {%- for s in brief.sections %}
+      [{{ s.label }}]
+      {{ s.text }}
+      {% endfor %}
+    max_chars: 5000
+    limit_source: "unverified: third-party API docs"
+
+  - name: exclude
+    type: text
+    whitespace: single_line
+    template: "{{ neg.items | join: ', ' }}"
+
+  - name: title
+    type: text
+    whitespace: single_line
+    template: "{{ p.title }}"
+    max_chars: 100
+    limit_source: "unverified: third-party API docs"
+
+  - name: instrumental
+    type: text
+    whitespace: single_line
+    template: "{% if p.instrumental %}on{% endif %}"

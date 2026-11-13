@@ -1,0 +1,105 @@
+# fixture: lofi-song  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator.
+
+## field: user
+<task>
+A gentle lo-fi song to study to, about rain on a library window.
+Subject: rain on a library window late at night
+Deliverable: a 2-minute study song
+</task>
+
+<details>
+- music genre: lo-fi hip hop
+- music mood: mellow, nostalgic
+- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass
+- music vocals: breathy female vocals, mostly hummed
+- music bpm: 78
+- music title: Library Rain
+</details>
+
+<outline>
+1. Intro: (rain and vinyl crackle)
+2. Verse: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. Chorus: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. Outro: (piano fades with the rain)
+</outline>
+
+<constraints>
+- Leave out: autotune, heavy 808s, rap verses
+</constraints>
+
+<output_format>
+Length: about 120 seconds
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Loopable, no sudden loud moments
+</success_criteria>
+
+## field: paste
+You are a careful, expert collaborator.
+
+<task>
+A gentle lo-fi song to study to, about rain on a library window.
+Subject: rain on a library window late at night
+Deliverable: a 2-minute study song
+</task>
+
+<details>
+- music genre: lo-fi hip hop
+- music mood: mellow, nostalgic
+- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass
+- music vocals: breathy female vocals, mostly hummed
+- music bpm: 78
+- music title: Library Rain
+</details>
+
+<outline>
+1. Intro: (rain and vinyl crackle)
+2. Verse: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. Chorus: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. Outro: (piano fades with the rain)
+</outline>
+
+<constraints>
+- Leave out: autotune, heavy 808s, rap verses
+</constraints>
+
+<output_format>
+Length: about 120 seconds
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Loopable, no sudden loud moments
+</success_criteria>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<task>\nA gentle lo-fi song to study to, about rain on a library window.\nSubject: rain on a library window late at night\nDeliverable: a 2-minute study song\n</task>\n\n<details>\n- music genre: lo-fi hip hop\n- music mood: mellow, nostalgic\n- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass\n- music vocals: breathy female vocals, mostly hummed\n- music bpm: 78\n- music title: Library Rain\n</details>\n\n<outline>\n1. Intro: (rain and vinyl crackle)\n2. Verse: Pages turning slow, the street lights hum\nEvery drop a word I haven't found\n3. Chorus: Stay a while, the rain will keep the time\nStay a while, ooh\n4. Outro: (piano fades with the rain)\n</outline>\n\n<constraints>\n- Leave out: autotune, heavy 808s, rap verses\n</constraints>\n\n<output_format>\nLength: about 120 seconds\n</output_format>\n\n<success_criteria>\nBefore you answer, check the result against each item:\n- Loopable, no sudden loud moments\n</success_criteria>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Claude makes text/code/data, brief asks for audio
+
+## coverage
+rendered 25 of 25 applicable (0 declared not applicable), rate 1
+dropped: none

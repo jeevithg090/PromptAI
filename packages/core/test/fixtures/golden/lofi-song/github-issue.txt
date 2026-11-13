@@ -1,0 +1,43 @@
+# fixture: lofi-song  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+rain on a library window late at night
+
+## field: body
+## Goal
+A gentle lo-fi song to study to, about rain on a library window.
+
+## Context
+- music genre: lo-fi hip hop
+- music mood: mellow, nostalgic
+- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass
+- music vocals: breathy female vocals, mostly hummed
+- music bpm: 78
+- music title: Library Rain
+
+## Plan
+1. **Intro**: (rain and vinyl crackle)
+2. **Verse**: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. **Chorus**: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. **Outro**: (piano fades with the rain)
+
+## Constraints
+- Out of scope: autotune, heavy 808s, rap verses
+
+## Acceptance criteria
+- [ ] Loopable, no sudden loud moments
+
+## field: request
+{
+  "title": "rain on a library window late at night",
+  "body": "## Goal\nA gentle lo-fi song to study to, about rain on a library window.\n\n## Context\n- music genre: lo-fi hip hop\n- music mood: mellow, nostalgic\n- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass\n- music vocals: breathy female vocals, mostly hummed\n- music bpm: 78\n- music title: Library Rain\n\n## Plan\n1. **Intro**: (rain and vinyl crackle)\n2. **Verse**: Pages turning slow, the street lights hum\nEvery drop a word I haven't found\n3. **Chorus**: Stay a while, the rain will keep the time\nStay a while, ooh\n4. **Outro**: (piano fades with the rain)\n\n## Constraints\n- Out of scope: autotune, heavy 808s, rap verses\n\n## Acceptance criteria\n- [ ] Loopable, no sudden loud moments"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GitHub issue (REST) makes text/code/data, brief asks for audio
+
+## coverage
+rendered 24 of 25 applicable (0 declared not applicable), rate 0.96
+dropped: /output/length/target

@@ -1,0 +1,20 @@
+# fixture: spreadsheet-formula  target: flux3  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+
+## field: request
+{
+  "prompt": "Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself."
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | FLUX 3 Image (BFL API) makes image, brief asks for text
+info not_applicable /audience | Image models have no notion of audience.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into description.
+info not_applicable /output | Image output.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 2 of 4 applicable (6 declared not applicable), rate 0.5
+dropped: /facets/app.name, /facets/app.sheet_layout

@@ -1,0 +1,155 @@
+card_format: 1
+id: cursor
+display_name: Cursor Agent
+vendor: Anysphere
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://cursor.com/docs/agent/prompting.md
+  - https://cursor.com/docs/rules.md
+model:
+  id: user-selected
+  note: "Model is picked in Cursor's model picker; the card renders the chat message and an optional project rule file."
+surface: mixed
+accepts: [code, text, data]
+family: code.agent
+aliases: [cursor ai, ask cursor, com.todesktop.230313mzl4w4u92]
+
+slots:
+  - id: language
+    label: Language
+    impact: 2
+    to: facets.code.language
+    default: same as the project
+    options: [TypeScript, Python, Go, Rust, Swift, Java]
+  - id: output
+    label: Output
+    impact: 2
+    to: output.format
+    default: code with a short explanation
+    options: [code only, code with a short explanation, step-by-step walkthrough, diff]
+
+params:
+  save_rule:
+    from: [tool_params.cursor.save_rule]
+    type: boolean
+    note: "IR v0.1 has no 'standing rule' scope, so the user opts in per brief (finding: candidate IR field constraints[].scope)."
+  rule_globs:
+    from: [tool_params.cursor.rule_globs]
+    type: string
+    note: "Comma-separated globs for the rule frontmatter."
+
+negation:
+  strategy: inline
+
+ignores:
+  /params/effort: "Cursor has no per-message effort setting; pick a more capable model instead."
+  /params/aspect_ratio: "Not applicable."
+  /role: "Cursor's agent has its own system prompt; a persona line adds little."
+
+fields:
+  - name: agent_message
+    type: text
+    required: true
+    description: "Message for Agent chat: task, @-mentioned files, constraints, acceptance checks."
+    template: |
+      {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Focus: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.intent.deliverable.description %}
+      Deliverable: {{ brief.intent.deliverable.description }}
+      {%- endif %}
+      {%- assign files = brief.inputs | where: "ref" %}
+      {%- if files.size > 0 %}
+
+      Files: {% for f in files %}{% if f.kind == "code" or f.kind == "file" %}@{{ f.ref }}{% else %}{{ f.ref }}{% endif %} ({{ f.role | replace: "_", " " }}{% if f.label %}: {{ f.label }}{% endif %}){% unless forloop.last %}, {% endunless %}{% endfor %}
+      {%- endif %}
+      {%- assign pasted = brief.inputs | where: "content" %}
+      {%- for d in pasted %}
+
+      {{ d.label | default: d.id }}:
+      ```
+      {{ d.content }}
+      ```
+      {%- endfor %}
+      {%- if brief.facets %}
+
+      Environment: {% for ns in brief.facets %}{% for kv in ns[1] %}{{ kv[0] | replace: "_", " " }} {{ kv[1] | join: ", " }}{% unless forloop.last %}; {% endunless %}{% endfor %}{% unless forloop.last %}; {% endunless %}{% endfor %}
+      {%- endif %}
+      {%- if brief.context %}
+
+      Context:
+      {{ brief.context | bullets }}
+      {%- endif %}
+      {%- if brief.sections %}
+
+      Steps:
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. {{ s.label }}: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.constraints or neg.items %}
+
+      Constraints:
+      {%- for c in brief.constraints %}
+      - {% if c.kind == "prefer" %}Preferred: {% endif %}{{ c.text }}
+      {%- endfor %}
+      {%- if neg.items %}
+      - Leave out: {{ neg.items | join: ", " }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.output.format or brief.output.structure %}
+
+      Output: {{ brief.output.format }}{% if brief.output.structure %} ({{ brief.output.structure | join: "; " }}){% endif %}
+      {%- endif %}
+      {%- if brief.output.schema %}
+      Output schema: {{ brief.output.schema | json }}
+      {%- endif %}
+      {%- if brief.examples %}
+
+      Examples:
+      {%- for e in brief.examples %}
+      - {% if e.input %}{{ e.input }} -> {% endif %}{{ e.output }}{% if e.note %} ({{ e.note }}){% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria %}
+
+      Done when:
+      {{ brief.success_criteria | bullets }}
+      {%- endif %}
+      {%- if assumed %}
+
+      Assumptions (tell me if any is wrong before changing code):
+      {{ assumed | bullets }}
+      {%- endif %}
+      {%- if brief.audience %}
+
+      This is for {{ brief.audience }}.
+      {%- endif %}
+      {%- if brief.style.tone %}
+      Tone: {{ brief.style.tone | join: ", " }}.
+      {%- endif %}
+
+  - name: rule_path
+    type: text
+    whitespace: single_line
+    template: "{% if p.save_rule %}.cursor/rules/{{ brief.intent.task_family | replace: '.', '-' }}.mdc{% endif %}"
+
+  - name: rule_file
+    type: text
+    description: "Project rule (.mdc with description/globs/alwaysApply frontmatter), only when save_rule is set."
+    template: |
+      {%- if p.save_rule -%}
+      ---
+      description: {{ brief.intent.task_family | replace: ".", " " }} conventions
+      {%- if p.rule_globs %}
+      globs: {{ p.rule_globs }}
+      alwaysApply: false
+      {%- else %}
+      alwaysApply: false
+      {%- endif %}
+      ---
+
+      {{ brief.constraints | map: "text" | bullets }}
+      {%- endif %}

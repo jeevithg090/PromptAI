@@ -1,0 +1,33 @@
+# fixture: bugfix  target: cursor  card: 2026-11-10.1  ok: true
+
+## field: agent_message
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Focus: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+
+Files: @src/lib/paginate.ts (edit target), @src/lib/paginate.test.ts (reference)
+
+Failing test output:
+```
+expected pageCount 3, received 4 (total=30, pageSize=10)
+```
+
+Environment: language TypeScript 5.9; runtime Node 24; test runner vitest
+
+Constraints:
+- Keep the public signature of paginate() unchanged
+- Do not add dependencies
+- Preferred: Smallest diff that fixes the bug
+
+Output: unified diff, then a 2-sentence explanation
+
+Done when:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+
+## issues
+info not_applicable /params/effort | Cursor has no per-message effort setting; pick a more capable model instead.
+
+## coverage
+rendered 15 of 15 applicable (1 declared not applicable), rate 1
+dropped: none

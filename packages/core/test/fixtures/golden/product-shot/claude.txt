@@ -1,0 +1,101 @@
+# fixture: product-shot  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator. The work is for Etsy shoppers browsing on phones; write at their level.
+
+## field: user
+<task>
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+</task>
+
+<details>
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+</details>
+
+<constraints>
+- The mug handle faces right
+- Leave out: text, watermark, people, harsh shadows
+</constraints>
+
+<style>
+clean, minimal props, warm neutral palette
+</style>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Mug is the clear focal point
+- Glaze texture is visible
+</success_criteria>
+
+<assumptions>
+I have not confirmed these. If one is wrong for the task, say so before you start:
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+</assumptions>
+
+## field: paste
+You are a careful, expert collaborator. The work is for Etsy shoppers browsing on phones; write at their level.
+
+<task>
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+</task>
+
+<details>
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+</details>
+
+<constraints>
+- The mug handle faces right
+- Leave out: text, watermark, people, harsh shadows
+</constraints>
+
+<style>
+clean, minimal props, warm neutral palette
+</style>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Mug is the clear focal point
+- Glaze texture is visible
+</success_criteria>
+
+<assumptions>
+I have not confirmed these. If one is wrong for the task, say so before you start:
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+</assumptions>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator. The work is for Etsy shoppers browsing on phones; write at their level.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<task>\nMake a hero photo for my Etsy listing of a handmade speckled ceramic mug.\nSubject: a handmade speckled ceramic mug with a matte sage-green glaze\nDeliverable: hero image for an Etsy listing\n</task>\n\n<details>\n- visual setting: on a light oak table beside a folded linen napkin\n- visual camera: close-up product shot, 35mm lens, shallow depth of field\n- visual lighting: soft morning window light from the left\n- visual mood: calm, homey\n- visual medium: photorealistic product photography\n</details>\n\n<constraints>\n- The mug handle faces right\n- Leave out: text, watermark, people, harsh shadows\n</constraints>\n\n<style>\nclean, minimal props, warm neutral palette\n</style>\n\n<success_criteria>\nBefore you answer, check the result against each item:\n- Mug is the clear focal point\n- Glaze texture is visible\n</success_criteria>\n\n<assumptions>\nI have not confirmed these. If one is wrong for the task, say so before you start:\n- aspect ratio: 4:5 (default)\n- lighting: soft morning window light from the left (inferred)\n</assumptions>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Claude makes text/code/data, brief asks for image
+
+## coverage
+rendered 21 of 21 applicable (0 declared not applicable), rate 1
+dropped: none

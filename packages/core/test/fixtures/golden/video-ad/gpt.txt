@@ -1,0 +1,71 @@
+# fixture: video-ad  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant. You are writing for local Gen-Z coffee drinkers.
+
+# Instructions
+* Leave out: dialogue, text overlays, logos.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: resolution: 1080p (default).
+
+## field: input
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+Aspect ratio: 9:16
+
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+
+Outline:
+1. Pour begins (0-3s): milk stream hits the espresso
+2. Pattern forms (3-6s): the tulip pattern blooms
+3. Reveal (6-8s): cup slides toward the camera
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant. You are writing for local Gen-Z coffee drinkers.
+
+# Instructions
+* Leave out: dialogue, text overlays, logos.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: resolution: 1080p (default).
+
+# Task
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+Aspect ratio: 9:16
+
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+
+Outline:
+1. Pour begins (0-3s): milk stream hits the espresso
+2. Pattern forms (3-6s): the tulip pattern blooms
+3. Reveal (6-8s): cup slides toward the camera
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant. You are writing for local Gen-Z coffee drinkers.\n\n# Instructions\n* Leave out: dialogue, text overlays, logos.\n* These assumptions are unconfirmed; if one is wrong for the task, say so first: resolution: 1080p (default).",
+  "input": "An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.\nSubject: a barista's hands pouring oat milk into a latte, forming a tulip pattern\nDeliverable: an 8-second vertical clip for Instagram Reels\nAspect ratio: 9:16\n\n- visual setting: a sunlit small coffee shop counter with plants\n- visual camera: slow push-in, macro close-up on the cup\n- visual lighting: warm golden hour light through the window\n- visual mood: cozy, inviting\n- visual shot: single continuous shot\n- audio ambience: soft cafe chatter and an espresso machine hiss\n- audio music: light acoustic guitar\n\nOutline:\n1. Pour begins (0-3s): milk stream hits the espresso\n2. Pattern forms (3-6s): the tulip pattern blooms\n3. Reveal (6-8s): cup slides toward the camera"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GPT (OpenAI Responses API / ChatGPT) makes text/code/data/image, brief asks for video
+warning param_unsupported /params/duration_s | GPT (OpenAI Responses API / ChatGPT) has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | GPT (OpenAI Responses API / ChatGPT) has no setting for "resolution"; not sent
+
+## coverage
+rendered 23 of 23 applicable (0 declared not applicable), rate 1
+dropped: none

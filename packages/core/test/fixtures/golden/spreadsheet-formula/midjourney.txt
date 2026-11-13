@@ -1,0 +1,15 @@
+# fixture: spreadsheet-formula  target: midjourney  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Midjourney makes image, brief asks for text
+info not_applicable /audience | Image models have no notion of audience.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into visual descriptors.
+info not_applicable /output | Image output: format/length do not apply.
+info not_applicable /success_criteria | Used by PromptAI's verifier, not by Midjourney.
+
+## coverage
+rendered 2 of 4 applicable (6 declared not applicable), rate 0.5
+dropped: /facets/app.name, /facets/app.sheet_layout

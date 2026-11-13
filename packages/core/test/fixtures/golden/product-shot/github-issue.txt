@@ -1,0 +1,40 @@
+# fixture: product-shot  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+a handmade speckled ceramic mug with a matte sage-green glaze
+
+## field: body
+## Goal
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+
+For: Etsy shoppers browsing on phones
+
+## Context
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+
+## Constraints
+- The mug handle faces right
+- Out of scope: text, watermark, people, harsh shadows
+
+## Acceptance criteria
+- [ ] Mug is the clear focal point
+- [ ] Glaze texture is visible
+
+## field: request
+{
+  "title": "a handmade speckled ceramic mug with a matte sage-green glaze",
+  "body": "## Goal\nMake a hero photo for my Etsy listing of a handmade speckled ceramic mug.\n\nFor: Etsy shoppers browsing on phones\n\n## Context\n- visual setting: on a light oak table beside a folded linen napkin\n- visual camera: close-up product shot, 35mm lens, shallow depth of field\n- visual lighting: soft morning window light from the left\n- visual mood: calm, homey\n- visual medium: photorealistic product photography\n\n## Constraints\n- The mug handle faces right\n- Out of scope: text, watermark, people, harsh shadows\n\n## Acceptance criteria\n- [ ] Mug is the clear focal point\n- [ ] Glaze texture is visible"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GitHub issue (REST) makes text/code/data, brief asks for image
+info not_applicable /style | Issues use the repo's plain style.
+info not_applicable /params/aspect_ratio | Not applicable.
+
+## coverage
+rendered 17 of 17 applicable (4 declared not applicable), rate 1
+dropped: none

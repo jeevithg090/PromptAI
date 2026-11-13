@@ -1,0 +1,29 @@
+# fixture: lesson-plan  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend
+
+## field: lyrics
+[Hook]
+a question students can argue about
+
+[Mini-lesson]
+inputs and outputs, with a diagram
+
+[Activity]
+floating leaf-disk experiment in groups
+
+[Exit ticket]
+explain it to a friend in 3 sentences
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Suno (Custom mode) makes audio/music, brief asks for text
+info not_applicable /audience | No audience channel.
+info not_applicable /context | Not applicable.
+info not_applicable /constraints | No instruction channel; a compile step must fold rules into style or lyrics.
+info not_applicable /output | Length is chosen in the UI (v6: up to 8 minutes).
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 9 of 9 applicable (13 declared not applicable), rate 1
+dropped: none

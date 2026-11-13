@@ -1,0 +1,21 @@
+{
+  "ir_version": "0.1",
+  "id": "lesson-plan",
+  "intent": { "mode": "do", "task_family": "education.lesson_plan", "deliverable": { "kind": "text", "description": "a 45-minute lesson plan with a hands-on activity" } },
+  "goal": "Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend",
+  "audience": "a 7th-grade science teacher (me) who will teach from the plan",
+  "context": ["30 students, mixed reading levels, 4 English learners", "We have spinach leaves, baking soda, syringes and cups, but no microscopes"],
+  "sections": [
+    { "label": "Hook", "text": "a question students can argue about" },
+    { "label": "Mini-lesson", "text": "inputs and outputs, with a diagram" },
+    { "label": "Activity", "text": "floating leaf-disk experiment in groups" },
+    { "label": "Exit ticket", "text": "explain it to a friend in 3 sentences" }
+  ],
+  "constraints": [
+    { "id": "time", "text": "Timings must add up to 45 minutes", "kind": "must" },
+    { "id": "ell", "text": "Include one support for English learners", "kind": "must" }
+  ],
+  "output": { "format": "markdown", "structure": ["Objectives", "Materials", "Timeline", "Differentiation", "Assessment"] },
+  "success_criteria": ["Every timeline step has minutes", "Uses only the listed materials"],
+  "provenance": { "/audience": { "source": "memory", "locked": true } }
+}

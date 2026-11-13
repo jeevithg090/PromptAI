@@ -1,0 +1,48 @@
+# fixture: spreadsheet-formula  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant. You are writing for an office manager who knows SUM and IF but not XLOOKUP or LET.
+
+# Instructions
+* One formula for cell F2 that can be filled down.
+* Output format: markdown.
+* Use these sections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation.
+* Before finishing, verify: Explains each function in one plain sentence.
+
+## field: input
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+Deliverable: a formula plus a short explanation
+
+- app name: Microsoft Excel 365
+- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant. You are writing for an office manager who knows SUM and IF but not XLOOKUP or LET.
+
+# Instructions
+* One formula for cell F2 that can be filled down.
+* Output format: markdown.
+* Use these sections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation.
+* Before finishing, verify: Explains each function in one plain sentence.
+
+# Task
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+Deliverable: a formula plus a short explanation
+
+- app name: Microsoft Excel 365
+- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant. You are writing for an office manager who knows SUM and IF but not XLOOKUP or LET.\n\n# Instructions\n* One formula for cell F2 that can be filled down.\n* Output format: markdown.\n* Use these sections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation.\n* Before finishing, verify: Explains each function in one plain sentence.",
+  "input": "Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.\nDeliverable: a formula plus a short explanation\n\n- app name: Microsoft Excel 365\n- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)"
+}
+
+## issues
+
+## coverage
+rendered 10 of 10 applicable (0 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,20 @@
+# fixture: cover-letter  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+confident, warm, plain-spoken, Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Suno (Custom mode) makes audio/music, brief asks for text
+warning param_unsupported /params/effort | Suno (Custom mode) has no setting for "effort"; not sent
+warning needs_llm /sections | /params/instrumental | No lyrics in the brief. Turn on Instrumental, or let the compile step (LLM) write lyrics.
+info not_applicable /audience | No audience channel.
+info not_applicable /role | No persona channel.
+info not_applicable /context | Not applicable.
+info not_applicable /constraints | No instruction channel; a compile step must fold rules into style or lyrics.
+info not_applicable /output | Length is chosen in the UI (v6: up to 8 minutes).
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+info not_applicable /assumptions | Shown in PromptAI only.
+
+## coverage
+rendered 4 of 9 applicable (17 declared not applicable), rate 0.444
+dropped: /inputs/0/label, /inputs/0/content, /inputs/1/label, /inputs/1/ref, /params/effort

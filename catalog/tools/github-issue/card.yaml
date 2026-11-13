@@ -1,0 +1,137 @@
+card_format: 1
+id: github-issue
+display_name: GitHub issue (REST)
+vendor: GitHub
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://docs.github.com/en/rest/issues/issues#create-an-issue
+model:
+  id: rest-v3
+  note: "Unplanned 8th target, added after the freeze to test a non-AI tool. POST /repos/{owner}/{repo}/issues; labels/assignees/type are silently dropped without push access."
+surface: api
+accepts: [text, code, data]
+family: text.issue
+aliases: [github ticket, gh issue, issue on github]
+insert: body
+
+slots:
+  - id: kind
+    label: Issue type
+    impact: 2
+    to: facets.issue.kind
+    default: bug
+    options: [bug, feature, task, question]
+
+params:
+  labels:
+    from: [tool_params.github-issue.labels]
+    type: string
+    pattern: '^[^,]+(,[^,]+)*$'
+    note: "Comma-separated in the brief; sent as an array."
+  type:
+    from: [tool_params.github-issue.type]
+    type: string
+
+negation:
+  strategy: inline
+
+ignores:
+  /params/effort: "Not applicable to an issue."
+  /params/aspect_ratio: "Not applicable."
+  /role: "An issue is written by the user, not a persona."
+  /style: "Issues use the repo's plain style."
+  /assumptions: "Kept in PromptAI; an issue states facts."
+
+fields:
+  - name: title
+    type: text
+    required: true
+    whitespace: single_line
+    template: "{{ brief.subject | default: brief.goal | truncate: 90 }}"
+
+  - name: body
+    type: text
+    required: true
+    template: |
+      ## Goal
+      {{ brief.goal | sentence }}
+      {%- if brief.audience %}
+
+      For: {{ brief.audience }}
+      {%- endif %}
+      {%- if brief.context or brief.facets %}
+
+      ## Context
+      {%- for c in brief.context %}
+      - {{ c }}
+      {%- endfor %}
+      {%- for ns in brief.facets %}{% for kv in ns[1] %}
+      - {{ ns[0] }} {{ kv[0] | replace: "_", " " }}: {{ kv[1] | join: ", " }}
+      {%- endfor %}{% endfor %}
+      {%- endif %}
+      {%- if brief.inputs %}
+
+      ## References
+      {%- for i in brief.inputs %}
+      - {% if i.ref %}`{{ i.ref }}`{% if i.label %} {{ i.label }}{% endif %}{% else %}{{ i.label | default: i.id }}{% endif %} ({{ i.role | replace: "_", " " }}){% if i.content %}
+        ```
+        {{ i.content | replace: "\n", "\n  " }}
+        ```{% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.sections %}
+
+      ## Plan
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. **{{ s.label }}**: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.constraints or neg.items %}
+
+      ## Constraints
+      {%- for c in brief.constraints %}
+      - {% if c.kind == "prefer" %}(preferred) {% endif %}{{ c.text }}
+      {%- endfor %}
+      {%- if neg.items %}
+      - Out of scope: {{ neg.items | join: ", " }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.output.format or brief.output.structure or brief.output.schema %}
+
+      ## Expected output
+      {%- if brief.output.format %}
+      {{ brief.output.format }}
+      {%- endif %}
+      {%- if brief.output.structure %}
+      Sections: {{ brief.output.structure | join: "; " }}
+      {%- endif %}
+      {%- if brief.output.schema %}
+      ```json
+      {{ brief.output.schema | json: 2 }}
+      ```
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.examples %}
+
+      ## Examples
+      {%- for e in brief.examples %}
+      - {% if e.input %}`{{ e.input }}` -> {% endif %}`{{ e.output }}`{% if e.note %} ({{ e.note }}){% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria %}
+
+      ## Acceptance criteria
+      {%- for s in brief.success_criteria %}
+      - [ ] {{ s }}
+      {%- endfor %}
+      {%- endif %}
+
+  - name: request
+    type: json
+    whitespace: preserve
+    body:
+      title: "=out.title"
+      body: "=out.body"
+      labels: "=p.labels | split: ','"
+      type: "=p.type"

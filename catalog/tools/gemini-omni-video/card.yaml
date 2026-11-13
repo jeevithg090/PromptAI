@@ -1,0 +1,114 @@
+card_format: 1
+id: gemini-omni-video
+display_name: Gemini Omni Flash video (Veo successor in the Gemini API)
+vendor: Google
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://ai.google.dev/gemini-api/docs/omni
+  - https://ai.google.dev/gemini-api/docs/video
+model:
+  id: gemini-omni-1.2-flash
+  note: "Veo 3.1 Preview in the Gemini API was shut down on 2026-10-22; Google's docs say to migrate to gemini-omni-1.2-flash (Interactions API) or to Veo 3.1 GA on Vertex. 3-15 s clips with native audio."
+surface: api
+accepts: [video]
+family: video.generate
+aliases: [veo, gemini omni, gemini video, omni flash]
+syntax: [sections]   # "[2-4s]" timecodes are timing syntax in the prompt
+
+slots:
+  - id: style
+    label: Style
+    impact: 3
+    to: style.descriptors
+    options: [cinematic live-action, 3D animation, 2D animation, stop-motion, documentary]
+  - id: camera
+    label: Camera
+    impact: 2
+    to: facets.visual.camera
+    default: static
+    options: [static, slow pan, tracking shot, aerial drone, zoom in]
+  - id: aspect_ratio
+    label: Aspect ratio
+    impact: 1
+    to: params.aspect_ratio
+    default: "16:9"
+    options: ["16:9", "9:16"]
+    pattern: '\b(16:9|9:16)\b'
+  - id: duration_s
+    label: Length (seconds)
+    impact: 1
+    to: params.duration_s
+    default: "8"
+    options: ["4", "8", "15"]
+    pattern: '\b(\d{1,2}) ?(?:s|secs?|seconds?)\b'
+
+params:
+  aspect_ratio:
+    type: string
+    enum: ["16:9", "9:16"]
+  duration_s:
+    type: integer
+    min: 3
+    max: 15
+    on_invalid: clamp
+    note: "Sent as a string like \"8s\"; default 10 s when unset."
+  resolution:
+    type: string
+    enum: ["360p", "720p", "1080p", "4k"]
+    note: "1080p and 4k are upscaled; default 720p."
+
+negation:
+  strategy: inline
+  note: "No negative-prompt field; the Omni guide says to put simple negatives in the prompt, e.g. 'No dialogue'."
+
+ignores:
+  /goal: "The prompt describes the scene; the purpose stays in PromptAI."
+  /audience: "No audience channel."
+  /role: "System instructions are not supported by Omni Flash."
+  /constraints: "No instruction channel beyond the scene prompt; a compile step must fold rules into it."
+  /success_criteria: "Used by PromptAI's verifier only."
+  /assumptions: "Shown in PromptAI only."
+  /examples: "Not applicable."
+  /output: "Length is the duration param."
+  /context: "Not applicable."
+  /intent/deliverable/description: "Covered by the scene."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    whitespace: collapse_lines
+    description: "Scene, camera, lighting, mood, then audio; timed beats use the guide's [a-bs] timecode syntax."
+    template: |
+      {%- if brief.facets.visual.shot %}{{ brief.facets.visual.shot | sentence }} {% endif -%}
+      {{ brief.subject | default: brief.goal | sentence }}
+      {%- if brief.facets.visual.action %} {{ brief.facets.visual.action | sentence }}{% endif %}
+      {%- if brief.facets.visual.setting %} Setting: {{ brief.facets.visual.setting | join: ", " | sentence }}{% endif %}
+      {%- if brief.facets.visual.camera %} Camera: {{ brief.facets.visual.camera | join: ", " | sentence }}{% endif %}
+      {%- if brief.facets.visual.lighting %} Lighting: {{ brief.facets.visual.lighting | join: ", " | sentence }}{% endif %}
+      {%- if brief.facets.visual.mood %} Mood: {{ brief.facets.visual.mood | join: ", " | sentence }}{% endif %}
+      {%- if brief.style.descriptors %} Style: {{ brief.style.descriptors | join: ", " | sentence }}{% endif %}
+      {%- if brief.style.references %} In the style of {{ brief.style.references | join: " and " | sentence }}{% endif %}
+      {%- if brief.sections %}
+      {% for s in brief.sections %}
+      {% if s.start_s != nil and s.end_s != nil %}[{{ s.start_s }}-{{ s.end_s }}s] {% endif %}{{ s.label | sentence }} {{ s.text | sentence }}
+      {%- endfor %}
+      {% endif %}
+      {%- if brief.facets.audio %}
+      Sound design: {% for kv in brief.facets.audio %}{{ kv[1] | join: ", " }}{% unless forloop.last %}; {% endunless %}{% endfor %}.
+      {%- endif %}
+      {%- for n in neg.items %} No {{ n }}.{% endfor %}
+
+  - name: request
+    type: json
+    whitespace: preserve
+    description: "POST /v1beta/interactions body."
+    body:
+      model: "{{ card.model }}"
+      input: "=out.prompt"
+      response_format:
+        type: video
+        aspect_ratio: "=p.aspect_ratio"
+        duration: "{% if p.duration_s %}{{ p.duration_s }}s{% endif %}"
+        resolution: "=p.resolution"

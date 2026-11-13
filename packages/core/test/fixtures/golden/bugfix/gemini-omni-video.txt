@@ -1,0 +1,25 @@
+# fixture: bugfix  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+The paginate() helper in the orders API.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "The paginate() helper in the orders API.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for code
+warning param_unsupported /params/effort | Gemini Omni Flash video (Veo successor in the Gemini API) has no setting for "effort"; not sent
+info not_applicable /goal | The prompt describes the scene; the purpose stays in PromptAI.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /output | Length is the duration param.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 1 of 9 applicable (7 declared not applicable), rate 0.111
+dropped: /inputs/0/ref, /inputs/1/ref, /inputs/2/label, /inputs/2/content, /facets/code.language, /facets/code.runtime, /facets/code.test_runner, /params/effort

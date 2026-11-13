@@ -1,0 +1,96 @@
+# fixture: lesson-plan  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator. The work is for a 7th-grade science teacher (me) who will teach from the plan; write at their level.
+
+## field: user
+<context>
+- 30 students, mixed reading levels, 4 English learners
+- We have spinach leaves, baking soda, syringes and cups, but no microscopes
+</context>
+
+<task>
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Deliverable: a 45-minute lesson plan with a hands-on activity
+</task>
+
+<outline>
+1. Hook: a question students can argue about
+2. Mini-lesson: inputs and outputs, with a diagram
+3. Activity: floating leaf-disk experiment in groups
+4. Exit ticket: explain it to a friend in 3 sentences
+</outline>
+
+<constraints>
+- Timings must add up to 45 minutes
+- Include one support for English learners
+</constraints>
+
+<output_format>
+Format: markdown
+Sections, in order: Objectives; Materials; Timeline; Differentiation; Assessment
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Every timeline step has minutes
+- Uses only the listed materials
+</success_criteria>
+
+## field: paste
+You are a careful, expert collaborator. The work is for a 7th-grade science teacher (me) who will teach from the plan; write at their level.
+
+<context>
+- 30 students, mixed reading levels, 4 English learners
+- We have spinach leaves, baking soda, syringes and cups, but no microscopes
+</context>
+
+<task>
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Deliverable: a 45-minute lesson plan with a hands-on activity
+</task>
+
+<outline>
+1. Hook: a question students can argue about
+2. Mini-lesson: inputs and outputs, with a diagram
+3. Activity: floating leaf-disk experiment in groups
+4. Exit ticket: explain it to a friend in 3 sentences
+</outline>
+
+<constraints>
+- Timings must add up to 45 minutes
+- Include one support for English learners
+</constraints>
+
+<output_format>
+Format: markdown
+Sections, in order: Objectives; Materials; Timeline; Differentiation; Assessment
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Every timeline step has minutes
+- Uses only the listed materials
+</success_criteria>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator. The work is for a 7th-grade science teacher (me) who will teach from the plan; write at their level.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<context>\n- 30 students, mixed reading levels, 4 English learners\n- We have spinach leaves, baking soda, syringes and cups, but no microscopes\n</context>\n\n<task>\nPlan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.\nDeliverable: a 45-minute lesson plan with a hands-on activity\n</task>\n\n<outline>\n1. Hook: a question students can argue about\n2. Mini-lesson: inputs and outputs, with a diagram\n3. Activity: floating leaf-disk experiment in groups\n4. Exit ticket: explain it to a friend in 3 sentences\n</outline>\n\n<constraints>\n- Timings must add up to 45 minutes\n- Include one support for English learners\n</constraints>\n\n<output_format>\nFormat: markdown\nSections, in order: Objectives; Materials; Timeline; Differentiation; Assessment\n</output_format>\n\n<success_criteria>\nBefore you answer, check the result against each item:\n- Every timeline step has minutes\n- Uses only the listed materials\n</success_criteria>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+
+## coverage
+rendered 22 of 22 applicable (0 declared not applicable), rate 1
+dropped: none

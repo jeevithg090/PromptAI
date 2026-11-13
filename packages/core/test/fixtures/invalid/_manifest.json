@@ -1,0 +1,17 @@
+{
+  "missing-goal": "structural",
+  "blank-goal": "transform: Zod trims before min(1); JSON Schema cannot",
+  "facet-not-namespaced": "structural",
+  "unknown-top-level": "structural",
+  "bad-aspect-ratio": "structural",
+  "bad-mode": "structural",
+  "input-without-ref-or-content": "cross-field refine",
+  "duplicate-constraint-ids": "cross-field superRefine",
+  "section-ends-before-start": "cross-field superRefine",
+  "length-min-gt-max": "cross-field superRefine",
+  "nested-tool-params": "structural",
+  "wrong-ir-version": "structural",
+  "provenance-not-pointer": "structural",
+  "bad-constraint-kind": "structural",
+  "negative-duration": "structural"
+}

@@ -1,0 +1,26 @@
+# fixture: invoice-extraction  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for data
+warning param_unsupported /params/effort | Gemini Omni Flash video (Veo successor in the Gemini API) has no setting for "effort"; not sent
+info not_applicable /role | System instructions are not supported by Omni Flash.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /output | Length is the duration param.
+info not_applicable /examples | Not applicable.
+info not_applicable /assumptions | Shown in PromptAI only.
+
+## coverage
+rendered 2 of 4 applicable (26 declared not applicable), rate 0.5
+dropped: /inputs/0/content, /params/effort

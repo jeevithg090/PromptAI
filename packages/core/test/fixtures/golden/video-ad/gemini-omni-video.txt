@@ -1,0 +1,30 @@
+# fixture: video-ad  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Single continuous shot. A barista's hands pouring oat milk into a latte, forming a tulip pattern. Setting: A sunlit small coffee shop counter with plants. Camera: Slow push-in, macro close-up on the cup. Lighting: Warm golden hour light through the window. Mood: Cozy, inviting.
+
+[0-3s] Pour begins. Milk stream hits the espresso.
+[3-6s] Pattern forms. The tulip pattern blooms.
+[6-8s] Reveal. Cup slides toward the camera.
+
+Sound design: soft cafe chatter and an espresso machine hiss; light acoustic guitar. No dialogue. No text overlays. No logos.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Single continuous shot. A barista's hands pouring oat milk into a latte, forming a tulip pattern. Setting: A sunlit small coffee shop counter with plants. Camera: Slow push-in, macro close-up on the cup. Lighting: Warm golden hour light through the window. Mood: Cozy, inviting.\n\n[0-3s] Pour begins. Milk stream hits the espresso.\n[3-6s] Pattern forms. The tulip pattern blooms.\n[6-8s] Reveal. Cup slides toward the camera.\n\nSound design: soft cafe chatter and an espresso machine hiss; light acoustic guitar. No dialogue. No text overlays. No logos.",
+  "response_format": {
+    "type": "video",
+    "aspect_ratio": "9:16",
+    "duration": "8s",
+    "resolution": "1080p"
+  }
+}
+
+## issues
+info not_applicable /goal | The prompt describes the scene; the purpose stays in PromptAI.
+info not_applicable /audience | No audience channel.
+
+## coverage
+rendered 21 of 21 applicable (2 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,79 @@
+# fixture: invoice-extraction  target: generic  card: 2026-11-13.1  ok: true
+
+## field: prompt
+You are a meticulous bookkeeping assistant.
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+Invoice text (source data):
+"""
+ACME Supplies Ltd
+Invoice #A-1042  Date: 03/11/2026
+Bill to: Riverbend Cafe
+2 x Espresso grinder burr set @ 45.00
+Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+Due in 30 days
+"""
+
+Format: json
+Return only JSON that validates against this JSON Schema:
+{
+  "type": "object",
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "currency",
+    "total"
+  ],
+  "properties": {
+    "vendor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "currency": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
+
+Rules:
+- Use null for any field that is not present; never guess
+- Dates as ISO 8601 (YYYY-MM-DD)
+
+Examples:
+- Invoice 77 from Bolt Co, 1 Jan 2026, total $50 -> {"vendor":"Bolt Co","invoice_number":"77","invoice_date":"2026-01-01","currency":"USD","total":50} (currency inferred from the $ sign)
+
+Assumptions (say so first if one is wrong for the task):
+- Dates are day/month/year (UK vendor)
+
+## issues
+warning param_unsupported /params/effort | Any AI tool has no setting for "effort"; not sent
+
+## coverage
+rendered 29 of 30 applicable (0 declared not applicable), rate 0.967
+dropped: /params/effort

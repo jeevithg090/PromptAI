@@ -1,0 +1,21 @@
+# fixture: minimal  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+a cozy reading nook illustration
+
+## field: body
+## Goal
+A cozy reading nook illustration.
+
+## field: request
+{
+  "title": "a cozy reading nook illustration",
+  "body": "## Goal\nA cozy reading nook illustration."
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GitHub issue (REST) makes text/code/data, brief asks for image
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

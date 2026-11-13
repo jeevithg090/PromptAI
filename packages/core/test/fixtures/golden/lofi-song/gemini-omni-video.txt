@@ -1,0 +1,29 @@
+# fixture: lofi-song  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Rain on a library window late at night.
+
+Intro. (rain and vinyl crackle)
+Verse. Pages turning slow, the street lights hum Every drop a word I haven't found.
+Chorus. Stay a while, the rain will keep the time Stay a while, ooh.
+Outro. (piano fades with the rain)
+ No autotune. No heavy 808s. No rap verses.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Rain on a library window late at night.\n\nIntro. (rain and vinyl crackle)\nVerse. Pages turning slow, the street lights hum Every drop a word I haven't found.\nChorus. Stay a while, the rain will keep the time Stay a while, ooh.\nOutro. (piano fades with the rain)\n No autotune. No heavy 808s. No rap verses.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for audio
+info not_applicable /goal | The prompt describes the scene; the purpose stays in PromptAI.
+info not_applicable /output | Length is the duration param.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 13 of 22 applicable (3 declared not applicable), rate 0.591
+dropped: /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title

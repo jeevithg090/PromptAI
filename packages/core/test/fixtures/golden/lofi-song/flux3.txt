@@ -1,0 +1,22 @@
+# fixture: lofi-song  target: flux3  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Rain on a library window late at night.
+
+## field: request
+{
+  "prompt": "Rain on a library window late at night."
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | FLUX 3 Image (BFL API) makes image, brief asks for audio
+warning needs_llm_rewrite /avoid/0 | "autotune" must be rephrased positively for FLUX 3 Image (BFL API); no table entry, left out
+warning needs_llm_rewrite /avoid/1 | "heavy 808s" must be rephrased positively for FLUX 3 Image (BFL API); no table entry, left out
+warning needs_llm_rewrite /avoid/2 | "rap verses" must be rephrased positively for FLUX 3 Image (BFL API); no table entry, left out
+info not_applicable /goal | Image prompt: the subject carries the content.
+info not_applicable /output | Image output.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 1 of 22 applicable (3 declared not applicable), rate 0.045
+dropped: /sections/0/label, /sections/0/text, /sections/1/label, /sections/1/text, /sections/2/label, /sections/2/text, /sections/3/label, /sections/3/text, /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/1, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title, /avoid/0, /avoid/1, /avoid/2

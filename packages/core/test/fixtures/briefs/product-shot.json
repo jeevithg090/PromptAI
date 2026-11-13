@@ -1,0 +1,22 @@
+{
+  "ir_version": "0.1",
+  "id": "product-shot",
+  "intent": { "mode": "do", "task_family": "image.product_shot", "deliverable": { "kind": "image", "description": "hero image for an Etsy listing" } },
+  "goal": "Make a hero photo for my Etsy listing of a handmade speckled ceramic mug",
+  "subject": "a handmade speckled ceramic mug with a matte sage-green glaze",
+  "audience": "Etsy shoppers browsing on phones",
+  "facets": {
+    "visual.setting": "on a light oak table beside a folded linen napkin",
+    "visual.camera": ["close-up product shot", "35mm lens", "shallow depth of field"],
+    "visual.lighting": "soft morning window light from the left",
+    "visual.mood": "calm, homey",
+    "visual.medium": "photorealistic product photography"
+  },
+  "style": { "descriptors": ["clean", "minimal props", "warm neutral palette"] },
+  "constraints": [ { "id": "c1", "text": "The mug handle faces right", "kind": "must" } ],
+  "avoid": ["text", "watermark", "people", "harsh shadows"],
+  "success_criteria": ["Mug is the clear focal point", "Glaze texture is visible"],
+  "params": { "aspect_ratio": "4:5" },
+  "tool_params": { "midjourney": { "stylize": 250, "raw": true } },
+  "provenance": { "/params/aspect_ratio": { "source": "default" }, "/facets/visual.lighting": { "source": "inferred", "confidence": 0.6 } }
+}

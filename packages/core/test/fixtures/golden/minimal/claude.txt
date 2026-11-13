@@ -1,0 +1,39 @@
+# fixture: minimal  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator.
+
+## field: user
+<task>
+A cozy reading nook illustration.
+</task>
+
+## field: paste
+You are a careful, expert collaborator.
+
+<task>
+A cozy reading nook illustration.
+</task>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<task>\nA cozy reading nook illustration.\n</task>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Claude makes text/code/data, brief asks for image
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,23 @@
+# fixture: spreadsheet-formula  target: cursor  card: 2026-11-10.1  ok: true
+
+## field: agent_message
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+Deliverable: a formula plus a short explanation
+
+Environment: name Microsoft Excel 365; sheet layout column A invoice id, column D due date, column E paid (TRUE/FALSE)
+
+Constraints:
+- One formula for cell F2 that can be filled down
+
+Output: markdown (Formula; How it works, piece by piece; Try it yourself: one practice variation)
+
+Done when:
+- Explains each function in one plain sentence
+
+This is for an office manager who knows SUM and IF but not XLOOKUP or LET.
+
+## issues
+
+## coverage
+rendered 10 of 10 applicable (0 declared not applicable), rate 1
+dropped: none

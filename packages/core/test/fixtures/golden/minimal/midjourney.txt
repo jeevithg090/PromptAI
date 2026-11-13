@@ -1,0 +1,10 @@
+# fixture: minimal  target: midjourney  card: 2026-11-10.1  ok: true
+
+## field: prompt
+a cozy reading nook illustration
+
+## issues
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

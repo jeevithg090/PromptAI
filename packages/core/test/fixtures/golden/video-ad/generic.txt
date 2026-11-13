@@ -1,0 +1,37 @@
+# fixture: video-ad  target: generic  card: 2026-11-13.1  ok: true
+
+## field: prompt
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+
+Outline:
+1. Pour begins (0-3s): milk stream hits the espresso
+2. Pattern forms (3-6s): the tulip pattern blooms
+3. Reveal (6-8s): cup slides toward the camera
+
+Audience: local Gen-Z coffee drinkers
+
+Details:
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+
+Rules:
+- Leave out: dialogue, text overlays, logos
+
+Assumptions (say so first if one is wrong for the task):
+- resolution: 1080p (default)
+
+## issues
+warning param_unsupported /params/aspect_ratio | Any AI tool has no setting for "aspect_ratio"; not sent
+warning param_unsupported /params/duration_s | Any AI tool has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | Any AI tool has no setting for "resolution"; not sent
+
+## coverage
+rendered 22 of 23 applicable (0 declared not applicable), rate 0.957
+dropped: /params/aspect_ratio

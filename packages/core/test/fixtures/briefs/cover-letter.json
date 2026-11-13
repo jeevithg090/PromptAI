@@ -1,0 +1,23 @@
+{
+  "ir_version": "0.1",
+  "id": "cover-letter",
+  "intent": { "mode": "do", "task_family": "writing.cover_letter", "deliverable": { "kind": "text", "description": "a one-page cover letter" } },
+  "goal": "Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me",
+  "audience": "a hiring manager who skims for evidence of research skills",
+  "role": "an experienced career coach who has hired UX researchers",
+  "inputs": [
+    { "id": "resume", "kind": "text", "role": "source_data", "label": "My resume (summary)", "content": "ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies." },
+    { "id": "posting", "kind": "url", "role": "reference", "label": "Job posting", "ref": "https://example.com/jobs/ux-researcher" }
+  ],
+  "context": ["The company builds remote patient monitoring software", "I am applying cold, with no referral"],
+  "style": { "tone": ["confident", "warm", "plain-spoken"] },
+  "constraints": [
+    { "id": "len", "text": "Keep it under 350 words", "kind": "must", "verifier": { "type": "max_words", "value": 350 } },
+    { "id": "cliche", "text": "Do not use the phrases 'passionate about' or 'team player'", "kind": "must_not", "verifier": { "type": "not_contains", "value": "passionate about" } },
+    { "id": "metric", "text": "Mention one concrete result with a number", "kind": "must" }
+  ],
+  "output": { "format": "prose", "length": { "unit": "words", "max": 350 }, "structure": ["Opening hook", "Research evidence from nursing", "Why this company", "Close with a call to action"] },
+  "success_criteria": ["A skimming reader finds a research method and a result in the first two paragraphs", "No clichés"],
+  "assumptions": [ { "id": "a1", "text": "US English spelling", "why": "the job is US-based", "confirmed": false } ],
+  "params": { "effort": "medium" }
+}

@@ -1,0 +1,30 @@
+# fixture: lesson-plan  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+
+Hook. A question students can argue about.
+Mini-lesson. Inputs and outputs, with a diagram.
+Activity. Floating leaf-disk experiment in groups.
+Exit ticket. Explain it to a friend in 3 sentences.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.\n\nHook. A question students can argue about.\nMini-lesson. Inputs and outputs, with a diagram.\nActivity. Floating leaf-disk experiment in groups.\nExit ticket. Explain it to a friend in 3 sentences.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for text
+info not_applicable /audience | No audience channel.
+info not_applicable /context | Not applicable.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /output | Length is the duration param.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 9 of 9 applicable (13 declared not applicable), rate 1
+dropped: none

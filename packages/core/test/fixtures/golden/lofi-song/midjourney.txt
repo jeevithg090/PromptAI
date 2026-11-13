@@ -1,0 +1,14 @@
+# fixture: lofi-song  target: midjourney  card: 2026-11-10.1  ok: true
+
+## field: prompt
+rain on a library window late at night --no autotune, heavy 808s, rap verses
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Midjourney makes image, brief asks for audio
+info not_applicable /goal | Keyword prompt: Midjourney reads the visual subject, not the user's purpose.
+info not_applicable /output | Image output: format/length do not apply.
+info not_applicable /success_criteria | Used by PromptAI's verifier, not by Midjourney.
+
+## coverage
+rendered 5 of 22 applicable (3 declared not applicable), rate 0.227
+dropped: /sections/0/label, /sections/0/text, /sections/1/text, /sections/2/label, /sections/2/text, /sections/3/label, /sections/3/text, /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/1, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title
