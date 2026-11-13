@@ -331,7 +331,7 @@ export async function forge(req: ForgeRequestParsed, deps: ForgeDeps): Promise<F
   const byId = (id: string | null | undefined) => (id ? deps.cards.find((c) => c.id === id) : undefined);
   const hinted = byId(req.toolHint);
   const named = hinted ? undefined : byId(resolveTool(text, undefined, deps.cards));
-  const hosted = hinted ?? named ? undefined : byId(resolveTool('', req.hostApp, deps.cards));
+  const hosted = hinted || named ? undefined : byId(resolveTool('', req.hostApp, deps.cards));
   let predicted: Card | undefined;
   if (!hinted && !named && !hosted && deps.toolUsage?.length) {
     const known = new Set(deps.cards.filter((c) => c.id !== GENERIC_CARD_ID).map((c) => c.id));
