@@ -13,6 +13,20 @@ The blueprint and evidence also cite `spikes/…` and `current/…`. Those live 
 - **Size.** They hold 47 GB of prototypes, models and test audio.
 - **Licensing.** The macOS TTS clips must stay out of public repos under Apple's voice licence.
 
+## Progress (2026-11-13)
+
+- **Fix-now list (§18):** done and merged into `main` (PR #12). It isn't deployed: the repo has no GitHub Actions secrets (`DATABASE_URL`, AWS keys).
+- **S6 (idempotency):** done in `apps/server/test/s6-idempotency.test.ts`.
+  - 10,000 distinct interleavings; every event stored exactly once.
+  - Concurrent reconnect: 2 × 1,000 events, 0 drops, 0 duplicates.
+  - The negative control reproduces the old loss (250 of 2,000 events).
+- **Thin slice (week 4):** built ahead of schedule on branch `phase-0/rebuild`, on Electron (B1 changed 2026-11-13).
+  - `packages/contract`, `packages/core` (the forge pipeline, Brief IR, card renderer, cleanup and grounding), `catalog/`, `apps/server`, `apps/native-macos` (`pf-native`), `apps/app` (Astryx panel) and `apps/desktop` (Electron).
+  - All type checks and 315 tests pass.
+  - An Electron end-to-end test runs dictation → real server and core → Insert, with only `pf-native` faked.
+- **Not yet verified by a person:** a physical ⌃⌥Space hold, the microphone prompt, and ⌘V into a real app (steps in `apps/native-macos`).
+- **Waiting on the owner:** S2 hardware checks, S3 (vendor keys), S4 (gateway key), S5 (labelled ideas and a second rater), S7 (participants), S1's Safari/iOS pass, and an LLM provider key for `understand` and repair.
+
 ## Build plan: how to start
 
 The full plan is in BLUEPRINT §19. To start it once the blueprint is approved:
