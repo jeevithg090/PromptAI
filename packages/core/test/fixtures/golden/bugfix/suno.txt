@@ -1,0 +1,17 @@
+# fixture: bugfix  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+the paginate() helper in the orders API
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Suno (Custom mode) makes audio/music, brief asks for code
+warning param_unsupported /params/effort | Suno (Custom mode) has no setting for "effort"; not sent
+warning needs_llm /sections | /params/instrumental | No lyrics in the brief. Turn on Instrumental, or let the compile step (LLM) write lyrics.
+info not_applicable /goal | Style field wants sound descriptors, not the purpose.
+info not_applicable /constraints | No instruction channel; a compile step must fold rules into style or lyrics.
+info not_applicable /output | Length is chosen in the UI (v6: up to 8 minutes).
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 1 of 9 applicable (7 declared not applicable), rate 0.111
+dropped: /inputs/0/ref, /inputs/1/ref, /inputs/2/label, /inputs/2/content, /facets/code.language, /facets/code.runtime, /facets/code.test_runner, /params/effort

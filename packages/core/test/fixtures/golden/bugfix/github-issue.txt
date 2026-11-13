@@ -1,0 +1,46 @@
+# fixture: bugfix  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+the paginate() helper in the orders API
+
+## field: body
+## Goal
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+
+## Context
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+
+## References
+- `src/lib/paginate.ts` (edit target)
+- `src/lib/paginate.test.ts` (reference)
+- Failing test output (source data)
+  ```
+  expected pageCount 3, received 4 (total=30, pageSize=10)
+  ```
+
+## Constraints
+- Keep the public signature of paginate() unchanged
+- Do not add dependencies
+- (preferred) Smallest diff that fixes the bug
+
+## Expected output
+unified diff, then a 2-sentence explanation
+
+## Acceptance criteria
+- [ ] New regression test fails before the fix and passes after
+- [ ] All existing tests pass
+
+## field: request
+{
+  "title": "the paginate() helper in the orders API",
+  "body": "## Goal\nFix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.\n\n## Context\n- code language: TypeScript 5.9\n- code runtime: Node 24\n- code test runner: vitest\n\n## References\n- `src/lib/paginate.ts` (edit target)\n- `src/lib/paginate.test.ts` (reference)\n- Failing test output (source data)\n  ```\n  expected pageCount 3, received 4 (total=30, pageSize=10)\n  ```\n\n## Constraints\n- Keep the public signature of paginate() unchanged\n- Do not add dependencies\n- (preferred) Smallest diff that fixes the bug\n\n## Expected output\nunified diff, then a 2-sentence explanation\n\n## Acceptance criteria\n- [ ] New regression test fails before the fix and passes after\n- [ ] All existing tests pass"
+}
+
+## issues
+info not_applicable /params/effort | Not applicable to an issue.
+
+## coverage
+rendered 15 of 15 applicable (1 declared not applicable), rate 1
+dropped: none

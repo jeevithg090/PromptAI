@@ -1,0 +1,15 @@
+# fixture: minimal  target: flux3  card: 2026-11-10.1  ok: true
+
+## field: prompt
+A cozy reading nook illustration.
+
+## field: request
+{
+  "prompt": "A cozy reading nook illustration."
+}
+
+## issues
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

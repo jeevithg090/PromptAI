@@ -1,0 +1,32 @@
+# fixture: minimal  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant.
+
+# Instructions
+
+## field: input
+A cozy reading nook illustration.
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant.
+
+# Instructions
+
+# Task
+A cozy reading nook illustration.
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant.\n\n# Instructions",
+  "input": "A cozy reading nook illustration."
+}
+
+## issues
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

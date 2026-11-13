@@ -1,0 +1,21 @@
+{
+  "ir_version": "0.1",
+  "id": "bugfix",
+  "intent": { "mode": "do", "task_family": "code.bugfix", "deliverable": { "kind": "code", "description": "a minimal patch plus a regression test" } },
+  "goal": "Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size",
+  "subject": "the paginate() helper in the orders API",
+  "inputs": [
+    { "id": "paginate", "kind": "code", "role": "edit_target", "ref": "src/lib/paginate.ts" },
+    { "id": "test", "kind": "code", "role": "reference", "ref": "src/lib/paginate.test.ts" },
+    { "id": "error", "kind": "text", "role": "source_data", "label": "Failing test output", "content": "expected pageCount 3, received 4 (total=30, pageSize=10)" }
+  ],
+  "facets": { "code.language": "TypeScript 5.9", "code.runtime": "Node 24", "code.test_runner": "vitest" },
+  "constraints": [
+    { "id": "api", "text": "Keep the public signature of paginate() unchanged", "kind": "must" },
+    { "id": "deps", "text": "Do not add dependencies", "kind": "must_not" },
+    { "id": "small", "text": "Smallest diff that fixes the bug", "kind": "prefer" }
+  ],
+  "output": { "format": "unified diff, then a 2-sentence explanation" },
+  "success_criteria": ["New regression test fails before the fix and passes after", "All existing tests pass"],
+  "params": { "effort": "high" }
+}

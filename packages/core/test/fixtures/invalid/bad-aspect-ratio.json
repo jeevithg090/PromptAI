@@ -1,0 +1,14 @@
+{
+  "ir_version": "0.1",
+  "intent": {
+    "mode": "do",
+    "task_family": "image.illustration",
+    "deliverable": {
+      "kind": "image"
+    }
+  },
+  "goal": "a cozy reading nook illustration",
+  "params": {
+    "aspect_ratio": "16x9"
+  }
+}

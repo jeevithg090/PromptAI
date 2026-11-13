@@ -1,0 +1,96 @@
+# fixture: video-ad  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator. The work is for local Gen-Z coffee drinkers; write at their level.
+
+## field: user
+<task>
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+</task>
+
+<details>
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+</details>
+
+<outline>
+1. Pour begins (0-3s): milk stream hits the espresso
+2. Pattern forms (3-6s): the tulip pattern blooms
+3. Reveal (6-8s): cup slides toward the camera
+</outline>
+
+<constraints>
+- Leave out: dialogue, text overlays, logos
+</constraints>
+
+<assumptions>
+I have not confirmed these. If one is wrong for the task, say so before you start:
+- resolution: 1080p (default)
+</assumptions>
+
+## field: paste
+You are a careful, expert collaborator. The work is for local Gen-Z coffee drinkers; write at their level.
+
+<task>
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+</task>
+
+<details>
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+</details>
+
+<outline>
+1. Pour begins (0-3s): milk stream hits the espresso
+2. Pattern forms (3-6s): the tulip pattern blooms
+3. Reveal (6-8s): cup slides toward the camera
+</outline>
+
+<constraints>
+- Leave out: dialogue, text overlays, logos
+</constraints>
+
+<assumptions>
+I have not confirmed these. If one is wrong for the task, say so before you start:
+- resolution: 1080p (default)
+</assumptions>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator. The work is for local Gen-Z coffee drinkers; write at their level.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<task>\nAn 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.\nSubject: a barista's hands pouring oat milk into a latte, forming a tulip pattern\nDeliverable: an 8-second vertical clip for Instagram Reels\n</task>\n\n<details>\n- visual setting: a sunlit small coffee shop counter with plants\n- visual camera: slow push-in, macro close-up on the cup\n- visual lighting: warm golden hour light through the window\n- visual mood: cozy, inviting\n- visual shot: single continuous shot\n- audio ambience: soft cafe chatter and an espresso machine hiss\n- audio music: light acoustic guitar\n</details>\n\n<outline>\n1. Pour begins (0-3s): milk stream hits the espresso\n2. Pattern forms (3-6s): the tulip pattern blooms\n3. Reveal (6-8s): cup slides toward the camera\n</outline>\n\n<constraints>\n- Leave out: dialogue, text overlays, logos\n</constraints>\n\n<assumptions>\nI have not confirmed these. If one is wrong for the task, say so before you start:\n- resolution: 1080p (default)\n</assumptions>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Claude makes text/code/data, brief asks for video
+warning param_unsupported /params/duration_s | Claude has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | Claude has no setting for "resolution"; not sent
+info not_applicable /params/aspect_ratio | Text model: aspect ratio is not a Claude setting.
+
+## coverage
+rendered 22 of 22 applicable (1 declared not applicable), rate 1
+dropped: none

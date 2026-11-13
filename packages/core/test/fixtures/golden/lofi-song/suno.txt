@@ -1,0 +1,35 @@
+# fixture: lofi-song  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+lo-fi hip hop, mellow, nostalgic, dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass, breathy female vocals, mostly hummed, 78 BPM
+
+## field: lyrics
+[Intro]
+(rain and vinyl crackle)
+
+[Verse]
+Pages turning slow, the street lights hum
+Every drop a word I haven't found
+
+[Chorus]
+Stay a while, the rain will keep the time
+Stay a while, ooh
+
+[Outro]
+(piano fades with the rain)
+
+## field: exclude
+autotune, heavy 808s, rap verses
+
+## field: title
+Library Rain
+
+## issues
+info not_applicable /goal | Style field wants sound descriptors, not the purpose.
+info not_applicable /subject | The theme belongs in the lyrics; the style field is sound only (without lyrics, needs_llm fires).
+info not_applicable /output | Length is chosen in the UI (v6: up to 8 minutes).
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 21 of 21 applicable (4 declared not applicable), rate 1
+dropped: none

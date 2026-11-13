@@ -1,0 +1,60 @@
+# fixture: product-shot  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant. You are writing for Etsy shoppers browsing on phones.
+
+# Instructions
+* The mug handle faces right.
+* Leave out: text, watermark, people, harsh shadows.
+* Style: clean, minimal props, warm neutral palette.
+* Before finishing, verify: Mug is the clear focal point; Glaze texture is visible.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: aspect ratio: 4:5 (default); lighting: soft morning window light from the left (inferred).
+
+## field: input
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+Aspect ratio: 4:5
+
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant. You are writing for Etsy shoppers browsing on phones.
+
+# Instructions
+* The mug handle faces right.
+* Leave out: text, watermark, people, harsh shadows.
+* Style: clean, minimal props, warm neutral palette.
+* Before finishing, verify: Mug is the clear focal point; Glaze texture is visible.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: aspect ratio: 4:5 (default); lighting: soft morning window light from the left (inferred).
+
+# Task
+Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+Aspect ratio: 4:5
+
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant. You are writing for Etsy shoppers browsing on phones.\n\n# Instructions\n* The mug handle faces right.\n* Leave out: text, watermark, people, harsh shadows.\n* Style: clean, minimal props, warm neutral palette.\n* Before finishing, verify: Mug is the clear focal point; Glaze texture is visible.\n* These assumptions are unconfirmed; if one is wrong for the task, say so first: aspect ratio: 4:5 (default); lighting: soft morning window light from the left (inferred).",
+  "input": "Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.\nSubject: a handmade speckled ceramic mug with a matte sage-green glaze\nDeliverable: hero image for an Etsy listing\nAspect ratio: 4:5\n\n- visual setting: on a light oak table beside a folded linen napkin\n- visual camera: close-up product shot, 35mm lens, shallow depth of field\n- visual lighting: soft morning window light from the left\n- visual mood: calm, homey\n- visual medium: photorealistic product photography"
+}
+
+## issues
+
+## coverage
+rendered 21 of 21 applicable (0 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,20 @@
+# fixture: minimal  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+A cozy reading nook illustration.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "A cozy reading nook illustration.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for image
+
+## coverage
+rendered 1 of 1 applicable (0 declared not applicable), rate 1
+dropped: none

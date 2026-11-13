@@ -1,0 +1,36 @@
+# fixture: spreadsheet-formula  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+Show me a formula that flags overdue invoices and teach me how it works so I can write...
+
+## field: body
+## Goal
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+
+For: an office manager who knows SUM and IF but not XLOOKUP or LET
+
+## Context
+- app name: Microsoft Excel 365
+- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)
+
+## Constraints
+- One formula for cell F2 that can be filled down
+
+## Expected output
+markdown
+Sections: Formula; How it works, piece by piece; Try it yourself: one practice variation
+
+## Acceptance criteria
+- [ ] Explains each function in one plain sentence
+
+## field: request
+{
+  "title": "Show me a formula that flags overdue invoices and teach me how it works so I can write...",
+  "body": "## Goal\nShow me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.\n\nFor: an office manager who knows SUM and IF but not XLOOKUP or LET\n\n## Context\n- app name: Microsoft Excel 365\n- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)\n\n## Constraints\n- One formula for cell F2 that can be filled down\n\n## Expected output\nmarkdown\nSections: Formula; How it works, piece by piece; Try it yourself: one practice variation\n\n## Acceptance criteria\n- [ ] Explains each function in one plain sentence"
+}
+
+## issues
+
+## coverage
+rendered 10 of 10 applicable (0 declared not applicable), rate 1
+dropped: none

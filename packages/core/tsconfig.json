@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // tests read fixtures and the catalog from disk; src/ stays I/O-free (enforced by test/compose.validate.test.ts)
+    "types": ["node"]
+  },
+  "include": ["src", "test"]
+}

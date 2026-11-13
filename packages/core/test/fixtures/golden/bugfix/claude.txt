@@ -1,0 +1,114 @@
+# fixture: bugfix  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator.
+
+## field: user
+<documents>
+<document index="1">
+<source>Failing test output</source>
+<document_content>
+expected pageCount 3, received 4 (total=30, pageSize=10)
+</document_content>
+</document>
+</documents>
+
+<attachments>
+- src/lib/paginate.ts (edit target)
+- src/lib/paginate.test.ts (reference)
+</attachments>
+
+<task>
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Subject: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+</task>
+
+<details>
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+</details>
+
+<constraints>
+- Keep the public signature of paginate() unchanged
+- Do not add dependencies
+- Preferred, not required: Smallest diff that fixes the bug
+</constraints>
+
+<output_format>
+Format: unified diff, then a 2-sentence explanation
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+</success_criteria>
+
+## field: paste
+You are a careful, expert collaborator.
+
+<documents>
+<document index="1">
+<source>Failing test output</source>
+<document_content>
+expected pageCount 3, received 4 (total=30, pageSize=10)
+</document_content>
+</document>
+</documents>
+
+<attachments>
+- src/lib/paginate.ts (edit target)
+- src/lib/paginate.test.ts (reference)
+</attachments>
+
+<task>
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Subject: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+</task>
+
+<details>
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+</details>
+
+<constraints>
+- Keep the public signature of paginate() unchanged
+- Do not add dependencies
+- Preferred, not required: Smallest diff that fixes the bug
+</constraints>
+
+<output_format>
+Format: unified diff, then a 2-sentence explanation
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+</success_criteria>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<documents>\n<document index=\"1\">\n<source>Failing test output</source>\n<document_content>\nexpected pageCount 3, received 4 (total=30, pageSize=10)\n</document_content>\n</document>\n</documents>\n\n<attachments>\n- src/lib/paginate.ts (edit target)\n- src/lib/paginate.test.ts (reference)\n</attachments>\n\n<task>\nFix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.\nSubject: the paginate() helper in the orders API\nDeliverable: a minimal patch plus a regression test\n</task>\n\n<details>\n- code language: TypeScript 5.9\n- code runtime: Node 24\n- code test runner: vitest\n</details>\n\n<constraints>\n- Keep the public signature of paginate() unchanged\n- Do not add dependencies\n- Preferred, not required: Smallest diff that fixes the bug\n</constraints>\n\n<output_format>\nFormat: unified diff, then a 2-sentence explanation\n</output_format>\n\n<success_criteria>\nBefore you answer, check the result against each item:\n- New regression test fails before the fix and passes after\n- All existing tests pass\n</success_criteria>"
+    }
+  ],
+  "output_config": {
+    "effort": "high"
+  }
+}
+
+## issues
+
+## coverage
+rendered 16 of 16 applicable (0 declared not applicable), rate 1
+dropped: none

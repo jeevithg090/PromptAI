@@ -1,0 +1,28 @@
+# fixture: cover-letter  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for text
+warning param_unsupported /params/effort | Gemini Omni Flash video (Veo successor in the Gemini API) has no setting for "effort"; not sent
+info not_applicable /audience | No audience channel.
+info not_applicable /role | System instructions are not supported by Omni Flash.
+info not_applicable /context | Not applicable.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /output | Length is the duration param.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+info not_applicable /assumptions | Shown in PromptAI only.
+
+## coverage
+rendered 1 of 9 applicable (17 declared not applicable), rate 0.111
+dropped: /inputs/0/label, /inputs/0/content, /inputs/1/label, /inputs/1/ref, /style/tone/0, /style/tone/1, /style/tone/2, /params/effort

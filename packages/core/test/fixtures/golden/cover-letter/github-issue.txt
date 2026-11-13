@@ -1,0 +1,50 @@
+# fixture: cover-letter  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 y...
+
+## field: body
+## Goal
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+
+For: a hiring manager who skims for evidence of research skills
+
+## Context
+- The company builds remote patient monitoring software
+- I am applying cold, with no referral
+
+## References
+- My resume (summary) (source data)
+  ```
+  ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.
+  ```
+- `https://example.com/jobs/ux-researcher` Job posting (reference)
+
+## Constraints
+- Keep it under 350 words
+- Do not use the phrases 'passionate about' or 'team player'
+- Mention one concrete result with a number
+
+## Expected output
+prose
+Sections: Opening hook; Research evidence from nursing; Why this company; Close with a call to action
+
+## Acceptance criteria
+- [ ] A skimming reader finds a research method and a result in the first two paragraphs
+- [ ] No clichés
+
+## field: request
+{
+  "title": "Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 y...",
+  "body": "## Goal\nWrite a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.\n\nFor: a hiring manager who skims for evidence of research skills\n\n## Context\n- The company builds remote patient monitoring software\n- I am applying cold, with no referral\n\n## References\n- My resume (summary) (source data)\n  ```\n  ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.\n  ```\n- `https://example.com/jobs/ux-researcher` Job posting (reference)\n\n## Constraints\n- Keep it under 350 words\n- Do not use the phrases 'passionate about' or 'team player'\n- Mention one concrete result with a number\n\n## Expected output\nprose\nSections: Opening hook; Research evidence from nursing; Why this company; Close with a call to action\n\n## Acceptance criteria\n- [ ] A skimming reader finds a research method and a result in the first two paragraphs\n- [ ] No clichés"
+}
+
+## issues
+info not_applicable /role | An issue is written by the user, not a persona.
+info not_applicable /style | Issues use the repo's plain style.
+info not_applicable /assumptions | Kept in PromptAI; an issue states facts.
+info not_applicable /params/effort | Not applicable to an issue.
+
+## coverage
+rendered 19 of 19 applicable (7 declared not applicable), rate 1
+dropped: none

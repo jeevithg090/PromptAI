@@ -1,0 +1,23 @@
+# fixture: video-ad  target: flux3  card: 2026-11-10.1  ok: false
+
+## field: prompt
+A barista's hands pouring oat milk into a latte, forming a tulip pattern. A sunlit small coffee shop counter with plants. Slow push-in, macro close-up on the cup. Warm golden hour light through the window. Cozy, inviting. Unbranded surfaces.
+
+## field: request
+{
+  "prompt": "A barista's hands pouring oat milk into a latte, forming a tulip pattern. A sunlit small coffee shop counter with plants. Slow push-in, macro close-up on the cup. Warm golden hour light through the window. Cozy, inviting. Unbranded surfaces.",
+  "aspect_ratio": "9:16"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | FLUX 3 Image (BFL API) makes image, brief asks for video
+error param_invalid /params/resolution | resolution="1080p" not in [768sq, 1k, 1.5k, 2k, 4k]; dropped
+warning param_unsupported /params/duration_s | FLUX 3 Image (BFL API) has no setting for "duration_s"; not sent
+warning needs_llm_rewrite /avoid/0 | "dialogue" must be rephrased positively for FLUX 3 Image (BFL API); no table entry, left out
+warning needs_llm_rewrite /avoid/1 | "text overlays" must be rephrased positively for FLUX 3 Image (BFL API); no table entry, left out
+info not_applicable /goal | Image prompt: the subject carries the content.
+info not_applicable /audience | Image models have no notion of audience.
+
+## coverage
+rendered 9 of 21 applicable (2 declared not applicable), rate 0.429
+dropped: /sections/0/label, /sections/0/text, /sections/1/label, /sections/1/text, /sections/2/label, /sections/2/text, /facets/visual.shot, /facets/audio.ambience, /facets/audio.music, /avoid/0, /avoid/1, /params/duration_s

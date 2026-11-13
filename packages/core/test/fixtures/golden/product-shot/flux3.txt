@@ -1,0 +1,20 @@
+# fixture: product-shot  target: flux3  card: 2026-11-10.1  ok: true
+
+## field: prompt
+A handmade speckled ceramic mug with a matte sage-green glaze. On a light oak table beside a folded linen napkin. Close-up product shot, 35mm lens, shallow depth of field. Soft morning window light from the left. Calm, homey. Photorealistic product photography. Clean, minimal props, warm neutral palette. Clean, unmarked surfaces, a clean, unbranded image, an empty, deserted scene, soft, diffused shadows.
+
+## field: request
+{
+  "prompt": "A handmade speckled ceramic mug with a matte sage-green glaze. On a light oak table beside a folded linen napkin. Close-up product shot, 35mm lens, shallow depth of field. Soft morning window light from the left. Calm, homey. Photorealistic product photography. Clean, minimal props, warm neutral palette. Clean, unmarked surfaces, a clean, unbranded image, an empty, deserted scene, soft, diffused shadows.",
+  "aspect_ratio": "4:5"
+}
+
+## issues
+info not_applicable /goal | Image prompt: the subject carries the content.
+info not_applicable /audience | Image models have no notion of audience.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into description.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 16 of 16 applicable (5 declared not applicable), rate 1
+dropped: none

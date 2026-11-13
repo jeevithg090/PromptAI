@@ -1,0 +1,90 @@
+# fixture: invoice-extraction  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping...
+
+## field: body
+## Goal
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+## References
+- Invoice text (source data)
+  ```
+  ACME Supplies Ltd
+  Invoice #A-1042  Date: 03/11/2026
+  Bill to: Riverbend Cafe
+  2 x Espresso grinder burr set @ 45.00
+  Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+  Due in 30 days
+  ```
+
+## Constraints
+- Use null for any field that is not present; never guess
+- Dates as ISO 8601 (YYYY-MM-DD)
+
+## Expected output
+json
+```json
+{
+  "type": "object",
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "currency",
+    "total"
+  ],
+  "properties": {
+    "vendor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "currency": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
+```
+
+## Examples
+- `Invoice 77 from Bolt Co, 1 Jan 2026, total $50` -> `{"vendor":"Bolt Co","invoice_number":"77","invoice_date":"2026-01-01","currency":"USD","total":50}` (currency inferred from the $ sign)
+
+## field: request
+{
+  "title": "Extract invoice fields from pasted invoice text so I can load them into my bookkeeping...",
+  "body": "## Goal\nExtract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.\n\n## References\n- Invoice text (source data)\n  ```\n  ACME Supplies Ltd\n  Invoice #A-1042  Date: 03/11/2026\n  Bill to: Riverbend Cafe\n  2 x Espresso grinder burr set @ 45.00\n  Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00\n  Due in 30 days\n  ```\n\n## Constraints\n- Use null for any field that is not present; never guess\n- Dates as ISO 8601 (YYYY-MM-DD)\n\n## Expected output\njson\n```json\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"vendor\",\n    \"invoice_number\",\n    \"invoice_date\",\n    \"currency\",\n    \"total\"\n  ],\n  \"properties\": {\n    \"vendor\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"invoice_number\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"invoice_date\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"format\": \"date\"\n    },\n    \"currency\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"total\": {\n      \"type\": [\n        \"number\",\n        \"null\"\n      ]\n    }\n  },\n  \"additionalProperties\": false\n}\n```\n\n## Examples\n- `Invoice 77 from Bolt Co, 1 Jan 2026, total $50` -> `{\"vendor\":\"Bolt Co\",\"invoice_number\":\"77\",\"invoice_date\":\"2026-01-01\",\"currency\":\"USD\",\"total\":50}` (currency inferred from the $ sign)"
+}
+
+## issues
+info not_applicable /role | An issue is written by the user, not a persona.
+info not_applicable /assumptions | Kept in PromptAI; an issue states facts.
+info not_applicable /params/effort | Not applicable to an issue.
+
+## coverage
+rendered 26 of 26 applicable (4 declared not applicable), rate 1
+dropped: none

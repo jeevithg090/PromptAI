@@ -1,0 +1,24 @@
+# fixture: spreadsheet-formula  target: gemini-omni-video  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for text
+info not_applicable /audience | No audience channel.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /output | Length is the duration param.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 2 of 4 applicable (6 declared not applicable), rate 0.5
+dropped: /facets/app.name, /facets/app.sheet_layout

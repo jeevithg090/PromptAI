@@ -1,0 +1,167 @@
+# fixture: invoice-extraction  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are a meticulous bookkeeping assistant.
+
+# Instructions
+* Use null for any field that is not present; never guess.
+* Dates as ISO 8601 (YYYY-MM-DD)
+* Output format: json.
+* Return only JSON matching the schema in <output_schema>.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: Dates are day/month/year (UK vendor).
+
+# Examples
+<example_input>Invoice 77 from Bolt Co, 1 Jan 2026, total $50</example_input>
+<example_output>{"vendor":"Bolt Co","invoice_number":"77","invoice_date":"2026-01-01","currency":"USD","total":50}</example_output>
+<example_note>currency inferred from the $ sign</example_note>
+
+## field: input
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+<text id="inv" role="source_data" label="Invoice text">
+ACME Supplies Ltd
+Invoice #A-1042  Date: 03/11/2026
+Bill to: Riverbend Cafe
+2 x Espresso grinder burr set @ 45.00
+Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+Due in 30 days
+</text>
+
+<output_schema>
+{
+  "type": "object",
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "currency",
+    "total"
+  ],
+  "properties": {
+    "vendor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "currency": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
+</output_schema>
+
+## field: chatgpt_paste
+# Identity
+You are a meticulous bookkeeping assistant.
+
+# Instructions
+* Use null for any field that is not present; never guess.
+* Dates as ISO 8601 (YYYY-MM-DD)
+* Output format: json.
+* Return only JSON matching the schema in <output_schema>.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: Dates are day/month/year (UK vendor).
+
+# Examples
+<example_input>Invoice 77 from Bolt Co, 1 Jan 2026, total $50</example_input>
+<example_output>{"vendor":"Bolt Co","invoice_number":"77","invoice_date":"2026-01-01","currency":"USD","total":50}</example_output>
+<example_note>currency inferred from the $ sign</example_note>
+
+# Task
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+<text id="inv" role="source_data" label="Invoice text">
+ACME Supplies Ltd
+Invoice #A-1042  Date: 03/11/2026
+Bill to: Riverbend Cafe
+2 x Espresso grinder burr set @ 45.00
+Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+Due in 30 days
+</text>
+
+<output_schema>
+{
+  "type": "object",
+  "required": [
+    "vendor",
+    "invoice_number",
+    "invoice_date",
+    "currency",
+    "total"
+  ],
+  "properties": {
+    "vendor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_number": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "invoice_date": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    },
+    "currency": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "total": {
+      "type": [
+        "number",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": false
+}
+</output_schema>
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are a meticulous bookkeeping assistant.\n\n# Instructions\n* Use null for any field that is not present; never guess.\n* Dates as ISO 8601 (YYYY-MM-DD)\n* Output format: json.\n* Return only JSON matching the schema in <output_schema>.\n* These assumptions are unconfirmed; if one is wrong for the task, say so first: Dates are day/month/year (UK vendor).\n\n# Examples\n<example_input>Invoice 77 from Bolt Co, 1 Jan 2026, total $50</example_input>\n<example_output>{\"vendor\":\"Bolt Co\",\"invoice_number\":\"77\",\"invoice_date\":\"2026-01-01\",\"currency\":\"USD\",\"total\":50}</example_output>\n<example_note>currency inferred from the $ sign</example_note>",
+  "input": "Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.\n\n<text id=\"inv\" role=\"source_data\" label=\"Invoice text\">\nACME Supplies Ltd\nInvoice #A-1042  Date: 03/11/2026\nBill to: Riverbend Cafe\n2 x Espresso grinder burr set @ 45.00\nSubtotal 90.00  VAT 20% 18.00  Total GBP 108.00\nDue in 30 days\n</text>\n\n<output_schema>\n{\n  \"type\": \"object\",\n  \"required\": [\n    \"vendor\",\n    \"invoice_number\",\n    \"invoice_date\",\n    \"currency\",\n    \"total\"\n  ],\n  \"properties\": {\n    \"vendor\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"invoice_number\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"invoice_date\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ],\n      \"format\": \"date\"\n    },\n    \"currency\": {\n      \"type\": [\n        \"string\",\n        \"null\"\n      ]\n    },\n    \"total\": {\n      \"type\": [\n        \"number\",\n        \"null\"\n      ]\n    }\n  },\n  \"additionalProperties\": false\n}\n</output_schema>",
+  "reasoning": {
+    "effort": "low"
+  }
+}
+
+## issues
+
+## coverage
+rendered 30 of 30 applicable (0 declared not applicable), rate 1
+dropped: none

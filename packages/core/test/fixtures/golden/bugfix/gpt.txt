@@ -1,0 +1,73 @@
+# fixture: bugfix  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant.
+
+# Instructions
+* Keep the public signature of paginate() unchanged.
+* Do not add dependencies.
+* Preferred, not required: Smallest diff that fixes the bug.
+* Output format: unified diff, then a 2-sentence explanation.
+* Before finishing, verify: New regression test fails before the fix and passes after; All existing tests pass.
+
+## field: input
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Subject: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+
+<code id="paginate" role="edit_target" ref="src/lib/paginate.ts" />
+
+<code id="test" role="reference" ref="src/lib/paginate.test.ts" />
+
+<text id="error" role="source_data" label="Failing test output">
+expected pageCount 3, received 4 (total=30, pageSize=10)
+</text>
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant.
+
+# Instructions
+* Keep the public signature of paginate() unchanged.
+* Do not add dependencies.
+* Preferred, not required: Smallest diff that fixes the bug.
+* Output format: unified diff, then a 2-sentence explanation.
+* Before finishing, verify: New regression test fails before the fix and passes after; All existing tests pass.
+
+# Task
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Subject: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+
+<code id="paginate" role="edit_target" ref="src/lib/paginate.ts" />
+
+<code id="test" role="reference" ref="src/lib/paginate.test.ts" />
+
+<text id="error" role="source_data" label="Failing test output">
+expected pageCount 3, received 4 (total=30, pageSize=10)
+</text>
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant.\n\n# Instructions\n* Keep the public signature of paginate() unchanged.\n* Do not add dependencies.\n* Preferred, not required: Smallest diff that fixes the bug.\n* Output format: unified diff, then a 2-sentence explanation.\n* Before finishing, verify: New regression test fails before the fix and passes after; All existing tests pass.",
+  "input": "Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.\nSubject: the paginate() helper in the orders API\nDeliverable: a minimal patch plus a regression test\n\n- code language: TypeScript 5.9\n- code runtime: Node 24\n- code test runner: vitest\n\n<code id=\"paginate\" role=\"edit_target\" ref=\"src/lib/paginate.ts\" />\n\n<code id=\"test\" role=\"reference\" ref=\"src/lib/paginate.test.ts\" />\n\n<text id=\"error\" role=\"source_data\" label=\"Failing test output\">\nexpected pageCount 3, received 4 (total=30, pageSize=10)\n</text>",
+  "reasoning": {
+    "effort": "high"
+  }
+}
+
+## issues
+
+## coverage
+rendered 16 of 16 applicable (0 declared not applicable), rate 1
+dropped: none

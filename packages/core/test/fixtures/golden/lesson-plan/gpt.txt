@@ -1,0 +1,66 @@
+# fixture: lesson-plan  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant. You are writing for a 7th-grade science teacher (me) who will teach from the plan.
+
+# Instructions
+* Timings must add up to 45 minutes.
+* Include one support for English learners.
+* Output format: markdown.
+* Use these sections, in order: Objectives; Materials; Timeline; Differentiation; Assessment.
+* Before finishing, verify: Every timeline step has minutes; Uses only the listed materials.
+
+## field: input
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Deliverable: a 45-minute lesson plan with a hands-on activity
+
+Outline:
+1. Hook: a question students can argue about
+2. Mini-lesson: inputs and outputs, with a diagram
+3. Activity: floating leaf-disk experiment in groups
+4. Exit ticket: explain it to a friend in 3 sentences
+
+<context>
+- 30 students, mixed reading levels, 4 English learners
+- We have spinach leaves, baking soda, syringes and cups, but no microscopes
+</context>
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant. You are writing for a 7th-grade science teacher (me) who will teach from the plan.
+
+# Instructions
+* Timings must add up to 45 minutes.
+* Include one support for English learners.
+* Output format: markdown.
+* Use these sections, in order: Objectives; Materials; Timeline; Differentiation; Assessment.
+* Before finishing, verify: Every timeline step has minutes; Uses only the listed materials.
+
+# Task
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Deliverable: a 45-minute lesson plan with a hands-on activity
+
+Outline:
+1. Hook: a question students can argue about
+2. Mini-lesson: inputs and outputs, with a diagram
+3. Activity: floating leaf-disk experiment in groups
+4. Exit ticket: explain it to a friend in 3 sentences
+
+<context>
+- 30 students, mixed reading levels, 4 English learners
+- We have spinach leaves, baking soda, syringes and cups, but no microscopes
+</context>
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant. You are writing for a 7th-grade science teacher (me) who will teach from the plan.\n\n# Instructions\n* Timings must add up to 45 minutes.\n* Include one support for English learners.\n* Output format: markdown.\n* Use these sections, in order: Objectives; Materials; Timeline; Differentiation; Assessment.\n* Before finishing, verify: Every timeline step has minutes; Uses only the listed materials.",
+  "input": "Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.\nDeliverable: a 45-minute lesson plan with a hands-on activity\n\nOutline:\n1. Hook: a question students can argue about\n2. Mini-lesson: inputs and outputs, with a diagram\n3. Activity: floating leaf-disk experiment in groups\n4. Exit ticket: explain it to a friend in 3 sentences\n\n<context>\n- 30 students, mixed reading levels, 4 English learners\n- We have spinach leaves, baking soda, syringes and cups, but no microscopes\n</context>"
+}
+
+## issues
+
+## coverage
+rendered 22 of 22 applicable (0 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,25 @@
+# fixture: product-shot  target: gemini-omni-video  card: 2026-11-10.1  ok: false
+
+## field: prompt
+A handmade speckled ceramic mug with a matte sage-green glaze. Setting: On a light oak table beside a folded linen napkin. Camera: Close-up product shot, 35mm lens, shallow depth of field. Lighting: Soft morning window light from the left. Mood: Calm, homey. Style: Clean, minimal props, warm neutral palette. No text. No watermark. No people. No harsh shadows.
+
+## field: request
+{
+  "model": "gemini-omni-1.2-flash",
+  "input": "A handmade speckled ceramic mug with a matte sage-green glaze. Setting: On a light oak table beside a folded linen napkin. Camera: Close-up product shot, 35mm lens, shallow depth of field. Lighting: Soft morning window light from the left. Mood: Calm, homey. Style: Clean, minimal props, warm neutral palette. No text. No watermark. No people. No harsh shadows.",
+  "response_format": {
+    "type": "video"
+  }
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini Omni Flash video (Veo successor in the Gemini API) makes video, brief asks for image
+error param_invalid /params/aspect_ratio | aspect_ratio="4:5" not in [16:9, 9:16]; dropped
+info not_applicable /goal | The prompt describes the scene; the purpose stays in PromptAI.
+info not_applicable /audience | No audience channel.
+info not_applicable /constraints | No instruction channel beyond the scene prompt; a compile step must fold rules into it.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 15 of 16 applicable (5 declared not applicable), rate 0.938
+dropped: /facets/visual.medium

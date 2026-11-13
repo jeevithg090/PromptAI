@@ -1,0 +1,20 @@
+# fixture: product-shot  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+clean, minimal props, warm neutral palette, a handmade speckled ceramic mug with a matte sage-green glaze
+
+## field: exclude
+text, watermark, people, harsh shadows
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Suno (Custom mode) makes audio/music, brief asks for image
+warning param_unsupported /params/aspect_ratio | Suno (Custom mode) has no setting for "aspect_ratio"; not sent
+warning needs_llm /sections | /params/instrumental | No lyrics in the brief. Turn on Instrumental, or let the compile step (LLM) write lyrics.
+info not_applicable /goal | Style field wants sound descriptors, not the purpose.
+info not_applicable /audience | No audience channel.
+info not_applicable /constraints | No instruction channel; a compile step must fold rules into style or lyrics.
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 8 of 16 applicable (5 declared not applicable), rate 0.5
+dropped: /facets/visual.setting, /facets/visual.camera/0, /facets/visual.camera/1, /facets/visual.camera/2, /facets/visual.lighting, /facets/visual.mood, /facets/visual.medium, /params/aspect_ratio

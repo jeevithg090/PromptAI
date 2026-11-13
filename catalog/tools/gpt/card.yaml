@@ -1,0 +1,175 @@
+card_format: 1
+id: gpt
+display_name: GPT (OpenAI Responses API / ChatGPT)
+vendor: OpenAI
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://developers.openai.com/api/docs/guides/prompt-engineering
+  - https://developers.openai.com/api/docs/guides/text
+  - https://developers.openai.com/api/docs/guides/prompt-guidance
+model:
+  id: gpt-6.1-sol
+  note: "OpenAI's GPT-6 guide (2026-11-10) lists gpt-6-astra, gpt-6.1-sol (balanced), gpt-6.1-terra, gpt-6-luna. Sol does not support effort 'none'."
+surface: mixed          # ChatGPT paste text, plus a Responses API body
+accepts: [text, code, data, image]
+family: text.chat
+aliases: [chatgpt, chat gpt, openai, com.openai.chat]
+insert: chatgpt_paste
+
+slots:
+  - id: audience
+    label: Audience
+    impact: 2
+    to: audience
+    default: a general audience
+    options: [a general audience, beginners, experts, children, my team]
+  - id: tone
+    label: Tone
+    impact: 1
+    to: style.tone
+    default: clear and direct
+    options: [professional, friendly, encouraging, concise, playful, academic]
+  - id: format
+    label: Format
+    impact: 1
+    to: output.format
+    default: markdown
+    options: [markdown, plain prose, bullet list, table, json, code]
+
+params:
+  aspect_ratio:
+    type: string
+    pattern: '^\d+:\d+$'
+    note: "Stated in the message for ChatGPT image requests; there is no request field for it here."
+  effort:
+    type: string
+    enum: [low, medium, high]
+    note: "reasoning.effort in the Responses API; when effort is set, do not send temperature/top_p."
+
+negation:
+  strategy: inline
+
+ignores: {}
+
+fields:
+  - name: instructions
+    type: text
+    required: true
+    description: "Responses API `instructions` (developer authority): Identity / Instructions / Examples in Markdown, per OpenAI's message-formatting guidance."
+    template: |
+      # Identity
+      {% if brief.role %}You are {{ brief.role }}.{% else %}You are an expert assistant.{% endif %}
+      {%- if brief.audience %} You are writing for {{ brief.audience }}.{% endif %}
+      {%- if brief.style.tone %} Tone: {{ brief.style.tone | join: ", " }}.{% endif %}
+
+      # Instructions
+      {%- for c in brief.constraints %}
+      * {% if c.kind == "prefer" %}Preferred, not required: {% endif %}{{ c.text | sentence }}
+      {%- endfor %}
+      {%- if neg.items %}
+      * Leave out: {{ neg.items | join: ", " }}.
+      {%- endif %}
+      {%- if brief.style.descriptors %}
+      * Style: {{ brief.style.descriptors | join: ", " }}.
+      {%- endif %}
+      {%- if brief.output.format %}
+      * Output format: {{ brief.output.format }}.
+      {%- endif %}
+      {%- if brief.output.length %}
+      * Length: {% if brief.output.length.target %}about {{ brief.output.length.target }} {% endif %}{% if brief.output.length.min %}at least {{ brief.output.length.min }} {% endif %}{% if brief.output.length.max %}at most {{ brief.output.length.max }} {% endif %}{{ brief.output.length.unit }}.
+      {%- endif %}
+      {%- if brief.output.structure %}
+      * Use these sections, in order: {{ brief.output.structure | join: "; " }}.
+      {%- endif %}
+      {%- if brief.output.language %}
+      * Write in {{ brief.output.language }}.
+      {%- endif %}
+      {%- if brief.output.schema %}
+      * Return only JSON matching the schema in <output_schema>.
+      {%- endif %}
+      {%- if brief.success_criteria %}
+      * Before finishing, verify: {{ brief.success_criteria | join: "; " }}.
+      {%- endif %}
+      {%- if assumed %}
+      * These assumptions are unconfirmed; if one is wrong for the task, say so first: {{ assumed | join: "; " }}.
+      {%- endif %}
+      {%- if brief.examples %}
+
+      # Examples
+      {%- for e in brief.examples %}
+      {% if e.input %}<example_input>{{ e.input }}</example_input>
+      {% endif %}<example_output>{{ e.output }}</example_output>{% if e.note %}
+      <example_note>{{ e.note }}</example_note>{% endif %}
+      {%- endfor %}
+      {%- endif %}
+
+  - name: input
+    type: text
+    required: true
+    description: "Responses API `input` (user message): the task plus data, data wrapped in XML tags."
+    template: |
+      {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Subject: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.intent.deliverable.description %}
+      Deliverable: {{ brief.intent.deliverable.description }}
+      {%- endif %}
+      {%- if p.aspect_ratio %}
+      Aspect ratio: {{ p.aspect_ratio }}
+      {%- endif %}
+      {%- if brief.facets %}
+      {% for ns in brief.facets %}{% for kv in ns[1] %}
+      - {{ ns[0] }} {{ kv[0] | replace: "_", " " }}: {{ kv[1] | join: ", " }}
+      {%- endfor %}{% endfor %}
+      {%- endif %}
+      {%- if brief.sections %}
+
+      Outline:
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. {{ s.label }}{% if s.start_s != nil %} ({{ s.start_s }}-{{ s.end_s }}s){% endif %}: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.style.references %}
+
+      References: {{ brief.style.references | join: "; " }}
+      {%- endif %}
+      {%- if brief.context %}
+
+      <context>
+      {{ brief.context | bullets }}
+      </context>
+      {%- endif %}
+      {%- for d in brief.inputs %}
+
+      <{{ d.kind }} id="{{ d.id }}" role="{{ d.role }}"{% if d.ref %} ref="{{ d.ref | escape }}"{% endif %}{% if d.label %} label="{{ d.label | escape }}"{% endif %}{% if d.content %}>
+      {{ d.content }}
+      </{{ d.kind }}>{% else %} />{% endif %}
+      {%- endfor %}
+      {%- if brief.output.schema %}
+
+      <output_schema>
+      {{ brief.output.schema | json: 2 }}
+      </output_schema>
+      {%- endif %}
+
+  - name: chatgpt_paste
+    type: text
+    description: "Single message for the ChatGPT app, which has no separate developer field."
+    template: |
+      {{ out.instructions }}
+
+      # Task
+      {{ out.input }}
+
+  - name: api_request
+    type: json
+    whitespace: preserve
+    description: "POST /v1/responses body."
+    body:
+      model: "{{ card.model }}"
+      instructions: "=out.instructions"
+      input: "=out.input"
+      reasoning:
+        effort: "=p.effort"

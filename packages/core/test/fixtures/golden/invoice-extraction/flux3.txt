@@ -1,0 +1,22 @@
+# fixture: invoice-extraction  target: flux3  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+## field: request
+{
+  "prompt": "Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet."
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | FLUX 3 Image (BFL API) makes image, brief asks for data
+warning param_unsupported /params/effort | FLUX 3 Image (BFL API) has no setting for "effort"; not sent
+info not_applicable /role | No persona channel.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into description.
+info not_applicable /output | Image output.
+info not_applicable /examples | Not applicable.
+info not_applicable /assumptions | Shown in PromptAI only.
+
+## coverage
+rendered 2 of 4 applicable (26 declared not applicable), rate 0.5
+dropped: /inputs/0/content, /params/effort

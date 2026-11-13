@@ -1,0 +1,43 @@
+# fixture: video-ad  target: github-issue  card: 2026-11-10.1  ok: true
+
+## field: title
+a barista's hands pouring oat milk into a latte, forming a tulip pattern
+
+## field: body
+## Goal
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+
+For: local Gen-Z coffee drinkers
+
+## Context
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+
+## Plan
+1. **Pour begins**: milk stream hits the espresso
+2. **Pattern forms**: the tulip pattern blooms
+3. **Reveal**: cup slides toward the camera
+
+## Constraints
+- Out of scope: dialogue, text overlays, logos
+
+## field: request
+{
+  "title": "a barista's hands pouring oat milk into a latte, forming a tulip pattern",
+  "body": "## Goal\nAn 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.\n\nFor: local Gen-Z coffee drinkers\n\n## Context\n- visual setting: a sunlit small coffee shop counter with plants\n- visual camera: slow push-in, macro close-up on the cup\n- visual lighting: warm golden hour light through the window\n- visual mood: cozy, inviting\n- visual shot: single continuous shot\n- audio ambience: soft cafe chatter and an espresso machine hiss\n- audio music: light acoustic guitar\n\n## Plan\n1. **Pour begins**: milk stream hits the espresso\n2. **Pattern forms**: the tulip pattern blooms\n3. **Reveal**: cup slides toward the camera\n\n## Constraints\n- Out of scope: dialogue, text overlays, logos"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GitHub issue (REST) makes text/code/data, brief asks for video
+warning param_unsupported /params/duration_s | GitHub issue (REST) has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | GitHub issue (REST) has no setting for "resolution"; not sent
+info not_applicable /params/aspect_ratio | Not applicable.
+
+## coverage
+rendered 21 of 22 applicable (1 declared not applicable), rate 0.955
+dropped: /params/resolution

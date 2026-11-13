@@ -1,0 +1,16 @@
+# fixture: spreadsheet-formula  target: suno  card: 2026-11-10.1  ok: true
+
+## field: style
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Suno (Custom mode) makes audio/music, brief asks for text
+warning needs_llm /sections | /params/instrumental | No lyrics in the brief. Turn on Instrumental, or let the compile step (LLM) write lyrics.
+info not_applicable /audience | No audience channel.
+info not_applicable /constraints | No instruction channel; a compile step must fold rules into style or lyrics.
+info not_applicable /output | Length is chosen in the UI (v6: up to 8 minutes).
+info not_applicable /success_criteria | Used by PromptAI's verifier only.
+
+## coverage
+rendered 2 of 4 applicable (6 declared not applicable), rate 0.5
+dropped: /facets/app.name, /facets/app.sheet_layout

@@ -1,0 +1,78 @@
+# fixture: spreadsheet-formula  target: claude  card: 2026-11-10.1  ok: true
+
+## field: system
+You are a careful, expert collaborator. The work is for an office manager who knows SUM and IF but not XLOOKUP or LET; write at their level.
+
+## field: user
+<task>
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+Deliverable: a formula plus a short explanation
+</task>
+
+<details>
+- app name: Microsoft Excel 365
+- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)
+</details>
+
+<constraints>
+- One formula for cell F2 that can be filled down
+</constraints>
+
+<output_format>
+Format: markdown
+Sections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Explains each function in one plain sentence
+</success_criteria>
+
+## field: paste
+You are a careful, expert collaborator. The work is for an office manager who knows SUM and IF but not XLOOKUP or LET; write at their level.
+
+<task>
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+Deliverable: a formula plus a short explanation
+</task>
+
+<details>
+- app name: Microsoft Excel 365
+- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)
+</details>
+
+<constraints>
+- One formula for cell F2 that can be filled down
+</constraints>
+
+<output_format>
+Format: markdown
+Sections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation
+</output_format>
+
+<success_criteria>
+Before you answer, check the result against each item:
+- Explains each function in one plain sentence
+</success_criteria>
+
+## field: api_request
+{
+  "model": "claude-opus-5-5",
+  "max_tokens": 16000,
+  "system": "You are a careful, expert collaborator. The work is for an office manager who knows SUM and IF but not XLOOKUP or LET; write at their level.",
+  "messages": [
+    {
+      "role": "user",
+      "content": "<task>\nShow me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.\nDeliverable: a formula plus a short explanation\n</task>\n\n<details>\n- app name: Microsoft Excel 365\n- app sheet layout: column A invoice id, column D due date, column E paid (TRUE/FALSE)\n</details>\n\n<constraints>\n- One formula for cell F2 that can be filled down\n</constraints>\n\n<output_format>\nFormat: markdown\nSections, in order: Formula; How it works, piece by piece; Try it yourself: one practice variation\n</output_format>\n\n<success_criteria>\nBefore you answer, check the result against each item:\n- Explains each function in one plain sentence\n</success_criteria>"
+    }
+  ],
+  "output_config": {
+    "effort": "medium"
+  }
+}
+
+## issues
+
+## coverage
+rendered 10 of 10 applicable (0 declared not applicable), rate 1
+dropped: none

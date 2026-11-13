@@ -1,0 +1,41 @@
+# fixture: cover-letter  target: cursor  card: 2026-11-10.1  ok: true
+
+## field: agent_message
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+Deliverable: a one-page cover letter
+
+Files: https://example.com/jobs/ux-researcher (reference: Job posting)
+
+My resume (summary):
+```
+ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.
+```
+
+Context:
+- The company builds remote patient monitoring software
+- I am applying cold, with no referral
+
+Constraints:
+- Keep it under 350 words
+- Do not use the phrases 'passionate about' or 'team player'
+- Mention one concrete result with a number
+
+Output: prose (Opening hook; Research evidence from nursing; Why this company; Close with a call to action)
+
+Done when:
+- A skimming reader finds a research method and a result in the first two paragraphs
+- No clichés
+
+Assumptions (tell me if any is wrong before changing code):
+- US English spelling (the job is US-based)
+
+This is for a hiring manager who skims for evidence of research skills.
+Tone: confident, warm, plain-spoken.
+
+## issues
+info not_applicable /role | Cursor's agent has its own system prompt; a persona line adds little.
+info not_applicable /params/effort | Cursor has no per-message effort setting; pick a more capable model instead.
+
+## coverage
+rendered 24 of 24 applicable (2 declared not applicable), rate 1
+dropped: none

@@ -1,0 +1,25 @@
+{
+  "ir_version": "0.1",
+  "id": "video-ad",
+  "intent": { "mode": "do", "task_family": "video.social_ad", "deliverable": { "kind": "video", "description": "an 8-second vertical clip for Instagram Reels" } },
+  "goal": "An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured",
+  "subject": "a barista's hands pouring oat milk into a latte, forming a tulip pattern",
+  "audience": "local Gen-Z coffee drinkers",
+  "facets": {
+    "visual.setting": "a sunlit small coffee shop counter with plants",
+    "visual.camera": ["slow push-in", "macro close-up on the cup"],
+    "visual.lighting": "warm golden hour light through the window",
+    "visual.mood": "cozy, inviting",
+    "visual.shot": "single continuous shot",
+    "audio.ambience": "soft cafe chatter and an espresso machine hiss",
+    "audio.music": "light acoustic guitar"
+  },
+  "sections": [
+    { "label": "Pour begins", "text": "milk stream hits the espresso", "start_s": 0, "end_s": 3 },
+    { "label": "Pattern forms", "text": "the tulip pattern blooms", "start_s": 3, "end_s": 6 },
+    { "label": "Reveal", "text": "cup slides toward the camera", "start_s": 6, "end_s": 8 }
+  ],
+  "avoid": ["dialogue", "text overlays", "logos"],
+  "params": { "aspect_ratio": "9:16", "duration_s": 8, "resolution": "1080p" },
+  "provenance": { "/params/resolution": { "source": "default" } }
+}

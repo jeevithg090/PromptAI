@@ -1,0 +1,108 @@
+card_format: 1
+id: midjourney
+display_name: Midjourney
+vendor: Midjourney
+version: "2026-11-10.1"
+verified_at: "2026-11-10"
+sources:
+  - https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List
+  - https://docs.midjourney.com/hc/en-us/articles/32196176868109
+  - https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version
+model:
+  id: "V8.2"
+  note: "Default version since 2026-07-24 per the Version page (crawled by spikes/tool-ingest on 2026-11-10; the page itself is behind a Cloudflare check for curl)."
+surface: paste
+accepts: [image]   # MJ video animates an existing image; a text brief for video is routed elsewhere
+family: image.generate
+aliases: [mid journey, mj prompt]
+syntax: [flags]    # "--ar", "--no", ... are parameters anywhere in the prompt (Parameter List)
+
+slots:
+  - id: style
+    label: Style
+    impact: 3
+    to: facets.visual.medium
+    options: [photorealistic, illustration, 3D render, anime, watercolor, oil painting]
+  - id: lighting
+    label: Lighting
+    impact: 2
+    to: facets.visual.lighting
+    default: soft natural light
+    options: [golden hour, soft studio, dramatic high-contrast, neon, overcast, night]
+  - id: composition
+    label: Framing
+    impact: 2
+    to: facets.visual.composition
+    default: medium shot
+    options: [close-up, medium shot, wide shot, overhead, low angle]
+  - id: aspect_ratio
+    label: Aspect ratio
+    impact: 1
+    to: params.aspect_ratio
+    default: "1:1"
+    options: ["1:1", "16:9", "9:16", "4:3", "4:5"]
+    pattern: '\b(\d{1,2}:\d{1,2})\b'
+
+params:
+  aspect_ratio:
+    type: string
+    pattern: '^\d+:\d+$'
+    format: "--ar {{ value }}"
+    note: "Whole numbers only, no punctuation after parameters (Parameter List)."
+  stylize:
+    type: integer
+    min: 0
+    max: 1000
+    on_invalid: clamp
+    format: "--s {{ value }}"
+    note: "Default 100; 0-1000 (Stylize page)."
+  chaos:
+    type: integer
+    min: 0
+    max: 100
+    on_invalid: clamp
+    format: "--chaos {{ value }}"
+  raw:
+    type: boolean
+    format: "--raw"
+  seed:
+    type: integer
+    min: 0
+    max: 4294967295
+    format: "--seed {{ value }}"
+
+negation:
+  strategy: flag
+  note: "--no takes a comma-separated list (Parameter List)."
+
+ignores:
+  /goal: "Keyword prompt: Midjourney reads the visual subject, not the user's purpose."
+  /audience: "Image models have no notion of audience."
+  /role: "No persona channel in an image prompt."
+  /constraints: "No instruction channel; a compile step must turn rules into visual descriptors."
+  /success_criteria: "Used by PromptAI's verifier, not by Midjourney."
+  /assumptions: "Shown to the user in PromptAI, not sent to Midjourney."
+  /examples: "Text examples do not apply; use --sref/image prompts instead."
+  /output: "Image output: format/length do not apply."
+  /context: "Background facts have no place in a keyword prompt."
+  /intent/deliverable/description: "Covered by the subject."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    whitespace: single_line
+    description: "Descriptors front-loaded, comma-separated; parameters last."
+    template: |
+      {%- assign order = "action,setting,composition,camera,lighting,mood,color,medium,detail" | split: "," -%}
+      {{ brief.subject | default: brief.goal }}
+      {%- for k in order %}{% if brief.facets.visual[k] %}, {{ brief.facets.visual[k] | join: ", " }}{% endif %}{% endfor %}
+      {%- if brief.style.descriptors %}, {{ brief.style.descriptors | join: ", " }}{% endif %}
+      {%- if brief.style.tone %}, {{ brief.style.tone | join: ", " }} mood{% endif %}
+      {%- if brief.style.references %}, in the style of {{ brief.style.references | join: " and " }}{% endif %}
+      {%- if brief.facets.visual.text %}, with the text "{{ brief.facets.visual.text }}"{% endif %}
+      {%- for i in brief.inputs %}{% if i.kind == "image" and i.ref %} {{ i.ref }}{% endif %}{% endfor %}
+      {%- if neg.items %} --no {{ neg.items | join: ", " }}{% endif %}
+      {%- if flags %} {{ flags | join: " " }}{% endif %}
+    max_chars: 6000
+    limit_source: "unverified: secondary sources; not stated on the crawled official pages"

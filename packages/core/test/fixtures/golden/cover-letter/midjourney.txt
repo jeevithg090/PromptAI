@@ -1,0 +1,19 @@
+# fixture: cover-letter  target: midjourney  card: 2026-11-10.1  ok: true
+
+## field: prompt
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me, confident, warm, plain-spoken mood
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Midjourney makes image, brief asks for text
+warning param_unsupported /params/effort | Midjourney has no setting for "effort"; not sent
+info not_applicable /audience | Image models have no notion of audience.
+info not_applicable /role | No persona channel in an image prompt.
+info not_applicable /context | Background facts have no place in a keyword prompt.
+info not_applicable /constraints | No instruction channel; a compile step must turn rules into visual descriptors.
+info not_applicable /output | Image output: format/length do not apply.
+info not_applicable /success_criteria | Used by PromptAI's verifier, not by Midjourney.
+info not_applicable /assumptions | Shown to the user in PromptAI, not sent to Midjourney.
+
+## coverage
+rendered 4 of 9 applicable (17 declared not applicable), rate 0.444
+dropped: /inputs/0/label, /inputs/0/content, /inputs/1/label, /inputs/1/ref, /params/effort

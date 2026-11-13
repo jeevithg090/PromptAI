@@ -1,0 +1,32 @@
+{
+  "ir_version": "0.1",
+  "id": "invoice-extraction",
+  "intent": { "mode": "automate", "task_family": "data.extraction", "deliverable": { "kind": "data" } },
+  "goal": "Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet",
+  "role": "a meticulous bookkeeping assistant",
+  "inputs": [ { "id": "inv", "kind": "text", "role": "source_data", "label": "Invoice text", "content": "ACME Supplies Ltd\nInvoice #A-1042  Date: 03/11/2026\nBill to: Riverbend Cafe\n2 x Espresso grinder burr set @ 45.00\nSubtotal 90.00  VAT 20% 18.00  Total GBP 108.00\nDue in 30 days" } ],
+  "constraints": [
+    { "id": "unk", "text": "Use null for any field that is not present; never guess", "kind": "must" },
+    { "id": "date", "text": "Dates as ISO 8601 (YYYY-MM-DD)", "kind": "must" }
+  ],
+  "output": {
+    "format": "json",
+    "schema": {
+      "type": "object",
+      "required": ["vendor", "invoice_number", "invoice_date", "currency", "total"],
+      "properties": {
+        "vendor": { "type": ["string", "null"] },
+        "invoice_number": { "type": ["string", "null"] },
+        "invoice_date": { "type": ["string", "null"], "format": "date" },
+        "currency": { "type": ["string", "null"] },
+        "total": { "type": ["number", "null"] }
+      },
+      "additionalProperties": false
+    }
+  },
+  "examples": [
+    { "input": "Invoice 77 from Bolt Co, 1 Jan 2026, total $50", "output": "{\"vendor\":\"Bolt Co\",\"invoice_number\":\"77\",\"invoice_date\":\"2026-01-01\",\"currency\":\"USD\",\"total\":50}", "note": "currency inferred from the $ sign" }
+  ],
+  "assumptions": [ { "id": "dmy", "text": "Dates are day/month/year", "why": "UK vendor", "confirmed": false } ],
+  "params": { "effort": "low" }
+}

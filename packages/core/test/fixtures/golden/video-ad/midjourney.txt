@@ -1,0 +1,15 @@
+# fixture: video-ad  target: midjourney  card: 2026-11-10.1  ok: true
+
+## field: prompt
+a barista's hands pouring oat milk into a latte, forming a tulip pattern, a sunlit small coffee shop counter with plants, slow push-in, macro close-up on the cup, warm golden hour light through the window, cozy, inviting --no dialogue, text overlays, logos --ar 9:16
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Midjourney makes image, brief asks for video
+warning param_unsupported /params/duration_s | Midjourney has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | Midjourney has no setting for "resolution"; not sent
+info not_applicable /goal | Keyword prompt: Midjourney reads the visual subject, not the user's purpose.
+info not_applicable /audience | Image models have no notion of audience.
+
+## coverage
+rendered 10 of 21 applicable (2 declared not applicable), rate 0.476
+dropped: /sections/0/label, /sections/0/text, /sections/1/label, /sections/1/text, /sections/2/label, /sections/2/text, /facets/visual.shot, /facets/audio.ambience, /facets/audio.music, /params/duration_s, /params/resolution

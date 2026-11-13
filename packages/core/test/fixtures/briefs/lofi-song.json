@@ -1,0 +1,24 @@
+{
+  "ir_version": "0.1",
+  "id": "lofi-song",
+  "intent": { "mode": "express", "task_family": "music.song", "deliverable": { "kind": "audio", "description": "a 2-minute study song" } },
+  "goal": "A gentle lo-fi song to study to, about rain on a library window",
+  "subject": "rain on a library window late at night",
+  "facets": {
+    "music.genre": "lo-fi hip hop",
+    "music.mood": ["mellow", "nostalgic"],
+    "music.instrumentation": ["dusty Rhodes piano", "vinyl crackle", "soft brushed drums", "warm upright bass"],
+    "music.vocals": "breathy female vocals, mostly hummed",
+    "music.bpm": 78,
+    "music.title": "Library Rain"
+  },
+  "sections": [
+    { "label": "Intro", "text": "(rain and vinyl crackle)" },
+    { "label": "Verse", "text": "Pages turning slow, the street lights hum\nEvery drop a word I haven't found" },
+    { "label": "Chorus", "text": "Stay a while, the rain will keep the time\nStay a while, ooh" },
+    { "label": "Outro", "text": "(piano fades with the rain)" }
+  ],
+  "avoid": ["autotune", "heavy 808s", "rap verses"],
+  "output": { "length": { "unit": "seconds", "target": 120 } },
+  "success_criteria": ["Loopable, no sudden loud moments"]
+}

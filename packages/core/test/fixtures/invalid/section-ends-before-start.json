@@ -1,0 +1,19 @@
+{
+  "ir_version": "0.1",
+  "intent": {
+    "mode": "do",
+    "task_family": "image.illustration",
+    "deliverable": {
+      "kind": "image"
+    }
+  },
+  "goal": "a cozy reading nook illustration",
+  "sections": [
+    {
+      "label": "Shot",
+      "text": "x",
+      "start_s": 5,
+      "end_s": 3
+    }
+  ]
+}

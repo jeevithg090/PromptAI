@@ -1,0 +1,75 @@
+# fixture: cover-letter  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an experienced career coach who has hired UX researchers. You are writing for a hiring manager who skims for evidence of research skills. Tone: confident, warm, plain-spoken.
+
+# Instructions
+* Keep it under 350 words.
+* Do not use the phrases 'passionate about' or 'team player'
+* Mention one concrete result with a number.
+* Output format: prose.
+* Length: at most 350 words.
+* Use these sections, in order: Opening hook; Research evidence from nursing; Why this company; Close with a call to action.
+* Before finishing, verify: A skimming reader finds a research method and a result in the first two paragraphs; No clichés.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: US English spelling (the job is US-based).
+
+## field: input
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+Deliverable: a one-page cover letter
+
+<context>
+- The company builds remote patient monitoring software
+- I am applying cold, with no referral
+</context>
+
+<text id="resume" role="source_data" label="My resume (summary)">
+ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.
+</text>
+
+<url id="posting" role="reference" ref="https://example.com/jobs/ux-researcher" label="Job posting" />
+
+## field: chatgpt_paste
+# Identity
+You are an experienced career coach who has hired UX researchers. You are writing for a hiring manager who skims for evidence of research skills. Tone: confident, warm, plain-spoken.
+
+# Instructions
+* Keep it under 350 words.
+* Do not use the phrases 'passionate about' or 'team player'
+* Mention one concrete result with a number.
+* Output format: prose.
+* Length: at most 350 words.
+* Use these sections, in order: Opening hook; Research evidence from nursing; Why this company; Close with a call to action.
+* Before finishing, verify: A skimming reader finds a research method and a result in the first two paragraphs; No clichés.
+* These assumptions are unconfirmed; if one is wrong for the task, say so first: US English spelling (the job is US-based).
+
+# Task
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+Deliverable: a one-page cover letter
+
+<context>
+- The company builds remote patient monitoring software
+- I am applying cold, with no referral
+</context>
+
+<text id="resume" role="source_data" label="My resume (summary)">
+ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.
+</text>
+
+<url id="posting" role="reference" ref="https://example.com/jobs/ux-researcher" label="Job posting" />
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an experienced career coach who has hired UX researchers. You are writing for a hiring manager who skims for evidence of research skills. Tone: confident, warm, plain-spoken.\n\n# Instructions\n* Keep it under 350 words.\n* Do not use the phrases 'passionate about' or 'team player'\n* Mention one concrete result with a number.\n* Output format: prose.\n* Length: at most 350 words.\n* Use these sections, in order: Opening hook; Research evidence from nursing; Why this company; Close with a call to action.\n* Before finishing, verify: A skimming reader finds a research method and a result in the first two paragraphs; No clichés.\n* These assumptions are unconfirmed; if one is wrong for the task, say so first: US English spelling (the job is US-based).",
+  "input": "Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.\nDeliverable: a one-page cover letter\n\n<context>\n- The company builds remote patient monitoring software\n- I am applying cold, with no referral\n</context>\n\n<text id=\"resume\" role=\"source_data\" label=\"My resume (summary)\">\nICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.\n</text>\n\n<url id=\"posting\" role=\"reference\" ref=\"https://example.com/jobs/ux-researcher\" label=\"Job posting\" />",
+  "reasoning": {
+    "effort": "medium"
+  }
+}
+
+## issues
+
+## coverage
+rendered 26 of 26 applicable (0 declared not applicable), rate 1
+dropped: none

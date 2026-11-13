@@ -1,0 +1,73 @@
+# fixture: lofi-song  target: gpt  card: 2026-11-10.1  ok: true
+
+## field: instructions
+# Identity
+You are an expert assistant.
+
+# Instructions
+* Leave out: autotune, heavy 808s, rap verses.
+* Length: about 120 seconds.
+* Before finishing, verify: Loopable, no sudden loud moments.
+
+## field: input
+A gentle lo-fi song to study to, about rain on a library window.
+Subject: rain on a library window late at night
+Deliverable: a 2-minute study song
+
+- music genre: lo-fi hip hop
+- music mood: mellow, nostalgic
+- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass
+- music vocals: breathy female vocals, mostly hummed
+- music bpm: 78
+- music title: Library Rain
+
+Outline:
+1. Intro: (rain and vinyl crackle)
+2. Verse: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. Chorus: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. Outro: (piano fades with the rain)
+
+## field: chatgpt_paste
+# Identity
+You are an expert assistant.
+
+# Instructions
+* Leave out: autotune, heavy 808s, rap verses.
+* Length: about 120 seconds.
+* Before finishing, verify: Loopable, no sudden loud moments.
+
+# Task
+A gentle lo-fi song to study to, about rain on a library window.
+Subject: rain on a library window late at night
+Deliverable: a 2-minute study song
+
+- music genre: lo-fi hip hop
+- music mood: mellow, nostalgic
+- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass
+- music vocals: breathy female vocals, mostly hummed
+- music bpm: 78
+- music title: Library Rain
+
+Outline:
+1. Intro: (rain and vinyl crackle)
+2. Verse: Pages turning slow, the street lights hum
+Every drop a word I haven't found
+3. Chorus: Stay a while, the rain will keep the time
+Stay a while, ooh
+4. Outro: (piano fades with the rain)
+
+## field: api_request
+{
+  "model": "gpt-6.1-sol",
+  "instructions": "# Identity\nYou are an expert assistant.\n\n# Instructions\n* Leave out: autotune, heavy 808s, rap verses.\n* Length: about 120 seconds.\n* Before finishing, verify: Loopable, no sudden loud moments.",
+  "input": "A gentle lo-fi song to study to, about rain on a library window.\nSubject: rain on a library window late at night\nDeliverable: a 2-minute study song\n\n- music genre: lo-fi hip hop\n- music mood: mellow, nostalgic\n- music instrumentation: dusty Rhodes piano, vinyl crackle, soft brushed drums, warm upright bass\n- music vocals: breathy female vocals, mostly hummed\n- music bpm: 78\n- music title: Library Rain\n\nOutline:\n1. Intro: (rain and vinyl crackle)\n2. Verse: Pages turning slow, the street lights hum\nEvery drop a word I haven't found\n3. Chorus: Stay a while, the rain will keep the time\nStay a while, ooh\n4. Outro: (piano fades with the rain)"
+}
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | GPT (OpenAI Responses API / ChatGPT) makes text/code/data/image, brief asks for audio
+
+## coverage
+rendered 25 of 25 applicable (0 declared not applicable), rate 1
+dropped: none
