@@ -10,6 +10,18 @@
     "build": "pnpm -r --if-present build",
     "test": "pnpm -r --if-present test",
     "typecheck": "pnpm -r --if-present typecheck",
-    "verify": "pnpm typecheck && pnpm test"
+    "lint": "biome lint --error-on-warnings --diagnostic-level=warn",
+    "deps": "depcruise apps packages --config .dependency-cruiser.cjs && node packages/gates/src/licences.ts",
+    "knip": "knip",
+    "verify": "pnpm typecheck && pnpm lint && pnpm deps && pnpm knip && pnpm test",
+    "gates:g1": "node packages/gates/src/g1.ts",
+    "bundle:keys": "node packages/bundle/src/cli.ts keys",
+    "bundle:build": "node packages/bundle/src/cli.ts build",
+    "bundle:sign": "node packages/bundle/src/cli.ts sign"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.7",
+    "dependency-cruiser": "18.7.2",
+    "knip": "6.45.1"
   }
 }
