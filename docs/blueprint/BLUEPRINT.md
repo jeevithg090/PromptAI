@@ -115,7 +115,7 @@ One Astryx 0.7.12 bundle runs everywhere; native code exists only for OS entry p
 |---|---|---|---|---|
 | Web | Vite SPA + vite-plugin-pwa | none | Tier 1 on Chrome 125+, Safari 26+, Firefox 147+; anchor polyfill ([support](https://astryx.atmeta.com/docs/browser-support)) | MVP |
 | macOS | Electron | N-API addon: Carbon `RegisterEventHotKey` (press and release) and CGEvent paste; clipboard restore; a `type: 'panel'` window; Swift helper over stdio for Apple speech | Chromium, Tier 1 | MVP |
-| Windows | Electron | `globalShortcut` plus a keyboard-hook addon for key-up; SendInput paste | Chromium, Tier 1 | 2a |
+| Windows | Electron | a native helper (low-level keyboard hook for key-up, SendInput paste) on the same stdio protocol | Chromium, Tier 1 | 2a |
 | Linux | Electron, best effort | Wayland: compositor keybinding + CLI trigger | possibly Tier 2; web build offered | Tier 2 |
 | Chrome/Edge/Firefox | WXT MV3 | none | chip in plain CSS with Astryx tokens | 2d |
 | iOS 17+ **or** Android | Capacitor (re-baseline on 9 in 2c; 9.0.0-beta.0 shipped 2026-10-28) | iOS share extension + App Intents, or Android share + PROCESS_TEXT; never AccessibilityService | iOS 26 Tier 1; 17–18 Tier 2 | 2c |
@@ -396,7 +396,6 @@ Checked with `gh api` (Hugging Face for weights) on 2026-11-10 (wave 2 rows on 2
 | electron, electron-builder, node-addon-api | MIT | ADOPT |
 | handy-computer/handy-keys | MIT (36★, **2026-08-07**, tiny bus factor) | ADOPT, **vendored** |
 | cjpais/Handy (paste and Secure-Input modules, attributed); transcribe.cpp | MIT (38.3k★); MIT (2.2k★) | REFERENCE; ASSESS (2d, unmeasured) |
-| electron | MIT | ASSESS (fallback, with a Carbon N-API addon) |
 | capacitor (8.6; 9 beta), wxt, vite-plugin-pwa, hono, zod, hey-api, drizzle-orm, pg-boss, tanstack/query, altcha, lingui | MIT | ADOPT |
 | vercel/ai; MCP typescript-sdk, ext-apps; supabase, pgvector; agentskills, models.dev | Apache-2.0 (NOASSERTION); MIT→Apache-2.0; Apache-2.0, PostgreSQL; Apache-2.0, MIT | ADOPT |
 | ricky0123/vad, silero-vad | ISC (NOASSERTION), MIT | ADOPT |
