@@ -3,6 +3,7 @@
  * /v1/forge, copy the brief. No dictation and no insert. Emits the same
  * content-free events as the desktop flow (apps/desktop/src/flow.ts).
  */
+import { t } from '@lingui/core/macro';
 import type { EventType } from '@promptai/contract';
 import type { ApiClient } from './api/client.ts';
 import type { Answers, PanelState, PromptAIBridge } from './bridge.ts';
@@ -40,7 +41,7 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
       set({ phase: 'ready', target: null, transcript: text, draft: result, answers });
       track('brief.shown', { assumptions: result.assumptions.length, unsourced: result.unsourced.length, covered: result.coverage.covered, total: result.coverage.total });
     } catch (err) {
-      if (id === session) set({ phase: 'error', target: null, message: `Couldn't draft: ${(err as Error).message ?? String(err)}`, transcript: text, answers, canRetry: true });
+      if (id === session) set({ phase: 'error', target: null, message: t`Couldn't draft: ${(err as Error).message ?? String(err)}`, transcript: text, answers, canRetry: true });
     }
   }
 

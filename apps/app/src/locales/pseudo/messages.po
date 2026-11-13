@@ -181,6 +181,11 @@ msgstr ""
 msgid "Couldn’t delete. Nothing was removed. Try again."
 msgstr ""
 
+#. placeholder {0}: (err as Error).message ?? String(err)
+#: src/web-bridge.ts
+msgid "Couldn't draft: {0}"
+msgstr ""
+
 #: src/places/You.tsx
 msgid "Couldn’t export. Try again."
 msgstr ""

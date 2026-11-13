@@ -1,8 +1,10 @@
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import { activate } from './i18n/index.ts';
 
 activate('en');
+// findBy*/waitFor wait up to 5 s: the guest ALTCHA solve and Astryx renders are slower on a busy machine.
+configure({ asyncUtilTimeout: 5_000 });
 
 afterEach(() => {
   cleanup();
