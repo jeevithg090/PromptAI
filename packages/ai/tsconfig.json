@@ -1,0 +1,8 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // prompts and routes.yaml are read from disk (src/prompts.ts, tests)
+    "types": ["node"]
+  },
+  "include": ["src", "test"]
+}
