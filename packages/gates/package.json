@@ -6,7 +6,9 @@
   "type": "module",
   "scripts": {
     "typecheck": "tsc -p .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "gp": "vitest run --config vitest.gp.config.ts",
+    "axe": "vitest run --config vitest.axe.config.ts"
   },
   "dependencies": {
     "@promptai/contract": "workspace:*",
@@ -15,7 +17,9 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@types/node": "^24.19.2",
+    "playwright": "^1.65.0",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0"
   }
