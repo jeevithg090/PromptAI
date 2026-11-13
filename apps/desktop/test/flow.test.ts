@@ -102,6 +102,15 @@ describe('flow', () => {
     expect(phases).toEqual(['listening', 'drafting', 'ready', 'inserting', 'done']);
   });
 
+  it('cleans the transcript on the Mac before drafting (fillers, "scratch that")', async () => {
+    const { ports, speak } = setup();
+    await speak('um write a song about my dog, scratch that, about my cat');
+    expect(ports.forge.forge).toHaveBeenCalledWith(
+      expect.objectContaining({ text: expect.not.stringMatching(/\bum\b|scratch that|dog/i) }),
+    );
+    expect(vi.mocked(ports.forge.forge).mock.calls[0]![0].text).toMatch(/cat/);
+  });
+
   it('waits for dictation.start before stopping when the key comes up early', async () => {
     const start = deferred<Record<string, unknown>>();
     const { flow, cmds } = setup({ native: { 'dictation.start': () => start.promise } });

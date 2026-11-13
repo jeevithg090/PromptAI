@@ -8,6 +8,7 @@
  *                  error ←────┴────────┘ (retry → drafting)
  */
 import type { Assumption, ForgeRequest, ForgeResponse, NativeCommand, NativeEvent } from '@promptai/contract';
+import { cleanTranscript } from '@promptai/core';
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
 /** A pf-native command before the client assigns its id. */
@@ -132,8 +133,9 @@ export function createFlow(ports: FlowPorts) {
       return;
     }
     if (id !== session || state.phase !== 'listening') return;
-    // The final transcript event arrives before the stop reply.
-    const transcript = (c.final ?? state.partial).trim();
+    // The final transcript event arrives before the stop reply. Rules cleanup runs
+    // on the Mac (blueprint §4: the client imports redaction, tool regex and rules).
+    const transcript = cleanTranscript((c.final ?? state.partial).trim(), 'en-US').trim();
     const target = await c.target;
     if (id !== session) return;
     if (!transcript) {

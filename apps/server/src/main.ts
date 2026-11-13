@@ -1,8 +1,10 @@
+import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { PGlite } from '@electric-sql/pglite';
 import pg from 'pg';
-import type { ForgeRequestParsed, ForgeResponse } from '@promptai/contract';
+import { forge, type Clock } from '@promptai/core';
 import { createApp, jsonLog } from './app.ts';
+import { loadCatalog } from './catalog.ts';
 import { createEventStore, migrate, type Sql } from './event-store.ts';
 
 // TODO(auth): remove this guard once /v1 routes verify the caller (app.ts).
@@ -11,22 +13,17 @@ if (process.env.NODE_ENV === 'production') {
   process.exit(1);
 }
 
-/**
- * STUB FORGE: local runs only. Deterministic, no LLM: echoes the text as the
- * brief under the "generic" tool. The lead replaces it with @promptai/core's
- * forge() after merge.
- */
-async function stubForge(req: ForgeRequestParsed): Promise<ForgeResponse> {
-  return {
-    toolId: 'generic',
-    toolName: 'Generic',
-    brief: req.text,
-    assumptions: [],
-    unsourced: [],
-    coverage: { covered: 0, total: 0 },
-    usage: { llmCalls: 0, ms: 0 },
-  };
-}
+/** Core takes time through a port so it stays pure; this is the real one. */
+const systemClock: Clock = {
+  now: () => performance.now(),
+  after: (ms) => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const promise = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, ms);
+    });
+    return { promise, cancel: () => clearTimeout(timer) };
+  },
+};
 
 /** DATABASE_URL is assumed migrated. Without it, an in-memory PGlite is migrated here (data is lost on exit). */
 async function database(): Promise<Sql> {
@@ -42,8 +39,14 @@ async function database(): Promise<Sql> {
   return db;
 }
 
-const app = createApp({ forge: stubForge, events: createEventStore(await database()) });
+// No LLM port yet: forge runs its deterministic path (card render, chips, checks)
+// until a model provider is configured.
+const cards = await loadCatalog(path.resolve(import.meta.dirname, '../../../catalog'));
+const app = createApp({
+  forge: (req) => forge(req, { cards, clock: systemClock }),
+  events: createEventStore(await database()),
+});
 const port = Number(process.env.PORT ?? 8787);
 serve({ fetch: app.fetch, port }, (info) => {
-  jsonLog({ level: 'info', msg: 'listening', port: info.port, db: process.env.DATABASE_URL ? 'postgres' : 'pglite-memory' });
+  jsonLog({ level: 'info', msg: 'listening', port: info.port, cards: cards.length, db: process.env.DATABASE_URL ? 'postgres' : 'pglite-memory' });
 });
