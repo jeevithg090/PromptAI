@@ -4,8 +4,8 @@
  * fake in development (or when VITE_PROMPTAI_DEV_AUTH=1, for the e2e tests)
  * and no sign-in at all otherwise.
  */
-export type OAuthProvider = 'google' | 'apple';
-export type AuthMethod = 'email' | OAuthProvider;
+type OAuthProvider = 'google' | 'apple';
+type AuthMethod = 'email' | OAuthProvider;
 
 export interface AuthSession {
   accessToken: string;
@@ -80,7 +80,7 @@ export function createDevAuth(): AuthPort {
 }
 
 /** The real client, loaded on first use so supabase-js stays out of the first-load bundle. */
-export function createSupabaseAuth(url: string, anonKey: string): AuthPort {
+function createSupabaseAuth(url: string, anonKey: string): AuthPort {
   const ls = listeners();
   let current: AuthSession | null = null;
   const client = import('@supabase/supabase-js').then(({ createClient }) => {

@@ -8,7 +8,7 @@ export function desktopFetch(bridge: Required<Pick<PromptAIBridge, 'api'>>): typ
   return async (input, init) => {
     const url = new URL(String(input));
     const headers: Record<string, string> = {};
-    new Headers(init?.headers).forEach((v, k) => (headers[k] = v));
+    for (const [k, v] of new Headers(init?.headers)) headers[k] = v;
     const reply = await bridge.api({
       method: init?.method ?? 'GET',
       path: url.pathname + url.search,

@@ -36,6 +36,7 @@ export async function startFakeServer(opts: FakeServerOptions = {}) {
     if (auth.startsWith('dev-')) api.signIn('dev');
   };
 
+  // biome-ignore lint/suspicious/noExplicitAny: the fake hands raw request JSON to whichever API method the route names.
   async function route(method: string, path: string, body: any, auth: string | null, res: ServerResponse): Promise<void> {
     if (method === 'GET' && path === '/v1/guest/challenge') return send(res, 200, await api.guestChallenge());
     if (method === 'POST' && path === '/v1/guest') return send(res, 200, await api.guest(String(body?.altcha ?? '')));
@@ -74,8 +75,14 @@ export async function startFakeServer(opts: FakeServerOptions = {}) {
         return result.ok ? send(res, 200, { accepted: result.accepted, rejected: result.rejected }) : send(res, result.status ?? 500, { error: 'failed' });
       }
     }
-    if (method === 'DELETE' && item?.[1] === 'memory') return (await api.forgetMemory(item[2]!), send(res, 204));
-    if (method === 'DELETE' && item?.[1] === 'library') return (await api.deleteBrief(item[2]!), send(res, 204));
+    if (method === 'DELETE' && item?.[1] === 'memory') {
+      await api.forgetMemory(item[2]!);
+      return send(res, 204);
+    }
+    if (method === 'DELETE' && item?.[1] === 'library') {
+      await api.deleteBrief(item[2]!);
+      return send(res, 204);
+    }
     throw new ApiError(404, 'not found', 'not_found');
   }
 

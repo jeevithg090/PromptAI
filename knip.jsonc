@@ -8,14 +8,14 @@
       "project": []
     },
     "apps/app": {
-      // loaded by index.html before the app mounts
-      "entry": ["public/*.js"]
+      // loaded by index.html before the app mounts; unit tests sit beside the code
+      "entry": ["public/*.js", "src/**/*.test.{ts,tsx}", "scripts/*.mjs"]
     },
     "apps/desktop": {
       // esbuild entries (scripts/build.mjs) and the fake pf-native the e2e tests spawn
       "entry": ["src/main.ts", "src/preload.ts", "test/fake-native.mjs"],
-      // its build copies @promptai/app's dist/ (resolved with require.resolve)
-      "ignoreDependencies": ["@promptai/app"]
+      // type declarations tsc reads for the .mjs build scripts the tests import
+      "ignore": ["scripts/*.d.mts"]
     },
     "apps/native-macos": {
       // a manual dictation check

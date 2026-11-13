@@ -124,6 +124,7 @@ export function App({ bridge, api, auth, tokens }: AppProps) {
   }, [gate, ensureToken, tokens]);
 
   // Whenever the identity changes, the server's profile decides whether first run still applies.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs on identity changes only; re-running on `gate` would refetch the profile on every gate change, and this effect sets the gate itself.
   useEffect(() => {
     if (!token || gate === 'refused') return;
     let live = true;
@@ -165,6 +166,7 @@ export function App({ bridge, api, auth, tokens }: AppProps) {
   );
 
   // A brief kept as a guest is saved once the account exists.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: fires once when an account session appears; the other values are read at that moment, not watched.
   useEffect(() => {
     if (!authSession || !signIn) return;
     const keep = signIn.keep;

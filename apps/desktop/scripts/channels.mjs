@@ -6,7 +6,7 @@
  * - mas-lite: a Mac App Store "Lite" build. No posted key events: Insert
  *   copies and the user presses ⌘V, so src/auto-paste.ts must not ship.
  */
-export const CHANNELS = {
+const CHANNELS = {
   direct: { caps: { insertAtCursor: true }, forbidden: [] },
   'mas-lite': { caps: { insertAtCursor: false }, forbidden: ['src/auto-paste.ts'] },
 };

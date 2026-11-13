@@ -23,4 +23,3 @@ export function activate(locale: AppLocale) {
   return i18n;
 }
 
-export { i18n };

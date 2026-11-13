@@ -492,6 +492,7 @@ function Receipt({ state, bridge }: { state: Extract<Drafted, { phase: 'done' }>
 function DidItWork({ rated, onRate }: { rated: Rating | undefined; onRate: (r: Rating) => void }) {
   if (rated) return <Text type="supporting">{t`Thanks for telling us.`}</Text>;
   return (
+    // biome-ignore lint/a11y/useSemanticElements: a labelled ARIA group keeps the Astryx layout; a fieldset would add a border and legend semantics this choice doesn't need.
     <div role="group" aria-labelledby="pa-did-it-work">
       <HStack gap={2} vAlign="center" wrap="wrap">
         <Text type="label" id="pa-did-it-work">

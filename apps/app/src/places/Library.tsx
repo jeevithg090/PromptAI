@@ -16,7 +16,7 @@ import { useToast } from '@astryxdesign/core/Toast';
 import { useStatusAnnouncer } from '../announce.ts';
 import { AppServicesContext } from '../shell/services.ts';
 
-export function matches(a: Artifact, query: string): boolean {
+function matches(a: Artifact, query: string): boolean {
   const q = query.trim().toLocaleLowerCase();
   return !q || `${a.title}\n${a.body}\n${a.toolId}`.toLocaleLowerCase().includes(q);
 }

@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv, type Plugin } from 'vite';
 import react from '@vitejs/plugin-react';
 import { lingui } from '@lingui/vite-plugin';
@@ -31,7 +32,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       // Compiles the .po catalogs on import and the Lingui macros natively (no Babel).
-      lingui({ macroTransform: true }),
+      lingui({ macroTransform: true, configPath: fileURLToPath(new URL('./lingui.config.ts', import.meta.url)) }),
       VitePWA({
         // main.tsx registers the worker itself, and only on http(s): Electron loads file:// and has no use for it.
         injectRegister: false,

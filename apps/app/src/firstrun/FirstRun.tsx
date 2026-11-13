@@ -18,10 +18,10 @@ export const PROVIDER_CONSENT_VERSION = 'providers-2026-11';
  * Named in the consent (Apple 5.1.2(i)). Owner: keep this in step with
  * catalog/routes.yaml; adding a provider means a new version and a new ask.
  */
-export const AI_PROVIDERS = ['Vercel AI Gateway'];
+const AI_PROVIDERS = ['Vercel AI Gateway'];
 
 /** YYYY-MM-DD from three typed parts, or null when they don't make a real past date. */
-export function dobFrom(day: string, month: string, year: string, today = new Date()): string | null {
+function dobFrom(day: string, month: string, year: string, today = new Date()): string | null {
   const d = Number(day);
   const m = Number(month);
   const y = Number(year);
@@ -127,6 +127,7 @@ export function ConsentStep({ onAnswer }: { onAnswer: (granted: boolean) => Prom
         <Text>{t`To draft a brief, PromptAI sends the words you type or say to ${providers}. They process them transiently to write the draft.`}</Text>
         <Text color="secondary">{t`If you say No, PromptAI drafts without them. Skipping counts as No.`}</Text>
         {failed && <Banner status="error" title={t`Couldn’t save your answer. Try again.`} />}
+        {/* biome-ignore lint/a11y/useSemanticElements: a labelled ARIA group keeps the Astryx layout; a fieldset would add a border and legend semantics this choice doesn't need. */}
         <div role="group" aria-label={t`Draft with AI providers?`}>
           <HStack gap={2} wrap="wrap">
             {/* Same variant and size: neither answer is nudged. */}
