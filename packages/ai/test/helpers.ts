@@ -5,9 +5,10 @@ import { parse } from 'yaml';
 import { parseRoutes } from '../src/routes.ts';
 import type { Transport } from '../src/gateway.ts';
 
-export const ROUTES_YAML = readFileSync(new URL('../../../catalog/routes.yaml', import.meta.url), 'utf8');
+const ROUTES_YAML = readFileSync(new URL('../../../catalog/routes.yaml', import.meta.url), 'utf8');
 export const routes = parseRoutes(ROUTES_YAML);
 /** A fresh, unvalidated copy of routes.yaml to break in tests. */
+// biome-ignore lint/suspicious/noExplicitAny: tests mutate arbitrary paths of the raw YAML to break validation.
 export const rawRoutes = (): any => parse(ROUTES_YAML);
 
 export type CallOptions = Parameters<MockLanguageModelV4['doGenerate']>[0];
@@ -26,7 +27,9 @@ export function manualClock() {
       timers.push(timer);
       return { promise, cancel: () => { timer.live = false; } };
     },
-    fire: () => timers.filter((t) => t.live).forEach((t) => t.fire()),
+    fire: () => {
+      for (const t of timers.filter((t) => t.live)) t.fire();
+    },
   };
 }
 

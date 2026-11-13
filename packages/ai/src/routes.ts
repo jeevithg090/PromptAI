@@ -56,7 +56,10 @@ export const routesSchema = z
       let outPrice = 0;
       route.models.forEach((id, i) => {
         const m = r.models[id];
-        if (!m) return issue([...at, 'models', i], `${id} is not in models`);
+        if (!m) {
+          issue([...at, 'models', i], `${id} is not in models`);
+          return;
+        }
         if (!m.thinking.includes(mode)) issue([...at, 'models', i], `${id} does not accept thinking ${mode}`);
         outPrice = Math.max(outPrice, m.price.out);
       });

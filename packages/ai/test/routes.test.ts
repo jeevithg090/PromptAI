@@ -24,6 +24,7 @@ describe('catalog/routes.yaml', () => {
     expect(routes.caps).toEqual({ cheap: 0.005, standard: 0.02, frontier: 0.04 });
   });
 
+  // biome-ignore lint/suspicious/noExplicitAny: each case edits an arbitrary path of the raw YAML.
   const rejects: Array<[string, (r: any) => void, RegExp]> = [
     ['a sampling parameter', (r) => { r.functions.understand.temperature = 0; }, /unrecognized key/i],
     ['a missing function', (r) => { delete r.functions.learn; }, /functions\.learn: Invalid input/],
