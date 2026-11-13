@@ -65,8 +65,9 @@ func paste(_ id: String, text raw: String, restoreClipboard: Bool) {
     var text = raw
     while text.last?.isNewline == true { text.removeLast() }
     let pb = NSPasteboard.general
+    let trusted = AXIsProcessTrusted()
     // Reading the clipboard back is silent only when the user chose "always allow" (macOS paste privacy).
-    let restore = restoreClipboard && pb.accessBehavior == .alwaysAllow
+    let restore = trusted && restoreClipboard && pb.accessBehavior == .alwaysAllow
     let saved: [NSPasteboardItem] = !restore ? [] : (pb.pasteboardItems ?? []).map { item in
         let copy = NSPasteboardItem()
         for type in item.types { if let d = item.data(forType: type) { copy.setData(d, forType: type) } }
@@ -79,7 +80,7 @@ func paste(_ id: String, text raw: String, restoreClipboard: Bool) {
     pb.clearContents()
     pb.writeObjects([item])
 
-    guard AXIsProcessTrusted() else { return reply(id, data: ["result": "copied"]) }
+    guard trusted else { return reply(id, data: ["result": "copied"]) }
     let source = CGEventSource(stateID: .hidSystemState)
     for keyDown in [true, false] {
         let e = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: keyDown)
@@ -147,7 +148,10 @@ func collect<S: AsyncSequence & Sendable>(_ results: S) -> Task<String, Error> w
             let t = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
             module = t; results = { collect(t.results) }
         }
-        guard await AssetInventory.status(forModules: [module]) == .installed else {
+        // installedLocales, not AssetInventory.status: status reports .supported for on-disk assets whose
+        // locale this process has not reserved, and those still transcribe on macOS 26 (spikes/asr-apple).
+        let installed = useDictation ? await DictationTranscriber.installedLocales : await SpeechTranscriber.installedLocales
+        guard installed.contains(where: { $0.identifier(.bcp47) == locale.identifier(.bcp47) }) else {
             throw Fail("on-device speech assets for \(locale.identifier(.bcp47)) are not installed")
         }
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -227,13 +231,12 @@ func arg<T>(_ a: [String: Any], _ key: String, _ type: T.Type, default fallback:
     do {
         switch cmd {
         case "hotkey.register":
-            let keyCode = try arg(a, "keyCode", Int.self)
-            guard keyCode >= 0 else { throw Invalid("keyCode must be non-negative") }
+            guard let keyCode = UInt32(exactly: try arg(a, "keyCode", Int.self)) else { throw Invalid("keyCode is out of range") }
             let mask = try arg(a, "modifiers", [String].self).reduce(0) { mask, name in
                 guard let m = modifierMasks[name] else { throw Invalid("unknown modifier: \(name)") }
                 return mask | m
             }
-            try registerHotKey(keyCode: UInt32(keyCode), modifiers: UInt32(mask))
+            try registerHotKey(keyCode: keyCode, modifiers: UInt32(mask))
             reply(id)
         case "dictation.start":
             let locale = try arg(a, "locale", String.self)
