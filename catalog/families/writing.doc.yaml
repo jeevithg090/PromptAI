@@ -1,0 +1,54 @@
+card_format: 1
+id: writing-doc
+display_name: Document
+vendor: PromptAI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+# other people read a shared document: profile, fact and goal memories never appear in it (blueprint §10)
+audience: shared_doc
+tos:
+  insert_allowed: true
+  note: "Family card for editors without their own card; pastes at the cursor and never shares or publishes."
+sources:
+  - https://support.google.com/docs/answer/12014036
+model:
+  id: none
+  note: "Family card (writing.doc). Not an AI target: plain text for a document others read, the user's own cleaned words until a compose model exists."
+surface: paste
+accepts: [text]
+family: writing.doc
+aliases: [microsoft word, word document, atlassian confluence, confluence page, dropbox paper, apple pages, com.microsoft.word]
+match_display_name: false   # "Document" is a category, not a name
+
+negation:
+  strategy: drop
+  note: "Document text states what the writer said; exclusions have no place in it."
+
+ignores:
+  /audience: "Readers of the document; not written into it."
+  /role: "The writer writes as themselves."
+  /style: "Tone shapes the words; it is not written into the document."
+  /context: "Background for PromptAI only."
+  /constraints: "Rules for the writer, not document text."
+  /success_criteria: "Checked by PromptAI, not written into the document."
+  /output: "The document text is the output."
+  /examples: "Not document text."
+  /intent/deliverable/description: "Covered by the text."
+
+fields:
+  - name: text
+    type: text
+    required: true
+    label: Text
+    whitespace: preserve
+    template: |
+      {%- if brief.subject %}{{ brief.subject }}
+
+      {% endif -%}
+      {{ brief.goal }}
+      {%- for s in brief.sections %}
+
+      {{ s.label }}
+      {{ s.text }}
+      {%- endfor %}

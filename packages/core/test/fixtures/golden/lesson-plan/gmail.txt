@@ -1,0 +1,24 @@
+# fixture: lesson-plan  target: gmail  card: 2026-11-13.1  ok: true
+
+## field: body
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend
+
+a question students can argue about
+
+inputs and outputs, with a diagram
+
+floating leaf-disk experiment in groups
+
+explain it to a friend in 3 sentences
+
+## issues
+warning needs_llm /subject | No subject line yet; add one in Gmail before you send.
+info not_applicable /audience | The recipient reads the email; there is no audience line in it.
+info not_applicable /context | Background for PromptAI only; an email states what the sender wrote.
+info not_applicable /constraints | Rules for the writer, not text for the recipient.
+info not_applicable /output | The email is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the email.
+
+## coverage
+rendered 5 of 9 applicable (13 declared not applicable), rate 0.556
+dropped: /sections/0/label, /sections/1/label, /sections/2/label, /sections/3/label

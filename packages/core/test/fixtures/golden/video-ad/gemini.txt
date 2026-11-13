@@ -1,0 +1,38 @@
+# fixture: video-ad  target: gemini  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Persona: You are a helpful expert. You are writing for local Gen-Z coffee drinkers.
+
+Task: An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Subject: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+Deliverable: an 8-second vertical clip for Instagram Reels
+
+Context:
+- visual setting: a sunlit small coffee shop counter with plants
+- visual camera: slow push-in, macro close-up on the cup
+- visual lighting: warm golden hour light through the window
+- visual mood: cozy, inviting
+- visual shot: single continuous shot
+- audio ambience: soft cafe chatter and an espresso machine hiss
+- audio music: light acoustic guitar
+
+Outline:
+1. Pour begins: milk stream hits the espresso
+2. Pattern forms: the tulip pattern blooms
+3. Reveal: cup slides toward the camera
+
+Rules:
+- Leave out: dialogue, text overlays, logos
+
+Assumptions (say so first if one is wrong for the task):
+- resolution: 1080p (default)
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gemini makes text/code/data/image, brief asks for video
+warning param_unsupported /params/duration_s | Gemini has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | Gemini has no setting for "resolution"; not sent
+info not_applicable /params/aspect_ratio | Stated nowhere: the Gemini app picks image shape from the words.
+
+## coverage
+rendered 22 of 22 applicable (1 declared not applicable), rate 1
+dropped: none

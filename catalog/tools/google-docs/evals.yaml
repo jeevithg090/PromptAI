@@ -1,0 +1,9 @@
+- name: plain text into a shared document
+  input: { text: "the q3 plan has three goals: ship search, cut churn, hire two engineers", toolHint: google-docs }
+  expect: { toolId: google-docs, briefIncludes: ["the q3 plan has three goals: ship search, cut churn, hire two engineers"], briefExcludes: ["#", "Assumptions"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: Docs in the browser as host
+  input: { text: "add a short summary of today's standup", hostApp: docs.google.com }
+  expect: { toolId: google-docs, briefIncludes: ["add a short summary of today's standup"], maxIssues: { block: 0 } }
+- name: paragraphs survive
+  input: { text: "first point new paragraph second point", toolHint: google-docs }
+  expect: { toolId: google-docs, briefIncludes: ["first point\n\nsecond point"], noUnsourced: true, maxIssues: { block: 0 } }

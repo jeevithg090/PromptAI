@@ -2,12 +2,35 @@ card_format: 1
 id: midjourney
 display_name: Midjourney
 vendor: Midjourney
-version: "2026-11-10.1"
-verified_at: "2026-11-10"
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-01-13"
+audience: private_ai
 sources:
   - https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List
   - https://docs.midjourney.com/hc/en-us/articles/32196176868109
   - https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version
+  - https://docs.midjourney.com/hc/en-us/articles/32023408776205-Prompt-Basics
+claims:
+  - id: params-last
+    text: "Parameters (--ar, --no, ...) go at the end, after the description."
+    quote: "Parameters always go at the end of your text prompt, after you've described what you want to see."
+    source: https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List
+  - id: no-param
+    text: "Exclusions use --no rather than words in the prompt."
+    quote: "Tell Midjourney what you don't want in your image using the no parameter --no"
+    source: https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List
+  - id: short-prompts
+    text: "The prompt is a short comma-separated description, not instructions."
+    quote: "Short and simple prompts typically generate the best images with Midjourney."
+    source: https://docs.midjourney.com/hc/en-us/articles/32023408776205-Prompt-Basics
+  - id: describe-wanted
+    text: "In-text negation is unreliable, which is why exclusions become --no."
+    quote: "Describe what you do want instead of what you don’t."
+    source: https://docs.midjourney.com/hc/en-us/articles/32023408776205-Prompt-Basics
+tos:
+  insert_allowed: true
+  note: "Insert pastes into the prompt box and never submits. Terms not yet reviewed by counsel."
 model:
   id: "V8.2"
   note: "Default version since 2026-07-24 per the Version page (crawled by spikes/tool-ingest on 2026-11-10; the page itself is behind a Cloudflare check for curl)."
@@ -91,6 +114,7 @@ fields:
   - name: prompt
     type: text
     required: true
+    label: Prompt
     whitespace: single_line
     description: "Descriptors front-loaded, comma-separated; parameters last."
     template: |

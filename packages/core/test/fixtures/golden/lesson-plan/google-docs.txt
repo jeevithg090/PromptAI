@@ -1,0 +1,27 @@
+# fixture: lesson-plan  target: google-docs  card: 2026-11-13.1  ok: true
+
+## field: text
+Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend
+
+Hook
+a question students can argue about
+
+Mini-lesson
+inputs and outputs, with a diagram
+
+Activity
+floating leaf-disk experiment in groups
+
+Exit ticket
+explain it to a friend in 3 sentences
+
+## issues
+info not_applicable /audience | Readers of the document; not written into it.
+info not_applicable /context | Background for PromptAI only.
+info not_applicable /constraints | Rules for the writer, not document text.
+info not_applicable /output | The document text is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the document.
+
+## coverage
+rendered 9 of 9 applicable (13 declared not applicable), rate 1
+dropped: none

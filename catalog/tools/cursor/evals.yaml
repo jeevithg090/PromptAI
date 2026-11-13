@@ -1,0 +1,12 @@
+- name: Agent Brief sections for a bug fix
+  input: { text: "ask cursor to fix the bug where users get logged out after the session times out" }
+  expect: { toolId: cursor, briefIncludes: ["Goal:", "Done when:", "- the existing tests pass", "Stop and ask before deleting files"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: Cursor as host app
+  input: { text: "add input validation to the signup form", hostApp: com.todesktop.230313mzl4w4u92 }
+  expect: { toolId: cursor, briefIncludes: ["Goal: Add input validation to the signup form."], noUnsourced: true, maxIssues: { block: 0 } }
+- name: a language said by name
+  input: { text: "in cursor, refactor the payment module in TypeScript" }
+  expect: { toolId: cursor, briefIncludes: ["Environment (code): language TypeScript"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: moving the cursor is not Cursor
+  input: { text: "move the cursor to the end of the line in my editor" }
+  expect: { toolId: generic, maxIssues: { block: 0 } }

@@ -1,0 +1,18 @@
+# fixture: spreadsheet-formula  target: search  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself.
+This is for an office manager who knows SUM and IF but not XLOOKUP or LET.
+
+One formula for cell F2 that can be filled down.
+
+Output format: Markdown. Sections: Formula; How it works, piece by piece; Try it yourself: one practice variation.
+
+A good answer:
+- Explains each function in one plain sentence
+
+## issues
+
+## coverage
+rendered 8 of 10 applicable (0 declared not applicable), rate 0.8
+dropped: /facets/app.name, /facets/app.sheet_layout

@@ -1,0 +1,21 @@
+# fixture: video-ad  target: perplexity  card: 2026-11-13.1  ok: true
+
+## field: prompt
+An 8-second vertical clip for my coffee shop's Reels showing our signature oat latte being poured.
+Topic: a barista's hands pouring oat milk into a latte, forming a tulip pattern
+This is for local Gen-Z coffee drinkers.
+
+Leave out: dialogue, text overlays, logos.
+
+Assumptions (say so first if one is wrong):
+- resolution: 1080p (default)
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Perplexity makes text/data, brief asks for video
+warning param_unsupported /params/duration_s | Perplexity has no setting for "duration_s"; not sent
+warning param_unsupported /params/resolution | Perplexity has no setting for "resolution"; not sent
+info not_applicable /params/aspect_ratio | Not applicable.
+
+## coverage
+rendered 8 of 22 applicable (1 declared not applicable), rate 0.364
+dropped: /sections/0/label, /sections/0/text, /sections/1/label, /sections/1/text, /sections/2/label, /sections/2/text, /facets/visual.setting, /facets/visual.camera/0, /facets/visual.camera/1, /facets/visual.lighting, /facets/visual.mood, /facets/visual.shot, /facets/audio.ambience, /facets/audio.music

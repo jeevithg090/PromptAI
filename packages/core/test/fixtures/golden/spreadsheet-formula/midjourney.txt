@@ -1,4 +1,4 @@
-# fixture: spreadsheet-formula  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: spreadsheet-formula  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself

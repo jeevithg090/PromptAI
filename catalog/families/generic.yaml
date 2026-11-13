@@ -4,6 +4,11 @@ display_name: Any AI tool
 vendor: PromptAI
 version: "2026-11-13.1"
 verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "Pastes into whatever tool has focus; never submits."
 sources:
   - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
   - https://developers.openai.com/api/docs/guides/prompt-engineering
@@ -41,6 +46,7 @@ fields:
   - name: prompt
     type: text
     required: true
+    label: Prompt
     description: "One message to paste into any assistant."
     template: |
       {%- if brief.role %}You are {{ brief.role }}.

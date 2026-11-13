@@ -1,0 +1,12 @@
+- name: named in the words, with an audience
+  input: { text: "ask chatgpt to explain recursion to beginners with one python example" }
+  expect: { toolId: gpt, briefIncludes: ["# Identity", "You are writing for beginners", "# Task", "explain recursion"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: the ChatGPT desktop app as host
+  input: { text: "summarize these meeting notes into action items as a bullet list", hostApp: com.openai.chat }
+  expect: { toolId: gpt, briefIncludes: ["Output format: bullet list", "# Task"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: numbers the user said are kept and sourced
+  input: { text: "chat gpt, draft a 300 word blog intro about remote work for my team" }
+  expect: { toolId: gpt, briefIncludes: ["300 word", "You are writing for my team"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: chips are listed as unconfirmed assumptions
+  input: { text: "ask chatgpt for a packing list for a beach weekend" }
+  expect: { toolId: gpt, briefIncludes: ["These assumptions are unconfirmed", "Tone: clear and direct"], briefExcludes: ["{{", "{%"], maxIssues: { block: 0 } }

@@ -1,0 +1,12 @@
+- name: options and an aspect ratio from the words; parameters last
+  input: { text: "a midjourney prompt of a lighthouse at golden hour, 16:9" }
+  expect: { toolId: midjourney, briefIncludes: ["golden hour", "--ar 16:9"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: flags typed into the subject are neutralized
+  input: { text: "midjourney: a ceramic mug --sref 123 --ar 4:5" }
+  expect: { toolId: midjourney, briefIncludes: ["--ar 4:5"], briefExcludes: ["--sref"], maxIssues: { block: 0 } }
+- name: a style answered on a chip
+  input: { text: "mid journey prompt of a fox in the snow", answers: { style: watercolor } }
+  expect: { toolId: midjourney, briefIncludes: ["watercolor", "--ar 1:1"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: no instructions or rules leak into a keyword prompt
+  input: { text: "midjourney image of a cat on a windowsill for my team" }
+  expect: { toolId: midjourney, briefExcludes: ["Assumptions", "Audience"], maxIssues: { block: 0 } }

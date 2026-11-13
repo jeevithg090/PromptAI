@@ -1,0 +1,29 @@
+# fixture: lofi-song  target: writing-email  card: 2026-11-13.1  ok: true
+
+## field: subject
+rain on a library window late at night
+
+## field: body
+A gentle lo-fi song to study to, about rain on a library window
+
+(rain and vinyl crackle)
+
+Pages turning slow, the street lights hum
+Every drop a word I haven't found
+
+Stay a while, the rain will keep the time
+Stay a while, ooh
+
+(piano fades with the rain)
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Email makes text, brief asks for audio
+warning negation_unsupported /avoid/0 | Email cannot exclude "autotune"
+warning negation_unsupported /avoid/1 | Email cannot exclude "heavy 808s"
+warning negation_unsupported /avoid/2 | Email cannot exclude "rap verses"
+info not_applicable /output | The email is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the email.
+
+## coverage
+rendered 7 of 23 applicable (2 declared not applicable), rate 0.304
+dropped: /sections/0/label, /sections/1/label, /sections/2/label, /sections/3/label, /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title, /avoid/0, /avoid/1, /avoid/2

@@ -1,0 +1,80 @@
+card_format: 1
+id: gmail
+display_name: Gmail
+vendor: Google
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+# a person reads this text: profile, fact and goal memories never appear in it (blueprint §10, destination rule)
+audience: human_recipient
+sources:
+  - https://support.google.com/mail/answer/2819488
+claims:
+  - id: subject-and-message
+    text: "A Gmail message has a subject and a message body; the card returns them as two fields."
+    quote: "Add a subject."
+    source: https://support.google.com/mail/answer/2819488
+  - id: recipients-in-gmail
+    text: "Recipients go in Gmail's To field, so the card never writes addresses into the text."
+    quote: "In the \"To\" field, add recipients."
+    source: https://support.google.com/mail/answer/2819488
+  - id: user-sends
+    text: "Sending is the user's click; Insert only fills the draft."
+    quote: "At the bottom of the message, click Send."
+    source: https://support.google.com/mail/answer/2819488
+tos:
+  insert_allowed: true
+  note: "Insert fills the open compose window and never sends. Terms not yet reviewed by counsel."
+model:
+  id: none
+  note: "Not an AI target: the text is the email a person reads. Without the compose model, the message is the user's own cleaned words."
+surface: paste
+accepts: [text]
+family: writing.email
+aliases: [google mail, mail.google.com, gmail.com]
+
+negation:
+  strategy: drop
+  note: "An email states what the sender wrote; exclusions have no place in it."
+
+requires:
+  - id: subject
+    label: Subject line
+    any_of: [/subject]
+    message: "No subject line yet; add one in Gmail before you send."
+
+ignores:
+  /audience: "The recipient reads the email; there is no audience line in it."
+  /role: "The sender writes as themselves."
+  /style: "Tone shapes the words; it is not written into the email."
+  /context: "Background for PromptAI only; an email states what the sender wrote."
+  /constraints: "Rules for the writer, not text for the recipient."
+  /success_criteria: "Checked by PromptAI, not written into the email."
+  /output: "The email is the output."
+  /examples: "Not part of an email."
+  /intent/deliverable/description: "Covered by the message."
+
+fields:
+  - name: subject
+    type: text
+    label: Subject
+    whitespace: single_line
+    template: "{{ brief.subject }}"
+    max_chars: 250
+    limit_source: "unverified: no subject limit on the cited page; a cautious cap"
+
+  - name: body
+    type: text
+    required: true
+    label: Message
+    whitespace: preserve
+    description: "The message as the user said it, cleaned; line breaks kept."
+    template: |
+      {{ brief.goal }}
+      {%- for s in brief.sections %}
+
+      {{ s.text }}
+      {%- endfor %}
+
+notes:
+  - "Phase 1 has no compose model, so the message is the cleaned dictation. Memory never adds text here: only style and preference memories may shape it."

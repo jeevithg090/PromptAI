@@ -1,0 +1,17 @@
+# fixture: bugfix  target: google-docs  card: 2026-11-13.1  ok: true
+
+## field: text
+the paginate() helper in the orders API
+
+Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Google Docs makes text, brief asks for code
+warning param_unsupported /params/effort | Google Docs has no setting for "effort"; not sent
+info not_applicable /constraints | Rules for the writer, not document text.
+info not_applicable /output | The document text is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the document.
+
+## coverage
+rendered 2 of 10 applicable (6 declared not applicable), rate 0.2
+dropped: /inputs/0/ref, /inputs/1/ref, /inputs/2/label, /inputs/2/content, /facets/code.language, /facets/code.runtime, /facets/code.test_runner, /params/effort

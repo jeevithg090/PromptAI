@@ -1,0 +1,7 @@
+source: https://www.perplexity.ai/help-center/en/articles/10352971-practical-tips-for-using-perplexity
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Instruction: Clearly say what you want Perplexity to do.
+Context: Give some background information to help Perplexity understand the task.
+Output format: Explain how you want the response to be formatted.

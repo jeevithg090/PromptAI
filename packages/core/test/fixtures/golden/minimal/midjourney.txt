@@ -1,4 +1,4 @@
-# fixture: minimal  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: minimal  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 a cozy reading nook illustration

@@ -1,0 +1,18 @@
+# fixture: cover-letter  target: writing-doc  card: 2026-11-13.1  ok: true
+
+## field: text
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me
+
+## issues
+warning param_unsupported /params/effort | Document has no setting for "effort"; not sent
+info not_applicable /audience | Readers of the document; not written into it.
+info not_applicable /role | The writer writes as themselves.
+info not_applicable /context | Background for PromptAI only.
+info not_applicable /style | Tone shapes the words; it is not written into the document.
+info not_applicable /constraints | Rules for the writer, not document text.
+info not_applicable /output | The document text is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the document.
+
+## coverage
+rendered 1 of 8 applicable (18 declared not applicable), rate 0.125
+dropped: /inputs/0/label, /inputs/0/content, /inputs/1/label, /inputs/1/ref, /assumptions/0/text, /assumptions/0/why, /params/effort

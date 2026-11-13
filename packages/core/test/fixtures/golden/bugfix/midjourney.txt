@@ -1,4 +1,4 @@
-# fixture: bugfix  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: bugfix  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 the paginate() helper in the orders API

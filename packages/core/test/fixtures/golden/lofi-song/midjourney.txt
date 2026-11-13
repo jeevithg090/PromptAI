@@ -1,4 +1,4 @@
-# fixture: lofi-song  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: lofi-song  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 rain on a library window late at night --no autotune, heavy 808s, rap verses

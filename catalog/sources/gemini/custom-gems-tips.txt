@@ -1,0 +1,10 @@
+source: https://support.google.com/gemini/answer/15235603
+fetched_from: https://support.google.com/gemini/answer/15235603?hl=en
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+The main areas to consider when writing good Gem instructions are the same as writing good prompts. You don't need to use all four, but using a few will help:
+Persona Tell your Gem what role to play and how to respond.
+Task Tell the Gem what you want Gemini to do or create.
+Context Provide as much background as possible.
+Format Be specific when specifying desired structure.

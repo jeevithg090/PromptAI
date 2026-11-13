@@ -1,0 +1,36 @@
+# fixture: invoice-extraction  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+
+Invoice text:
+```
+ACME Supplies Ltd
+Invoice #A-1042  Date: 03/11/2026
+Bill to: Riverbend Cafe
+2 x Espresso grinder burr set @ 45.00
+Subtotal 90.00  VAT 20% 18.00  Total GBP 108.00
+Due in 30 days
+```
+
+Constraints:
+- Use null for any field that is not present; never guess
+- Dates as ISO 8601 (YYYY-MM-DD)
+
+When you finish, show the commands you ran and their output.
+
+Output: json
+Output schema: {"type":"object","required":["vendor","invoice_number","invoice_date","currency","total"],"properties":{"vendor":{"type":["string","null"]},"invoice_number":{"type":["string","null"]},"invoice_date":{"type":["string","null"],"format":"date"},"currency":{"type":["string","null"]},"total":{"type":["number","null"]}},"additionalProperties":false}
+
+Examples:
+- Invoice 77 from Bolt Co, 1 Jan 2026, total $50 -> {"vendor":"Bolt Co","invoice_number":"77","invoice_date":"2026-01-01","currency":"USD","total":50} (currency inferred from the $ sign)
+
+Assumptions (tell me if any is wrong before changing code):
+- Dates are day/month/year (UK vendor)
+
+## issues
+warning param_unsupported /params/effort | Coding agent (Agent Brief) has no setting for "effort"; not sent
+
+## coverage
+rendered 28 of 30 applicable (0 declared not applicable), rate 0.933
+dropped: /role, /params/effort

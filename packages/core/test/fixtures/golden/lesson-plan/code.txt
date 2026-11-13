@@ -1,0 +1,35 @@
+# fixture: lesson-plan  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend.
+Deliverable: a 45-minute lesson plan with a hands-on activity
+
+Context:
+- 30 students, mixed reading levels, 4 English learners
+- We have spinach leaves, baking soda, syringes and cups, but no microscopes
+
+Steps:
+1. Hook: a question students can argue about
+2. Mini-lesson: inputs and outputs, with a diagram
+3. Activity: floating leaf-disk experiment in groups
+4. Exit ticket: explain it to a friend in 3 sentences
+
+Constraints:
+- Timings must add up to 45 minutes
+- Include one support for English learners
+
+Done when:
+- Every timeline step has minutes
+- Uses only the listed materials
+
+When you finish, show the commands you ran and their output.
+
+Output: markdown (Objectives; Materials; Timeline; Differentiation; Assessment)
+
+This is for a 7th-grade science teacher (me) who will teach from the plan.
+
+## issues
+
+## coverage
+rendered 22 of 22 applicable (0 declared not applicable), rate 1
+dropped: none

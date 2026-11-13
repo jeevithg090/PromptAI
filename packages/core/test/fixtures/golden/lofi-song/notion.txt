@@ -1,0 +1,32 @@
+# fixture: lofi-song  target: notion  card: 2026-11-13.1  ok: true
+
+## field: text
+# rain on a library window late at night
+
+A gentle lo-fi song to study to, about rain on a library window
+
+## Intro
+(rain and vinyl crackle)
+
+## Verse
+Pages turning slow, the street lights hum
+Every drop a word I haven't found
+
+## Chorus
+Stay a while, the rain will keep the time
+Stay a while, ooh
+
+## Outro
+(piano fades with the rain)
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Notion makes text, brief asks for audio
+warning negation_unsupported /avoid/0 | Notion cannot exclude "autotune"
+warning negation_unsupported /avoid/1 | Notion cannot exclude "heavy 808s"
+warning negation_unsupported /avoid/2 | Notion cannot exclude "rap verses"
+info not_applicable /output | The page text is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the page.
+
+## coverage
+rendered 11 of 23 applicable (2 declared not applicable), rate 0.478
+dropped: /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title, /avoid/0, /avoid/1, /avoid/2

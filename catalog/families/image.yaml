@@ -1,0 +1,87 @@
+card_format: 1
+id: image
+display_name: Image generator
+vendor: PromptAI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "Family card for image generators without their own card; pastes into the prompt box and never submits."
+sources:
+  - https://docs.midjourney.com/hc/en-us/articles/32023408776205-Prompt-Basics
+  - https://docs.bfl.ml/guides/prompting_unified_technical.md
+model:
+  id: any
+  note: "Family card (image.generate): a plain-language scene description, subject first, then medium, light and framing, with the shape stated in words since flag syntax differs per tool."
+surface: paste
+accepts: [image]
+family: image.generate
+aliases: [dall-e, dalle, ideogram, leonardo ai, stable diffusion, adobe firefly, imagen, recraft]
+match_display_name: false   # "Image generator" is a category, not a name
+
+slots:
+  - id: style
+    label: Style
+    impact: 3
+    to: facets.visual.medium
+    options: [photorealistic, illustration, 3D render, anime, watercolor, oil painting]
+  - id: lighting
+    label: Lighting
+    impact: 2
+    to: facets.visual.lighting
+    default: soft natural light
+    options: [golden hour, soft studio, dramatic high-contrast, neon, overcast, night]
+  - id: composition
+    label: Framing
+    impact: 2
+    to: facets.visual.composition
+    default: medium shot
+    options: [close-up, medium shot, wide shot, overhead, low angle]
+  - id: aspect_ratio
+    label: Aspect ratio
+    impact: 1
+    to: params.aspect_ratio
+    default: "1:1"
+    options: ["1:1", "16:9", "9:16", "4:3", "4:5"]
+    pattern: '\b(\d{1,2}:\d{1,2})\b'
+
+params:
+  aspect_ratio:
+    type: string
+    pattern: '^\d+:\d+$'
+    note: "Stated in words; each tool has its own setting for it."
+
+negation:
+  strategy: inline
+  note: "Exclusions are stated once at the end; tools with a negative-prompt field have their own card."
+
+ignores:
+  /goal: "Image prompt: the subject carries the content."
+  /audience: "Image models have no notion of audience."
+  /role: "No persona channel in an image prompt."
+  /constraints: "No instruction channel; a compile step must turn rules into description."
+  /success_criteria: "Used by PromptAI's verifier only."
+  /assumptions: "Shown in PromptAI only."
+  /examples: "Not applicable."
+  /output: "Image output."
+  /context: "Not applicable."
+  /intent/deliverable/description: "Covered by the subject."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    label: Prompt
+    whitespace: single_line
+    template: |
+      {%- assign order = "action,setting,composition,camera,lighting,mood,color,medium,detail" | split: "," -%}
+      {{ brief.subject | default: brief.goal | sentence }}
+      {%- for k in order %}{% if brief.facets.visual[k] %} {{ brief.facets.visual[k] | join: ", " | sentence }}{% endif %}{% endfor %}
+      {%- if brief.style.descriptors %} {{ brief.style.descriptors | join: ", " | sentence }}{% endif %}
+      {%- if brief.style.tone %} The mood is {{ brief.style.tone | join: ", " }}.{% endif %}
+      {%- if brief.style.references %} In the style of {{ brief.style.references | join: " and " }}.{% endif %}
+      {%- if brief.facets.visual.text %} The image shows the text "{{ brief.facets.visual.text }}".{% endif %}
+      {%- if p.aspect_ratio %} Aspect ratio {{ p.aspect_ratio }}.{% endif %}
+      {%- if neg.items %} Without {{ neg.items | join: ", " }}.{% endif %}

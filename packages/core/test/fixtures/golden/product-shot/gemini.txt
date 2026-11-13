@@ -1,0 +1,34 @@
+# fixture: product-shot  target: gemini  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Persona: You are a helpful expert. You are writing for Etsy shoppers browsing on phones.
+
+Task: Make a hero photo for my Etsy listing of a handmade speckled ceramic mug.
+Subject: a handmade speckled ceramic mug with a matte sage-green glaze
+Deliverable: hero image for an Etsy listing
+
+Context:
+- visual setting: on a light oak table beside a folded linen napkin
+- visual camera: close-up product shot, 35mm lens, shallow depth of field
+- visual lighting: soft morning window light from the left
+- visual mood: calm, homey
+- visual medium: photorealistic product photography
+Style: clean, minimal props, warm neutral palette
+
+Rules:
+- The mug handle faces right
+- Leave out: text, watermark, people, harsh shadows
+
+Done when:
+- Mug is the clear focal point
+- Glaze texture is visible
+
+Assumptions (say so first if one is wrong for the task):
+- aspect ratio: 4:5 (default)
+- lighting: soft morning window light from the left (inferred)
+
+## issues
+
+## coverage
+rendered 21 of 21 applicable (0 declared not applicable), rate 1
+dropped: none

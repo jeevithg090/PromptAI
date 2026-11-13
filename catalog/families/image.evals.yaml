@@ -1,0 +1,6 @@
+- name: an image tool with no card; the shape is stated in words
+  input: { text: "dall-e image of a cozy cabin in the woods, 16:9" }
+  expect: { toolId: image, briefIncludes: ["Aspect ratio 16:9."], briefExcludes: ["--ar"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: the style stays a pick
+  input: { text: "stable diffusion picture of a robot" }
+  expect: { toolId: image, maxIssues: { block: 0 } }

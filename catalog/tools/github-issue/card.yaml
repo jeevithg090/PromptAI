@@ -4,6 +4,11 @@ display_name: GitHub issue (REST)
 vendor: GitHub
 version: "2026-11-10.1"
 verified_at: "2026-11-10"
+review_by: "2027-02-10"
+audience: shared_doc     # maintainers and the public read an issue
+tos:
+  insert_allowed: true
+  note: "Title and body are shown for the user to paste or send. Terms not yet reviewed by counsel."
 sources:
   - https://docs.github.com/en/rest/issues/issues#create-an-issue
 model:
@@ -47,12 +52,14 @@ fields:
   - name: title
     type: text
     required: true
+    label: Title
     whitespace: single_line
     template: "{{ brief.subject | default: brief.goal | truncate: 90 }}"
 
   - name: body
     type: text
     required: true
+    label: Body
     template: |
       ## Goal
       {{ brief.goal | sentence }}
@@ -129,6 +136,7 @@ fields:
 
   - name: request
     type: json
+    label: API request (JSON)
     whitespace: preserve
     body:
       title: "=out.title"

@@ -1,4 +1,4 @@
-# fixture: injection  target: claude  card: 2026-11-10.1  ok: true
+# fixture: injection  target: claude  card: 2026-11-13.1  ok: true
 
 ## field: system
 You are a careful, expert collaborator.

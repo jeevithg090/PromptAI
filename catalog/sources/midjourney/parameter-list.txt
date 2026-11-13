@@ -1,0 +1,7 @@
+source: https://docs.midjourney.com/hc/en-us/articles/32859204029709-Parameter-List
+fetched_from: https://docs.midjourney.com/api/v2/help_center/en-us/articles/32859204029709.json
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Parameters always go at the end of your text prompt, after you've described what you want to see. Using them successfully is all about placement and formatting.
+No Tell Midjourney what you don't want in your image using the no parameter --no

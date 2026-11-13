@@ -1,0 +1,67 @@
+card_format: 1
+id: notion
+display_name: Notion
+vendor: Notion Labs
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+# a shared workspace page: profile, fact and goal memories never appear in it (blueprint §10)
+audience: shared_doc
+sources:
+  - https://www.notion.com/help/writing-and-editing-basics
+claims:
+  - id: markdown-shortcuts
+    text: "Notion turns Markdown into blocks, so the card writes headings and lists in Markdown."
+    quote: "Notion supports many Markdown shortcuts."
+    source: https://www.notion.com/help/writing-and-editing-basics
+  - id: heading
+    text: "A title line becomes an H1 heading."
+    quote: "Type # followed by space to create an H1 heading."
+    source: https://www.notion.com/help/writing-and-editing-basics
+tos:
+  insert_allowed: true
+  note: "Insert pastes at the cursor and never shares or publishes. Terms not yet reviewed by counsel."
+model:
+  id: none
+  note: "Not an AI target: the text goes into a page others read. Without the compose model, the text is the user's own cleaned words."
+surface: paste
+accepts: [text]
+family: writing.doc
+aliases: [in notion, to notion, notion page, notion doc, notion.so, notion.com, notion.id]
+match_display_name: false   # "I have a notion that ..." is not the app
+
+negation:
+  strategy: drop
+  note: "Page text states what the writer said; exclusions have no place in it."
+
+ignores:
+  /audience: "Readers of the page; not written into it."
+  /role: "The writer writes as themselves."
+  /style: "Tone shapes the words; it is not written into the page."
+  /context: "Background for PromptAI only."
+  /constraints: "Rules for the writer, not page text."
+  /success_criteria: "Checked by PromptAI, not written into the page."
+  /output: "The page text is the output."
+  /examples: "Not page text."
+  /intent/deliverable/description: "Covered by the text."
+
+fields:
+  - name: text
+    type: text
+    required: true
+    label: Text
+    whitespace: preserve
+    description: "Markdown: an optional # title, the user's words, then ## sections."
+    template: |
+      {%- if brief.subject %}# {{ brief.subject }}
+
+      {% endif -%}
+      {{ brief.goal }}
+      {%- for s in brief.sections %}
+
+      ## {{ s.label }}
+      {{ s.text }}
+      {%- endfor %}
+
+notes:
+  - "unverified: the cited page documents typed Markdown shortcuts; that a pasted Markdown heading converts the same way was not checked against Notion's docs."

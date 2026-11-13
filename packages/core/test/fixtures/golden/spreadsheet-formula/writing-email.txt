@@ -1,0 +1,15 @@
+# fixture: spreadsheet-formula  target: writing-email  card: 2026-11-13.1  ok: true
+
+## field: body
+Show me a formula that flags overdue invoices and teach me how it works so I can write the next one myself
+
+## issues
+warning needs_llm /subject | No subject line yet; add one before you send.
+info not_applicable /audience | The recipient reads the email; there is no audience line in it.
+info not_applicable /constraints | Rules for the writer, not text for the recipient.
+info not_applicable /output | The email is the output.
+info not_applicable /success_criteria | Checked by PromptAI, not written into the email.
+
+## coverage
+rendered 2 of 4 applicable (6 declared not applicable), rate 0.5
+dropped: /facets/app.name, /facets/app.sheet_layout

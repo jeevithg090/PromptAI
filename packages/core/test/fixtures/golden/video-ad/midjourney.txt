@@ -1,4 +1,4 @@
-# fixture: video-ad  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: video-ad  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 a barista's hands pouring oat milk into a latte, forming a tulip pattern, a sunlit small coffee shop counter with plants, slow push-in, macro close-up on the cup, warm golden hour light through the window, cozy, inviting --no dialogue, text overlays, logos --ar 9:16

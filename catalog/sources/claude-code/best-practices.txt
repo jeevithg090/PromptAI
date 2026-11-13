@@ -1,0 +1,8 @@
+source: https://code.claude.com/docs/en/best-practices
+fetched_from: https://code.claude.com/docs/en/best-practices.md
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+A specific prompt helps for the same reason, because it gives Claude information it doesn't already have. If you name the file, describe the symptom, and say what "fixed" looks like up front, you usually save yourself a round of corrections later.
+If you give it something that comes back pass or fail, Claude can close that loop itself. It makes the change, runs the check, and if something broke it reads the output and fixes it before running the check again.
+Whichever option you use, ask Claude for *evidence*: the command it ran and its output, or the screenshot. "All tests pass" on its own tells you very little, and reading the output is faster than rerunning the check yourself. For a session you weren't watching, it's also the only evidence you have.

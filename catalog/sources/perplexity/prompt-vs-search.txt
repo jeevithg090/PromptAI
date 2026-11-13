@@ -1,0 +1,5 @@
+source: https://www.perplexity.ai/help-center/en/articles/10354937-what-is-the-difference-between-a-prompt-and-a-search
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Perplexity handles both prompts and searches smoothly. You can use simple keywords or detailed, conversational questions—both approaches will provide accurate results.

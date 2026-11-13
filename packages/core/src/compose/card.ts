@@ -48,6 +48,8 @@ export const FieldSchema = z.object({
   /** json fields: a vendor JSON Schema the rendered body must satisfy (inline; was `schema_file` in the spike) */
   schema: z.record(z.string(), z.unknown()).optional(),
   description: z.string().optional(),
+  /** the name the Draft sheet shows; a labelled field is one the user can insert. Unlabelled fields are parts of other fields */
+  label: z.string().min(1).max(100).optional(),
 }).strict().refine((f) => (f.type === 'text' ? f.template !== undefined : f.body !== undefined), {
   message: 'text fields need template; json fields need body',
 });
@@ -70,6 +72,23 @@ export const SlotSchema = z.object({
   pattern: z.string().optional(),
 }).strict();
 
+const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+
+/**
+ * A fact the card relies on, with the vendor's own words (blueprint §10, Tool Atlas).
+ * `quote` must be a literal substring of the cached copy of `source` (catalog/sources/).
+ */
+export const ClaimSchema = z.object({
+  id: z.string().regex(/^[a-z0-9_-]+$/),
+  text: Str,
+  quote: Str,
+  /** one of the card's `sources` */
+  source: z.string().url(),
+  valid_from: Day.optional(),
+  valid_to: Day.optional(),
+  review_by: Day.optional(),
+}).strict();
+
 export const CardSchema = z.object({
   card_format: z.literal(1),
   id: z.string().regex(/^[a-z0-9_-]+$/),
@@ -77,8 +96,18 @@ export const CardSchema = z.object({
   vendor: Str,
   /** content version of this card; bump when the tool changes */
   version: Str,
-  verified_at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  verified_at: Day,
+  /** re-check the card's claims by this date */
+  review_by: Day,
+  /**
+   * Who reads the inserted text (blueprint §6, §10). Text for a person (`human_recipient`)
+   * or a shared document (`shared_doc`) never carries profile, fact or goal memories.
+   */
+  audience: z.enum(['private_ai', 'human_recipient', 'shared_doc']),
   sources: z.array(z.string().url()).min(1),
+  claims: z.array(ClaimSchema).default([]),
+  /** whether pasting into the tool's own input is allowed by its terms; core never submits either way */
+  tos: z.object({ insert_allowed: z.boolean(), note: z.string().optional() }).strict(),
   /** the model/version the card was written against (perishable) */
   model: z.object({ id: Str, note: z.string().optional() }).strict(),
   /** how the output reaches the tool */
@@ -89,6 +118,8 @@ export const CardSchema = z.object({
   family: z.string().regex(/^[a-z][a-z0-9_]*(\.[a-z0-9_]+)*$/),
   /** other names people say or host apps report (bundle ids); resolveTool matches these and display_name */
   aliases: z.array(Str).default([]),
+  /** false when the display name is an everyday word ("Email", "Notion"): then only aliases match the user's words */
+  match_display_name: z.boolean().default(true),
   /** the text field forge returns as the brief; default: the first required text field */
   insert: FieldName.optional(),
   /** syntax this tool parses inside free text; the renderer neutralizes it in user content */
@@ -103,8 +134,10 @@ export const CardSchema = z.object({
     rewrite: z.record(z.string(), Str).optional(),
     note: z.string().optional(),
   }).strict(),
-  /** content the target must have that a deterministic render cannot invent */
+  /** content the target must have that a deterministic render cannot invent; each is a checklist item too */
   requires: z.array(z.object({
+    id: z.string().regex(/^[a-z][a-z0-9_]*$/),
+    label: z.string().min(1).max(200),
     any_of: z.array(z.string().regex(/^\//)).min(1),
     message: Str,
   }).strict()).default([]),
@@ -129,6 +162,21 @@ export const CardSchema = z.object({
   }
   const insert = c.insert === undefined ? c.fields.find((f) => f.type === 'text' && f.required) : c.fields.find((f) => f.name === c.insert);
   if (!insert || insert.type !== 'text') ctx.addIssue({ code: 'custom', path: ['insert'], message: 'insert must name a text field (or a required text field must exist)' });
+  if (insert && insert.label === undefined && c.fields.some((f) => f.label !== undefined)) {
+    ctx.addIssue({ code: 'custom', path: ['insert'], message: 'when any field has a label, the insert field needs one too' });
+  }
+  if (c.review_by <= c.verified_at) ctx.addIssue({ code: 'custom', path: ['review_by'], message: 'review_by must be after verified_at' });
+  const claimIds = new Set<string>();
+  for (const [i, cl] of c.claims.entries()) {
+    if (claimIds.has(cl.id)) ctx.addIssue({ code: 'custom', path: ['claims', i], message: `duplicate claim ${cl.id}` });
+    claimIds.add(cl.id);
+    if (!c.sources.includes(cl.source)) ctx.addIssue({ code: 'custom', path: ['claims', i, 'source'], message: `claim ${cl.id}: source must be one of the card's sources` });
+  }
+  const requireIds = new Set<string>();
+  for (const [i, r] of c.requires.entries()) {
+    if (requireIds.has(r.id) || c.slots.some((s) => s.id === r.id)) ctx.addIssue({ code: 'custom', path: ['requires', i], message: `requires ${r.id}: id must be unique among slots and requires` });
+    requireIds.add(r.id);
+  }
   const slotIds = new Set<string>();
   for (const [i, s] of c.slots.entries()) {
     if (slotIds.has(s.id)) ctx.addIssue({ code: 'custom', path: ['slots', i], message: `duplicate slot ${s.id}` });

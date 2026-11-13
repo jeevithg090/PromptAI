@@ -1,0 +1,6 @@
+source: https://www.notion.com/help/writing-and-editing-basics
+fetched: 2026-11-13
+note: only the paragraphs a claim quotes, verbatim
+---
+Notion supports many Markdown shortcuts. Learn more about keyboard shortcuts here →
+Type # followed by space to create an H1 heading.

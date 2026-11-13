@@ -1,10 +1,10 @@
-# fixture: cover-letter  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: cover-letter  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+Goal: Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
 Deliverable: a one-page cover letter
 
-Files: https://example.com/jobs/ux-researcher (reference: Job posting)
+Scope: https://example.com/jobs/ux-researcher (reference: Job posting)
 
 My resume (summary):
 ```
@@ -17,14 +17,16 @@ Context:
 
 Constraints:
 - Keep it under 350 words
-- Do not use the phrases 'passionate about' or 'team player'
 - Mention one concrete result with a number
 
-Output: prose (Opening hook; Research evidence from nursing; Why this company; Close with a call to action)
+Do not:
+- Do not use the phrases 'passionate about' or 'team player'
 
 Done when:
 - A skimming reader finds a research method and a result in the first two paragraphs
 - No clichés
+
+Output: prose (Opening hook; Research evidence from nursing; Why this company; Close with a call to action)
 
 Assumptions (tell me if any is wrong before changing code):
 - US English spelling (the job is US-based)

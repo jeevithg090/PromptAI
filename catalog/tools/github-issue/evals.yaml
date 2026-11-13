@@ -1,0 +1,6 @@
+- name: the body is the brief; the kind is assumed
+  input: { text: "file a github issue: the export button does nothing on Safari" }
+  expect: { toolId: github-issue, briefIncludes: ["## Goal", "issue kind: bug"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: a feature request said by kind
+  input: { text: "gh issue feature: let users pick a dark theme" }
+  expect: { toolId: github-issue, briefIncludes: ["issue kind: feature"], maxIssues: { block: 0 } }

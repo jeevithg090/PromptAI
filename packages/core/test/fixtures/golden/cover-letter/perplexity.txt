@@ -1,0 +1,37 @@
+# fixture: cover-letter  target: perplexity  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Write a cover letter for a UX researcher role at a health-tech startup, showing how 8 years as an ICU nurse prepared me.
+This is for a hiring manager who skims for evidence of research skills.
+
+Context:
+- The company builds remote patient monitoring software
+- I am applying cold, with no referral
+
+My resume (summary) (source data):
+"""
+ICU nurse, 8 years, St. Mary's Hospital. Led a 6-month study of alarm fatigue: 40 nurse interviews, shadowing, redesigned alarm triage cards adopted unit-wide. Google UX Design Certificate (2025). Portfolio: 3 case studies.
+"""
+
+Job posting (reference: https://example.com/jobs/ux-researcher)
+
+Keep it under 350 words.
+Do not use the phrases 'passionate about' or 'team player'
+Mention one concrete result with a number.
+
+Output format: Prose. Length: at most 350 words. Sections: Opening hook; Research evidence from nursing; Why this company; Close with a call to action.
+
+A good answer:
+- A skimming reader finds a research method and a result in the first two paragraphs
+- No clichés
+
+Assumptions (say so first if one is wrong):
+- US English spelling (the job is US-based)
+
+## issues
+info not_applicable /role | Perplexity answers as itself; a persona adds little to a search.
+info not_applicable /params/effort | Pro Search and Research modes are chosen in the UI.
+
+## coverage
+rendered 21 of 24 applicable (2 declared not applicable), rate 0.875
+dropped: /style/tone/0, /style/tone/1, /style/tone/2

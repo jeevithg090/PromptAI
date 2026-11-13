@@ -1,0 +1,165 @@
+card_format: 1
+id: code
+display_name: Coding agent (Agent Brief)
+vendor: PromptAI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-01-13"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "Agent Brief family card: prefilled into the agent's input, never submitted; the agent's own approvals govern what runs."
+sources:
+  - https://code.claude.com/docs/en/best-practices
+  - https://cursor.com/docs/agent/prompting.md
+claims:
+  - id: name-the-file
+    text: "The brief names files, the symptom and what done looks like before the agent starts."
+    quote: "If you name the file, describe the symptom, and say what \"fixed\" looks like up front, you usually save yourself a round of corrections later."
+    source: https://code.claude.com/docs/en/best-practices
+  - id: give-a-check
+    text: "Every brief carries a pass/fail check under Done when."
+    quote: "If you give it something that comes back pass or fail, Claude can close that loop itself."
+    source: https://code.claude.com/docs/en/best-practices
+  - id: scope-optional
+    text: "With no files named, scope is left to the agent's own search."
+    quote: "Use @ mentions when you know which files are relevant."
+    source: https://cursor.com/docs/agent/prompting.md
+model:
+  id: any
+  note: "Family card (code.agent): the Agent Brief dialect (goal, allowed scope, forbidden actions, done-when checks, stop-and-ask points) for coding agents with no card of their own."
+surface: paste
+accepts: [code, text, data]
+family: code.agent
+aliases: [windsurf editor, openai codex, codex cli, github copilot, copilot agent, aider, cline, com.exafunction.windsurf]
+match_display_name: false   # "Coding agent" is a category, not a name
+
+slots:
+  - id: check
+    label: Done check
+    impact: 2
+    to: facets.agent.check
+    default: the existing tests pass
+    options: [the existing tests pass, a new failing test now passes, typecheck and lint are clean, the app builds and runs]
+  - id: stop_before
+    label: Stop and ask before
+    impact: 2
+    to: facets.agent.stop_before
+    default: deleting files, adding dependencies or pushing
+    options: [deleting files, adding dependencies or pushing, any change outside the named files, running migrations or deploying, every change]
+
+negation:
+  strategy: inline
+
+ignores:
+  /params/aspect_ratio: "Not applicable."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    label: Prompt
+    description: "Agent Brief dialect: goal, allowed scope, forbidden actions, done-when checks, stop-and-ask points and the evidence to report."
+    template: |
+      Goal: {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Focus: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.intent.deliverable.description %}
+      Deliverable: {{ brief.intent.deliverable.description }}
+      {%- endif %}
+      {%- assign files = brief.inputs | where: "ref" %}
+      {%- if files.size > 0 %}
+
+      Scope: {% for f in files %}{{ f.ref }} ({{ f.role | replace: "_", " " }}{% if f.label %}: {{ f.label }}{% endif %}){% unless forloop.last %}, {% endunless %}{% endfor %}
+      {%- endif %}
+      {%- assign pasted = brief.inputs | where: "content" %}
+      {%- for d in pasted %}
+
+      {{ d.label | default: d.id }}:
+      ```
+      {{ d.content }}
+      ```
+      {%- endfor %}
+      {%- if brief.context %}
+
+      Context:
+      {{ brief.context | bullets }}
+      {%- endif %}
+      {%- for ns in brief.facets %}{% if ns[0] != "agent" %}
+
+      Environment ({{ ns[0] }}): {% for kv in ns[1] %}{{ kv[0] | replace: "_", " " }} {{ kv[1] | join: ", " }}{% unless forloop.last %}; {% endunless %}{% endfor %}
+      {%- endif %}{% endfor %}
+      {%- if brief.sections %}
+
+      Steps:
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. {{ s.label }}: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- assign musts = brief.constraints | where: "kind", "must" %}
+      {%- assign prefers = brief.constraints | where: "kind", "prefer" %}
+      {%- assign nots = brief.constraints | where: "kind", "must_not" %}
+      {%- if musts.size > 0 or prefers.size > 0 %}
+
+      Constraints:
+      {%- for c in musts %}
+      - {{ c.text }}
+      {%- endfor %}
+      {%- for c in prefers %}
+      - Preferred: {{ c.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if nots.size > 0 or neg.items %}
+
+      Do not:
+      {%- for c in nots %}
+      - {{ c.text }}
+      {%- endfor %}
+      {%- for n in neg.items %}
+      - {{ n }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria or brief.facets.agent.check %}
+
+      Done when:
+      {%- for s in brief.success_criteria %}
+      - {{ s }}
+      {%- endfor %}
+      {%- if brief.facets.agent.check %}
+      - {{ brief.facets.agent.check }}
+      {%- endif %}
+      {%- endif %}
+
+
+      {% if brief.facets.agent.stop_before %}Stop and ask before {{ brief.facets.agent.stop_before }}.
+      {% endif %}When you finish, show the commands you ran and their output.
+      {%- if brief.output.format or brief.output.structure %}
+
+      Output: {{ brief.output.format }}{% if brief.output.structure %} ({{ brief.output.structure | join: "; " }}){% endif %}
+      {%- endif %}
+      {%- if brief.output.schema %}
+      Output schema: {{ brief.output.schema | json }}
+      {%- endif %}
+      {%- if brief.examples %}
+
+      Examples:
+      {%- for e in brief.examples %}
+      - {% if e.input %}{{ e.input }} -> {% endif %}{{ e.output }}{% if e.note %} ({{ e.note }}){% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if assumed %}
+
+      Assumptions (tell me if any is wrong before changing code):
+      {{ assumed | bullets }}
+      {%- endif %}
+      {%- if brief.audience %}
+
+      This is for {{ brief.audience }}.
+      {%- endif %}
+      {%- if brief.style.tone %}
+      Tone: {{ brief.style.tone | join: ", " }}.
+      {%- endif %}
+
+notes:
+  - "Agent Brief dialect (w2-agentic-execution §7): prefilled at the prompt and never submitted. The agent acts with its own permissions, so PromptAI says plainly that the agent will act."

@@ -1,4 +1,4 @@
-# fixture: invoice-extraction  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: invoice-extraction  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet

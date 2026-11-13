@@ -1,0 +1,6 @@
+- name: a natural-language prompt and a schema-valid request body
+  input: { text: "a flux 3 image of a red bicycle against a white wall, 16:9" }
+  expect: { toolId: flux3, briefIncludes: ["A flux 3 image of a red bicycle"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: an unsupported ratio is dropped, not sent
+  input: { text: "flux3 poster of a mountain lake, 7:3" }
+  expect: { toolId: flux3, maxIssues: { block: 0 } }

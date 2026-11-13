@@ -1,0 +1,154 @@
+card_format: 1
+id: chat
+display_name: AI chat assistant
+vendor: PromptAI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
+tos:
+  insert_allowed: true
+  note: "Family card for chat assistants without their own card; pastes into the message box and never sends."
+sources:
+  - https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+  - https://developers.openai.com/api/docs/guides/prompt-engineering
+claims:
+  - id: sections
+    text: "Labelled sections (task, context, rules, format) mark the parts of the prompt."
+    quote: "Markdown headers and lists can be helpful to mark distinct sections of a prompt, and to communicate hierarchy to the model."
+    source: https://developers.openai.com/api/docs/guides/prompt-engineering
+  - id: say-what-to-do
+    text: "Exclusions are listed once; the rest says what to do."
+    quote: "Tell Claude what to do instead of what not to do"
+    source: https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices
+model:
+  id: any
+  note: "Family card (text.chat): chat assistants with no card of their own get this plain, tool-neutral message."
+surface: paste
+accepts: [text, code, data, image]
+family: text.chat
+aliases: [deepseek, chat.deepseek.com, grok, mistral le chat, meta ai, microsoft copilot]
+match_display_name: false   # "AI chat assistant" is a category, not a name
+
+slots:
+  - id: audience
+    label: Audience
+    impact: 2
+    to: audience
+    default: a general audience
+    options: [a general audience, beginners, experts, children, my team]
+  - id: tone
+    label: Tone
+    impact: 1
+    to: style.tone
+    default: clear and direct
+    options: [professional, friendly, encouraging, concise, playful, academic]
+  - id: format
+    label: Format
+    impact: 1
+    to: output.format
+    default: markdown
+    options: [markdown, plain prose, bullet list, table, json, code]
+
+negation:
+  strategy: inline
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    label: Prompt
+    description: "One message to paste into any assistant."
+    template: |
+      {%- if brief.role %}You are {{ brief.role }}.
+      {% endif -%}
+      {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Subject: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.intent.deliverable.description %}
+      Deliverable: {{ brief.intent.deliverable.description }}
+      {%- endif %}
+      {%- if brief.context %}
+
+      Context:
+      {{ brief.context | bullets }}
+      {%- endif %}
+      {%- for d in brief.inputs %}
+
+      {{ d.label | default: d.id }} ({{ d.role | replace: "_", " " }}{% if d.ref %}: {{ d.ref }}{% endif %}){% if d.content %}:
+      """
+      {{ d.content }}
+      """{% endif %}
+      {%- endfor %}
+      {%- if brief.sections %}
+
+      Outline:
+      {%- for s in brief.sections %}
+      {{ forloop.index }}. {{ s.label }}{% if s.start_s != nil %} ({{ s.start_s }}-{{ s.end_s }}s){% endif %}: {{ s.text }}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.audience or brief.style or brief.output %}
+      {% if brief.audience %}
+      Audience: {{ brief.audience }}
+      {%- endif %}
+      {%- if brief.style.tone %}
+      Tone: {{ brief.style.tone | join: ", " }}
+      {%- endif %}
+      {%- if brief.style.descriptors %}
+      Style: {{ brief.style.descriptors | join: ", " }}
+      {%- endif %}
+      {%- if brief.style.references %}
+      References: {{ brief.style.references | join: "; " }}
+      {%- endif %}
+      {%- if brief.output.format %}
+      Format: {{ brief.output.format }}
+      {%- endif %}
+      {%- if brief.output.length %}
+      Length: {% if brief.output.length.target %}about {{ brief.output.length.target }} {% endif %}{% if brief.output.length.min %}at least {{ brief.output.length.min }} {% endif %}{% if brief.output.length.max %}at most {{ brief.output.length.max }} {% endif %}{{ brief.output.length.unit }}
+      {%- endif %}
+      {%- if brief.output.structure %}
+      Sections, in order: {{ brief.output.structure | join: "; " }}
+      {%- endif %}
+      {%- if brief.output.language %}
+      Language: {{ brief.output.language }}
+      {%- endif %}
+      {%- if brief.output.schema %}
+      Return only JSON that validates against this JSON Schema:
+      {{ brief.output.schema | json: 2 }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.facets %}
+
+      Details:
+      {%- for ns in brief.facets %}{% for kv in ns[1] %}
+      - {{ ns[0] }} {{ kv[0] | replace: "_", " " }}: {{ kv[1] | join: ", " }}
+      {%- endfor %}{% endfor %}
+      {%- endif %}
+      {%- if brief.constraints or neg.items %}
+
+      Rules:
+      {%- for c in brief.constraints %}
+      - {% if c.kind == "prefer" %}Preferred, not required: {% endif %}{{ c.text }}
+      {%- endfor %}
+      {%- if neg.items %}
+      - Leave out: {{ neg.items | join: ", " }}
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.examples %}
+
+      Examples:
+      {%- for e in brief.examples %}
+      - {% if e.input %}{{ e.input }} -> {% endif %}{{ e.output }}{% if e.note %} ({{ e.note }}){% endif %}
+      {%- endfor %}
+      {%- endif %}
+      {%- if brief.success_criteria %}
+
+      Done when:
+      {{ brief.success_criteria | bullets }}
+      {%- endif %}
+      {%- if assumed %}
+
+      Assumptions (say so first if one is wrong for the task):
+      {{ assumed | bullets }}
+      {%- endif %}

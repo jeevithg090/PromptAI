@@ -1,0 +1,117 @@
+card_format: 1
+id: perplexity
+display_name: Perplexity
+vendor: Perplexity AI
+version: "2026-11-13.1"
+verified_at: "2026-11-13"
+review_by: "2027-02-13"
+audience: private_ai
+sources:
+  - https://www.perplexity.ai/help-center/en/articles/10352971-practical-tips-for-using-perplexity
+  - https://www.perplexity.ai/help-center/en/articles/10354937-what-is-the-difference-between-a-prompt-and-a-search
+claims:
+  - id: instruction-first
+    text: "The ask opens with a plain instruction of what to find or do."
+    quote: "Instruction: Clearly say what you want Perplexity to do."
+    source: https://www.perplexity.ai/help-center/en/articles/10352971-practical-tips-for-using-perplexity
+  - id: context
+    text: "Background and pasted material follow under Context."
+    quote: "Context: Give some background information to help Perplexity understand the task."
+    source: https://www.perplexity.ai/help-center/en/articles/10352971-practical-tips-for-using-perplexity
+  - id: output-format
+    text: "The answer's shape is stated explicitly."
+    quote: "Output format: Explain how you want the response to be formatted."
+    source: https://www.perplexity.ai/help-center/en/articles/10352971-practical-tips-for-using-perplexity
+  - id: prompt-or-search
+    text: "A full conversational prompt works as well as keywords, so the card writes sentences."
+    quote: "Perplexity handles both prompts and searches smoothly."
+    source: https://www.perplexity.ai/help-center/en/articles/10354937-what-is-the-difference-between-a-prompt-and-a-search
+tos:
+  insert_allowed: true
+  note: "Insert pastes into the Ask box and never submits. Terms not yet reviewed by counsel."
+model:
+  id: user-selected
+  note: "Perplexity picks the model and the search; the card writes one question."
+surface: paste
+accepts: [text, data]
+family: search.answer
+aliases: [perplexity ai, perplexity.ai, ai.perplexity.mac]
+
+slots:
+  - id: recency
+    label: Sources from
+    impact: 2
+    to: facets.search.recency
+    default: prefer the most recent sources
+    options: [prefer the most recent sources, only the past year, only the past month, any date]
+  - id: format
+    label: Answer format
+    impact: 1
+    to: output.format
+    default: a short answer with key points and cited sources
+    options: [a short answer with key points and cited sources, a detailed report, a comparison table, a step-by-step guide]
+
+negation:
+  strategy: inline
+
+ignores:
+  /params/aspect_ratio: "Not applicable."
+  /params/effort: "Pro Search and Research modes are chosen in the UI."
+  /role: "Perplexity answers as itself; a persona adds little to a search."
+
+fields:
+  - name: prompt
+    type: text
+    required: true
+    label: Question
+    description: "Instruction, Context, Input and Output format, from Perplexity's prompting tips."
+    template: |
+      {{ brief.goal | sentence }}
+      {%- if brief.subject and brief.subject != brief.goal %}
+      Topic: {{ brief.subject }}
+      {%- endif %}
+      {%- if brief.audience %}
+      This is for {{ brief.audience }}.
+      {%- endif %}
+      {%- if brief.context %}
+
+      Context:
+      {{ brief.context | bullets }}
+      {%- endif %}
+      {%- for d in brief.inputs %}
+
+      {{ d.label | default: d.id }} ({{ d.role | replace: "_", " " }}{% if d.ref %}: {{ d.ref }}{% endif %}){% if d.content %}:
+      """
+      {{ d.content }}
+      """{% endif %}
+      {%- endfor %}
+      {%- if brief.facets.search.recency %}
+
+      Sources: {{ brief.facets.search.recency }}.
+      {%- endif %}
+      {%- if brief.constraints or neg.items %}
+      {% for c in brief.constraints %}
+      {% if c.kind == "prefer" %}Preferably, {% endif %}{{ c.text | sentence }}
+      {%- endfor %}
+      {%- if neg.items %}
+      Leave out: {{ neg.items | join: ", " }}.
+      {%- endif %}
+      {%- endif %}
+      {%- if brief.output.format or brief.output.length or brief.output.structure or brief.output.language %}
+
+      Output format:
+      {%- if brief.output.format %} {{ brief.output.format | sentence }}{% endif %}
+      {%- if brief.output.length %} Length: {% if brief.output.length.target %}about {{ brief.output.length.target }} {% endif %}{% if brief.output.length.max %}at most {{ brief.output.length.max }} {% endif %}{{ brief.output.length.unit }}.{% endif %}
+      {%- if brief.output.structure %} Sections: {{ brief.output.structure | join: "; " }}.{% endif %}
+      {%- if brief.output.language %} Language: {{ brief.output.language }}.{% endif %}
+      {%- endif %}
+      {%- if brief.success_criteria %}
+
+      A good answer:
+      {{ brief.success_criteria | bullets }}
+      {%- endif %}
+      {%- if assumed %}
+
+      Assumptions (say so first if one is wrong):
+      {{ assumed | bullets }}
+      {%- endif %}

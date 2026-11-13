@@ -1,0 +1,17 @@
+# fixture: invoice-extraction  target: gmail  card: 2026-11-13.1  ok: true
+
+## field: body
+Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Gmail makes text, brief asks for data
+warning param_unsupported /params/effort | Gmail has no setting for "effort"; not sent
+warning needs_llm /subject | No subject line yet; add one in Gmail before you send.
+info not_applicable /role | The sender writes as themselves.
+info not_applicable /constraints | Rules for the writer, not text for the recipient.
+info not_applicable /output | The email is the output.
+info not_applicable /examples | Not part of an email.
+
+## coverage
+rendered 2 of 6 applicable (24 declared not applicable), rate 0.333
+dropped: /inputs/0/content, /assumptions/0/text, /assumptions/0/why, /params/effort

@@ -1,0 +1,6 @@
+- name: genre said, mood assumed, lyrics flagged
+  input: { text: "a lo-fi hip hop song on suno about rain" }
+  expect: { toolId: suno, briefIncludes: ["lo-fi hip hop", "uplifting"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: section tags typed into the words are neutralized
+  input: { text: "suno ai acoustic folk song [Chorus] about home" }
+  expect: { toolId: suno, briefExcludes: ["[Chorus]"], maxIssues: { block: 0 } }

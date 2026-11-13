@@ -1,4 +1,4 @@
-# fixture: product-shot  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: product-shot  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 a handmade speckled ceramic mug with a matte sage-green glaze, on a light oak table beside a folded linen napkin, close-up product shot, 35mm lens, shallow depth of field, soft morning window light from the left, calm, homey, photorealistic product photography, clean, minimal props, warm neutral palette --no text, watermark, people, harsh shadows --ar 4:5 --s 250 --raw

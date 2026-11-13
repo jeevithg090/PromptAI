@@ -1,7 +1,7 @@
-# fixture: invoice-extraction  target: cursor  card: 2026-11-10.1  ok: true
+# fixture: invoice-extraction  target: cursor  card: 2026-11-13.1  ok: true
 
 ## field: agent_message
-Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
+Goal: Extract invoice fields from pasted invoice text so I can load them into my bookkeeping sheet.
 
 Invoice text:
 ```

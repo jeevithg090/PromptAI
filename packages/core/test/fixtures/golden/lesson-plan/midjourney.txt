@@ -1,4 +1,4 @@
-# fixture: lesson-plan  target: midjourney  card: 2026-11-10.1  ok: true
+# fixture: lesson-plan  target: midjourney  card: 2026-11-13.1  ok: true
 
 ## field: prompt
 Plan a 45-minute lesson that helps my 7th graders understand photosynthesis well enough to explain it to a friend

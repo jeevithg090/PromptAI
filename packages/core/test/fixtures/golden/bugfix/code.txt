@@ -1,0 +1,37 @@
+# fixture: bugfix  target: code  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Goal: Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Focus: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+
+Scope: src/lib/paginate.ts (edit target), src/lib/paginate.test.ts (reference)
+
+Failing test output:
+```
+expected pageCount 3, received 4 (total=30, pageSize=10)
+```
+
+Environment (code): language TypeScript 5.9; runtime Node 24; test runner vitest
+
+Constraints:
+- Keep the public signature of paginate() unchanged
+- Preferred: Smallest diff that fixes the bug
+
+Do not:
+- Do not add dependencies
+
+Done when:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+
+When you finish, show the commands you ran and their output.
+
+Output: unified diff, then a 2-sentence explanation
+
+## issues
+warning param_unsupported /params/effort | Coding agent (Agent Brief) has no setting for "effort"; not sent
+
+## coverage
+rendered 15 of 16 applicable (0 declared not applicable), rate 0.938
+dropped: /params/effort

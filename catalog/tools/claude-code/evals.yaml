@@ -1,0 +1,12 @@
+- name: Agent Brief with a check and evidence
+  input: { text: "claude code, write a failing test for the token refresh bug, then fix it" }
+  expect: { toolId: claude-code, briefIncludes: ["Goal:", "Done when:", "When you finish, show the commands you ran and their output."], noUnsourced: true, maxIssues: { block: 0 } }
+- name: named over plain Claude
+  input: { text: "ask claude code to add a dark mode toggle to the settings page" }
+  expect: { toolId: claude-code, briefIncludes: ["Stop and ask before deleting files, adding dependencies or pushing."], briefExcludes: ["<task>"], maxIssues: { block: 0 } }
+- name: the done check said in the words
+  input: { text: "in claude code, rename the config loader and make sure typecheck and lint are clean" }
+  expect: { toolId: claude-code, briefIncludes: ["- typecheck and lint are clean"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: a hinted tool, never submitted
+  input: { text: "migrate the users table to add an email_verified column", toolHint: claude-code }
+  expect: { toolId: claude-code, briefIncludes: ["Goal: Migrate the users table"], noUnsourced: true, maxIssues: { block: 0 } }

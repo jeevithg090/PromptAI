@@ -1,0 +1,36 @@
+# fixture: bugfix  target: gemini  card: 2026-11-13.1  ok: true
+
+## field: prompt
+Task: Fix the off-by-one bug where the last page of /api/orders is empty when the total is an exact multiple of the page size.
+Subject: the paginate() helper in the orders API
+Deliverable: a minimal patch plus a regression test
+
+Context:
+- code language: TypeScript 5.9
+- code runtime: Node 24
+- code test runner: vitest
+- paginate (edit target: src/lib/paginate.ts)
+- test (reference: src/lib/paginate.test.ts)
+- Failing test output (source data):
+"""
+expected pageCount 3, received 4 (total=30, pageSize=10)
+"""
+
+Format:
+- unified diff, then a 2-sentence explanation
+
+Rules:
+- Keep the public signature of paginate() unchanged
+- Do not add dependencies
+- Preferred, not required: Smallest diff that fixes the bug
+
+Done when:
+- New regression test fails before the fix and passes after
+- All existing tests pass
+
+## issues
+warning param_unsupported /params/effort | Gemini has no setting for "effort"; not sent
+
+## coverage
+rendered 15 of 16 applicable (0 declared not applicable), rate 0.938
+dropped: /params/effort

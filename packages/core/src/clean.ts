@@ -3,6 +3,7 @@
  * Every rule leans toward keeping words: a filler left in is a cosmetic miss,
  * a meaningful word removed is a meaning error.
  */
+import { applyReplacements, fillerPattern, scaleNumbers, type LocalePack } from './locale.ts';
 import { foldDigits, foldNumberGrouping } from './text.ts';
 
 /** Marks "capitalize the next letter" where a removed word carried a sentence's capital. */
@@ -68,21 +69,26 @@ function indianGrouping(t: string): string {
 }
 
 /**
- * Clean a dictated transcript. The rules are English plus Hinglish, so they run
- * only for `en*` and `hi*` locales ("er" is a German pronoun); other locales get
- * whitespace cleanup only, until their locale pack exists.
+ * Clean a dictated transcript. The built-in rules are English plus Hinglish, so
+ * they run only for `en*` and `hi*` locales ("er" is a German pronoun); other
+ * locales get whitespace cleanup only. A locale pack adds its fillers,
+ * replacements and number words, and sets the digit grouping.
  */
-export function cleanTranscript(text: string, locale = 'en'): string {
+export function cleanTranscript(text: string, locale = 'en', pack?: LocalePack): string {
   let t = text.normalize('NFC').replaceAll(CAP, '').replace(/\r\n?/g, '\n');
   if (!/^(?:en|hi)(?:-|$)/i.test(locale)) return t.replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').trim();
   t = t.replace(LAYOUT, (_m, cmd: string | undefined) => (cmd?.toLowerCase() === 'paragraph' ? '\n\n' : '\n'));
   t = t.replace(FILLER, (m, word: string) => (word.length > 1 && word === word.toUpperCase() ? m : capIf(word)));
+  const packFillers = pack && fillerPattern(pack);
+  if (packFillers) t = t.replace(packFillers, (_m, word: string) => capIf(word));
+  if (pack) t = applyReplacements(t, pack);
   t = t.replace(YOU_KNOW, (_m, phrase: string) => capIf(phrase));
   t = t.replace(LIKE_COMMAS, ' ');
   t = t.replace(LIKE_OPENER, (_m, lead: string, word: string) => lead + capIf(word).trim());
   t = t.replace(LIKE_HEDGE, '$1 ');
   t = scratchThat(t);
-  if (/^en-in$/i.test(locale)) t = indianGrouping(t);
+  if (pack) t = scaleNumbers(t, pack);
+  if (pack ? pack.numbers.grouping === 'indian' : /^en-in$/i.test(locale)) t = indianGrouping(t);
   return t
     .replace(/[ \t]+/g, ' ')
     .replace(/ ?\n ?/g, '\n')
@@ -94,12 +100,16 @@ export function cleanTranscript(text: string, locale = 'en'): string {
     .trim();
 }
 
-function numbersIn(s: string): string[] {
-  return foldNumberGrouping(foldDigits(s.normalize('NFC'))).match(/\d+(?:[.:]\d+)*/g) ?? [];
+function numbersIn(s: string, pack?: LocalePack): string[] {
+  const t = foldDigits(s.normalize('NFC'));
+  return foldNumberGrouping(pack ? scaleNumbers(t, pack) : t).match(/\d+(?:[.:]\d+)*/g) ?? [];
 }
 
-/** True when every number in `after` also appears in `before` (grouping and script differences ignored). */
-export function numbersConsistent(before: string, after: string): boolean {
-  const have = new Set(numbersIn(before));
-  return numbersIn(after).every((n) => have.has(n));
+/**
+ * True when every number in `after` also appears in `before` (grouping and script
+ * differences ignored; with a pack, "5 lakh" equals 500000).
+ */
+export function numbersConsistent(before: string, after: string, pack?: LocalePack): boolean {
+  const have = new Set(numbersIn(before, pack));
+  return numbersIn(after, pack).every((n) => have.has(n));
 }

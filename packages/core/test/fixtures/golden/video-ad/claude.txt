@@ -1,4 +1,4 @@
-# fixture: video-ad  target: claude  card: 2026-11-10.1  ok: true
+# fixture: video-ad  target: claude  card: 2026-11-13.1  ok: true
 
 ## field: system
 You are a careful, expert collaborator. The work is for local Gen-Z coffee drinkers; write at their level.

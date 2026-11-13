@@ -1,0 +1,6 @@
+- name: pattern slots read from the words
+  input: { text: "a veo clip of waves, 9:16, 15s, drone shot, documentary" }
+  expect: { toolId: gemini-omni-video, briefIncludes: ["Camera: Drone shot.", "Style: Documentary."], noUnsourced: true, maxIssues: { block: 0 } }
+- name: defaults fill the rest
+  input: { text: "gemini omni: a short clip of a cat stretching" }
+  expect: { toolId: gemini-omni-video, briefIncludes: ["Camera: Static."], maxIssues: { block: 0 } }

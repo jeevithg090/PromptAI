@@ -1,0 +1,19 @@
+# fixture: lofi-song  target: perplexity  card: 2026-11-13.1  ok: true
+
+## field: prompt
+A gentle lo-fi song to study to, about rain on a library window.
+Topic: rain on a library window late at night
+
+Leave out: autotune, heavy 808s, rap verses.
+
+Output format: Length: about 120 seconds.
+
+A good answer:
+- Loopable, no sudden loud moments
+
+## issues
+warning deliverable_mismatch /intent/deliverable/kind | Perplexity makes text/data, brief asks for audio
+
+## coverage
+rendered 8 of 25 applicable (0 declared not applicable), rate 0.32
+dropped: /sections/0/label, /sections/0/text, /sections/1/text, /sections/2/label, /sections/2/text, /sections/3/label, /sections/3/text, /facets/music.genre, /facets/music.mood/0, /facets/music.mood/1, /facets/music.instrumentation/0, /facets/music.instrumentation/1, /facets/music.instrumentation/2, /facets/music.instrumentation/3, /facets/music.vocals, /facets/music.bpm, /facets/music.title
