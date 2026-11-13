@@ -177,6 +177,7 @@ export interface DraftResponseClarifying {
   session_id: string;
   final_state: 'awaiting_clarification';
   task_type: TaskType;
+  entities: Record<string, string>;
   questions: ClarifyingQuestion[];
   can_generate_now: boolean;
   pipeline_trace: unknown[];

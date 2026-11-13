@@ -49,7 +49,9 @@ function BuildContent() {
 
   const [sessionId, setSessionId] = useState('');
   const [taskType, setTaskType] = useState<TaskType | null>(null);
+  const [entities, setEntities] = useState<Record<string, string>>({});
   const [questions, setQuestions] = useState<ClarifyingQuestion[]>([]);
+  // Every answer in this session, across rounds: the server keeps no answers between calls.
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
   const [result, setResult] = useState<DraftResponse | null>(null);
@@ -76,7 +78,7 @@ function BuildContent() {
     if (typeof localStorage !== 'undefined') localStorage.setItem('pf_build_mode', mode);
   };
 
-  const answeredCount = Object.values(answers).filter((v) => v.length > 0).length;
+  const answeredCount = questions.filter((q) => (answers[q.id] ?? '').length > 0).length;
   const hasAnswers = answeredCount > 0;
 
   const handleAnswerChange = useCallback((questionId: string, value: string) => {
@@ -91,11 +93,16 @@ function BuildContent() {
     // F2.1: the resume leg is the slow one (3–7s) and we know the session id,
     // so poll for the true pipeline step. Falls back silently to the spinner.
     const stop = startProgressPolling(sessionId);
+    // Send every answer so far ("Just generate" keeps them too), and this round's
+    // unanswered questions as empty answers, which the server will not ask again.
+    const skipped = Object.fromEntries(questions.filter((q) => !answers[q.id]?.trim()).map((q) => [q.id, '']));
     try {
       const res: DraftResponse = await api.clarify(sessionId, {
         platform_id: selectedPlatform,
         idea,
-        clarifications: justGenerate ? {} : answers,
+        clarifications: { ...skipped, ...answers },
+        task_type: taskType ?? undefined,
+        entities,
         just_generate: justGenerate,
         ...customPlatformPayload(selectedPlatform),
       });
@@ -133,10 +140,12 @@ function BuildContent() {
 
     if (status === 'clarifying' && 'session_id' in res) {
       const clarifying = res as Extract<DraftResponse, { status: 'clarifying' }>;
+      // A follow-up round keeps the session's answers; only a new session starts empty.
+      if (clarifying.session_id !== sessionId) setAnswers({});
       setSessionId(clarifying.session_id);
       setTaskType(clarifying.task_type);
+      setEntities(clarifying.entities ?? {});
       setQuestions(clarifying.questions);
-      setAnswers({});
       setPhase('clarifying');
     } else if (status === 'ok' && 'response' in res) {
       setResult(res);
@@ -550,6 +559,10 @@ function BuildContent() {
             <FeedbackDialog
               taskType={designedResponse.taskType}
               platformId={designedResponse.platformId}
+              rubricScores={
+                designedResponse.strength &&
+                Object.fromEntries(designedResponse.strength.dimensions.map((d) => [d.dimension, d.score]))
+              }
               onClose={() => {}}
             />
           </div>

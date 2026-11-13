@@ -8,7 +8,7 @@ import { NODE_TYPES, type PromptNode, type TaskType } from '../types/Prompt';
 import { logger } from '../utils/logger';
 import { extractJson } from '../utils/json';
 import { numberChunks } from '../utils/chunkRefs';
-import { assembleDraft, draftResponseSchema, normalizeRawNodes, DRAFT_JSON_FEWSHOT, type RawDraftNode } from './draftShared';
+import { assembleDraft, draftResponseSchema, givenAnswers, normalizeRawNodes, DRAFT_JSON_FEWSHOT, type RawDraftNode } from './draftShared';
 import type { Agent, AgentInput, AgentOutput } from '../types/Agent';
 
 /**
@@ -128,8 +128,9 @@ Give 2–3 ranked alternatives for creative nodes (style, composition, lighting)
     if (context.entities && Object.keys(context.entities).length) {
       parts.push(`Extracted details: ${JSON.stringify(context.entities)}`);
     }
-    if (context.clarifications && Object.keys(context.clarifications).length) {
-      parts.push(`User's clarification answers: ${JSON.stringify(context.clarifications)}`);
+    const answers = givenAnswers(context.clarifications);
+    if (Object.keys(answers).length) {
+      parts.push(`User's clarification answers: ${JSON.stringify(answers)}`);
     }
     if (context.justGenerate) {
       parts.push('The user chose "just generate now" — fill unanswered aspects with sensible defaults.');

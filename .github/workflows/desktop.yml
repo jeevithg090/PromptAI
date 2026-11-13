@@ -3,9 +3,10 @@ name: desktop
 on:
   push:
     branches: [main]
-    paths: ['desktop/**']
-  push_tags:
+    # `push_tags` is not a GitHub event, so tag releases never ran. Path filters
+    # are not evaluated for tag pushes, so every desktop-v* tag triggers.
     tags: ['desktop-v*']
+    paths: ['desktop/**']
   workflow_dispatch:
 
 jobs:

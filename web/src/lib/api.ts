@@ -8,6 +8,7 @@ import type {
   ClarifyingQuestion, PreviewResponse, PreviewBody, AgainBody,
   VisualPreviewResponse, VisualPreviewBody, EnhanceResponse,
   ChatRefineMessage, ChatRefineResponse, ChatDraftResponse, ModeRecommendation,
+  TaskType,
 } from './api-types';
 
 export type ApiError = { status: number; message: string };
@@ -123,6 +124,8 @@ export class ApiClient {
       platform_id: string;
       idea: string;
       clarifications: Record<string, string>;
+      task_type?: TaskType;
+      entities?: Record<string, string>;
       just_generate?: boolean;
       connection_id?: string;
       custom_platform?: unknown;
@@ -403,6 +406,9 @@ export class ApiClient {
   }
   getShare(slug: string): Promise<{ status: string; assembled: string; nodes: Array<{ type: string; value: string }>; strength_score: number | null; variables: Array<{ name: string; default?: string }> }> {
     return this.request('GET', `/share/${slug}`);
+  }
+  reportShare(slug: string, reason: string): Promise<{ status: string }> {
+    return this.request('POST', `/share/${slug}/report`, { reason });
   }
 
   sessionsList(): Promise<{ status: string; sessions: unknown[] }> {

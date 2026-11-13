@@ -73,7 +73,65 @@ function ShareView() {
           {strings.share.openInApp}
         </a>
       </div>
+
+      <ReportShare slug={slug} />
     </main>
+  );
+}
+
+/** Report a public share with a reason code; nothing else is sent. */
+function ReportShare({ slug }: { slug: string }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  if (state === 'sent') {
+    return <p role="status" className="mt-8 text-sm text-gray-600">{strings.share.reportThanks}</p>;
+  }
+  if (!open) {
+    return (
+      <button type="button" onClick={() => setOpen(true)} className="mt-8 text-sm text-gray-600 underline hover:text-gray-900">
+        {strings.share.reportButton}
+      </button>
+    );
+  }
+  return (
+    <form
+      className="mt-8 rounded-lg border border-gray-200 p-4"
+      onSubmit={async (e) => {
+        e.preventDefault();
+        setState('sending');
+        try {
+          await api.reportShare(slug, reason);
+          setState('sent');
+        } catch {
+          setState('error');
+        }
+      }}
+    >
+      <label className="block text-sm text-gray-700">
+        {strings.share.reportPrompt}
+        <select
+          required
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          className="mt-1 block w-full rounded border border-gray-300 px-2 py-1.5"
+        >
+          <option value="" disabled>{strings.share.reportChoose}</option>
+          {Object.entries(strings.share.reportReasons).map(([code, label]) => (
+            <option key={code} value={code}>{label}</option>
+          ))}
+        </select>
+      </label>
+      {state === 'error' && <p role="alert" className="mt-2 text-sm text-red-600">{strings.share.reportError}</p>}
+      <button
+        type="submit"
+        disabled={!reason || state === 'sending'}
+        className="mt-3 rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+      >
+        {strings.share.reportSubmit}
+      </button>
+    </form>
   );
 }
 

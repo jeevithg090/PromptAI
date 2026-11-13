@@ -14,6 +14,14 @@ import type { PipelineContext } from '../types/Agent';
 export class ShareBlocked extends Error {}
 export class ShareNotFound extends Error {}
 
+/** Reason codes for reports and takedowns (mirrored by migration 022's checks). */
+export const SHARE_REPORT_REASONS = ['illegal', 'child_safety', 'harassment', 'sexual', 'privacy', 'copyright', 'spam', 'other'] as const;
+export type ShareReportReason = (typeof SHARE_REPORT_REASONS)[number];
+
+export function isShareReportReason(value: unknown): value is ShareReportReason {
+  return typeof value === 'string' && (SHARE_REPORT_REASONS as readonly string[]).includes(value);
+}
+
 function newSlug(): string {
   return crypto.randomBytes(16).toString('base64url'); // 22 chars, 128-bit
 }
@@ -77,4 +85,39 @@ export async function getShare(slug: string): Promise<{
     ? (typeof row.variables === 'string' ? JSON.parse(row.variables) : row.variables)
     : parseVars(assembled);
   return { assembled, nodes, strength_score: row.strength_score ?? null, variables };
+}
+
+/** Record a content-free report against an active link. False when the link is missing or revoked. */
+export async function reportShare(slug: string, reason: ShareReportReason): Promise<boolean> {
+  const res = await getPool().query(
+    `insert into share_reports (share_link_id, reason)
+     select id, $2 from share_links where slug = $1 and revoked_at is null`,
+    [slug, reason]
+  );
+  return (res.rowCount ?? 0) > 0;
+}
+
+/** Admin queue: active links with reports, most reported first. */
+export async function listShareReports(): Promise<Array<{ slug: string; reports: number; reasons: string[]; last_reported_at: string }>> {
+  const res = await getPool().query(
+    `select sl.slug, count(*) as reports, array_agg(distinct r.reason) as reasons, max(r.created_at) as last_reported_at
+     from share_reports r
+     join share_links sl on sl.id = r.share_link_id
+     where sl.revoked_at is null
+     group by sl.slug
+     order by count(*) desc, max(r.created_at) desc
+     limit 200`
+  );
+  return res.rows.map((row) => ({ ...row, reports: Number(row.reports) }));
+}
+
+/** Admin takedown: revoke an active link and record the reason. False when nothing was active. */
+export async function takedownShare(slug: string, reason: ShareReportReason): Promise<boolean> {
+  const res = await getPool().query(
+    `update share_links set revoked_at = now(), takedown_reason = $2 where slug = $1 and revoked_at is null`,
+    [slug, reason]
+  );
+  const done = (res.rowCount ?? 0) > 0;
+  if (done) logger.info({ type: 'share:taken_down', reason });
+  return done;
 }

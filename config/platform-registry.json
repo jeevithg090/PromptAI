@@ -23,7 +23,7 @@
       "input_selector_candidates": [
         "rich-textarea div[contenteditable='true']"
       ],
-      "docs_url": "https://ai.google.dev/gemini-api/docs",
+      "docs_url": "https://aistudio.google.com/docs",
       "quirks": [
         "Negative prompts are unreliable for image generation — phrase exclusions positively (describe what SHOULD be present)",
         "Responds well to conversational, full-sentence phrasing rather than keyword lists",
@@ -157,7 +157,7 @@
       "input_selector_candidates": [
         "#prompt-textarea"
       ],
-      "docs_url": "https://platform.openai.com/docs/guides/prompt-engineering",
+      "docs_url": "https://developers.openai.com/api/docs/guides/prompt-engineering",
       "quirks": [
         "Strong system/persona adherence when the role is stated up front in the first message",
         "Verbose by default — explicit length constraints materially change output",
@@ -267,7 +267,7 @@
       "input_selector_candidates": [
         "div[contenteditable='true'].ProseMirror"
       ],
-      "docs_url": "https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview",
+      "docs_url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
       "quirks": [
         "Documented to respond well to XML-style tags for separating instruction sections (<instructions>, <example>, <data>)",
         "Benefits measurably from explicit step-by-step reasoning requests on complex tasks",
@@ -397,10 +397,10 @@
       "model_family": "diffusion_image",
       "modes": [
         {
-          "mode_id": "v7",
-          "name": "Version 7 (default)",
+          "mode_id": "v8_2",
+          "name": "Version 8.2 (default)",
           "aliases": [
-            "--v 7"
+            "--v 8.2"
           ],
           "best_for": [
             "photo",
@@ -411,7 +411,7 @@
             "cinematic"
           ],
           "avoid_for": [],
-          "notes": "The default engine — best coherence and photorealism.",
+          "notes": "The default engine since July 2026; older versions are chosen with --v.",
           "docs_url": "https://docs.midjourney.com/hc/en-us/articles/32199405667853-Version"
         },
         {
@@ -471,7 +471,7 @@
       "input_selector_candidates": [
         "textarea[placeholder*='prompt']"
       ],
-      "docs_url": "https://platform.stability.ai/docs/getting-started",
+      "docs_url": "https://docs.stability.ai/",
       "quirks": [
         "Dedicated negative-prompt field — exclusions belong there, not in the main prompt",
         "Supports attention weighting syntax in most UIs: (word:1.3)",
@@ -536,7 +536,7 @@
       ],
       "dom_fingerprint_selectors": [],
       "input_selector_candidates": [],
-      "docs_url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "docs_url": "https://code.claude.com/docs/en/overview",
       "quirks": [
         "Agentic CLI coding tool — reads/edits files and runs commands, not a chat box; prompts are task instructions in a terminal",
         "Slash commands (e.g. /init, /clear, /compact, custom skills) change behavior; plan mode separates planning from editing",
@@ -584,7 +584,7 @@
       ],
       "dom_fingerprint_selectors": [],
       "input_selector_candidates": [],
-      "docs_url": "https://docs.cursor.com/",
+      "docs_url": "https://cursor.com/docs",
       "quirks": [
         "IDE with inline edit (Cmd/Ctrl+K), chat, and an agent mode; @-symbols pull files/docs/symbols into context",
         ".cursorrules / project rules files set persistent coding conventions",
@@ -792,7 +792,7 @@
         "textarea",
         "div[contenteditable='true']"
       ],
-      "docs_url": "https://docs.mistral.ai/guides/prompting_capabilities/",
+      "docs_url": "https://docs.mistral.ai/inference/prompting",
       "quirks": [
         "Follows explicit, numbered instructions reliably; benefits from clear delimiters between context and task",
         "Strong at structured JSON output when the schema is stated explicitly"
@@ -857,7 +857,7 @@
         "textarea",
         "div[contenteditable='true']"
       ],
-      "docs_url": "https://docs.x.ai/docs/guides/prompt-engineering",
+      "docs_url": "https://docs.x.ai/developers/model-capabilities/text/best-practices",
       "quirks": [
         "Conversational and willing to reason step by step when asked; benefits from an explicit request to think before answering",
         "Can access real-time context on X — state when you want current information versus general knowledge"

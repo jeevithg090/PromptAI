@@ -45,6 +45,9 @@ function fakePool() {
     if (sql.includes('from memory_entries where')) {
       return { rows: [{ id: 'm1', scope: 'global', source: 'user_added', status: 'active', statement_ciphertext: 'ct', task_type: 'text_to_image', created_at: new Date().toISOString() }] };
     }
+    if (sql.startsWith('select secret_ref from provider_connections where user_id')) {
+      return { rows: [{ secret_ref: '/promptforge/byok/u/openai/c1' }] };
+    }
     if (sql.includes('from provider_connections where user_id')) {
       return { rows: [{ id: 'c1', provider: 'openai', status: 'active', created_at: new Date().toISOString() }] };
     }

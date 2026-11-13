@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TASK_TYPES } from './Prompt';
 
 /** Hono context variable bindings shared across handlers/middleware. */
 export interface AppEnv {
@@ -78,7 +79,11 @@ export type DraftBody = z.infer<typeof draftBodySchema>;
 export const clarifyBodySchema = z.object({
   platform_id: z.string().min(1).max(100),
   idea: z.string().min(1).max(IDEA_MAX),
+  // Every answer so far; an empty answer marks a question the user skipped, which is not asked again.
   clarifications: z.record(z.string().max(200), z.string().max(2_000)).optional(),
+  // Echoed from the 'clarifying' response so the resume skips intent classification.
+  task_type: z.enum(TASK_TYPES).optional(),
+  entities: z.record(z.string().max(100), z.string().max(2_000)).optional(),
   just_generate: z.boolean().optional(),
   connection_id: z.string().uuid().optional(),
   project_id: z.string().uuid().optional(),

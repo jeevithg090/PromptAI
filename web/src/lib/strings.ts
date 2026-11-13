@@ -484,6 +484,23 @@ const en = {
     fillTitle: 'Fill in the variables',
     fillApply: 'Apply',
     fillPreview: 'Preview',
+    reportButton: 'Report this link',
+    reportPrompt: 'Why are you reporting it?',
+    reportChoose: 'Choose a reason',
+    reportSubmit: 'Send report',
+    reportThanks: 'Thanks. We\'ll review this link.',
+    reportError: 'Couldn\'t send the report. Please try again.',
+    // Keys are the backend's reason codes (SHARE_REPORT_REASONS).
+    reportReasons: {
+      illegal: 'Illegal content',
+      child_safety: 'Child safety',
+      harassment: 'Harassment or hate',
+      sexual: 'Sexual content',
+      privacy: 'Private information',
+      copyright: 'Copyright',
+      spam: 'Spam or scam',
+      other: 'Something else',
+    },
   },
 
   // Command palette (F2.3)
