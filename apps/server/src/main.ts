@@ -1,16 +1,47 @@
+import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 import { serve } from '@hono/node-server';
+import { getConnInfo } from '@hono/node-server/conninfo';
 import { PGlite } from '@electric-sql/pglite';
+import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
+import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
+import { createRemoteJWKSet } from 'jose';
 import pg from 'pg';
 import { forge, type Clock } from '@promptai/core';
-import { createApp, jsonLog } from './app.ts';
+import { migrate, schema, type Db } from '@promptai/db';
+import { createApp, DEFAULT_LIMITS, jsonLog, type Limits } from './app.ts';
+import { createAuth, createAuthAdmin, createGuests, type SupabaseAuthConfig } from './auth.ts';
 import { loadCatalog } from './catalog.ts';
-import { createEventStore, migrate, type Sql } from './event-store.ts';
+import { createEventStore, type Sql } from './event-store.ts';
 
-// TODO(auth): remove this guard once /v1 routes verify the caller (app.ts).
-if (process.env.NODE_ENV === 'production') {
-  console.error('apps/server has no auth yet; refusing to start with NODE_ENV=production.');
-  process.exit(1);
+const env = process.env;
+const production = env.NODE_ENV === 'production';
+
+/**
+ * Auth config. Accounts need SUPABASE_JWKS_URL (asymmetric keys) and/or
+ * SUPABASE_JWT_SECRET (legacy HS256). Without either the server runs in dev
+ * mode: only guest tokens are accepted, signed with a per-process secret
+ * unless GUEST_SECRET is set. Production refuses to start without the full set.
+ */
+const supabase: SupabaseAuthConfig | undefined =
+  env.SUPABASE_JWKS_URL || env.SUPABASE_JWT_SECRET
+    ? {
+        jwks: env.SUPABASE_JWKS_URL ? createRemoteJWKSet(new URL(env.SUPABASE_JWKS_URL)) : undefined,
+        jwtSecret: env.SUPABASE_JWT_SECRET,
+        issuer: env.SUPABASE_URL ? `${env.SUPABASE_URL.replace(/\/$/, '')}/auth/v1` : undefined,
+      }
+    : undefined;
+if (production) {
+  const missing = [
+    !supabase && 'SUPABASE_JWKS_URL or SUPABASE_JWT_SECRET',
+    !env.SUPABASE_URL && 'SUPABASE_URL',
+    !env.SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY (account deletion must delete the auth user)',
+    !env.GUEST_SECRET && 'GUEST_SECRET (guest tokens must survive restarts and match across instances)',
+  ].filter(Boolean);
+  if (missing.length > 0) {
+    console.error(`Refusing to start with NODE_ENV=production: set ${missing.join(', ')}.`);
+    process.exit(1);
+  }
 }
 
 /** Core takes time through a port so it stays pure; this is the real one. */
@@ -25,28 +56,58 @@ const systemClock: Clock = {
   },
 };
 
-/** DATABASE_URL is assumed migrated. Without it, an in-memory PGlite is migrated here (data is lost on exit). */
-async function database(): Promise<Sql> {
-  if (process.env.DATABASE_URL) {
-    const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+/** DATABASE_URL is assumed migrated (`pnpm --filter @promptai/server migrate`). Without it, an in-memory PGlite is migrated here (data is lost on exit). */
+async function database(): Promise<{ sql: Sql; db: Db }> {
+  if (env.DATABASE_URL) {
+    const pool = new pg.Pool({ connectionString: env.DATABASE_URL });
     // An idle client losing its connection (restart, failover) emits 'error' on
     // the pool; unhandled, that crashes the process. The next query reconnects.
     pool.on('error', (err) => jsonLog({ level: 'warn', msg: 'pg_idle_client_error', code: (err as { code?: unknown }).code }));
-    return pool;
+    return { sql: pool, db: drizzlePg({ client: pool, schema }) };
   }
-  const db = new PGlite();
+  const client = new PGlite();
+  const db = drizzlePglite({ client, schema });
   await migrate(db);
-  return db;
+  return { sql: client, db };
 }
 
+const int = (name: string, fallback: number) => (env[name] ? Number.parseInt(env[name], 10) : fallback);
+const limits: Limits = {
+  ...DEFAULT_LIMITS,
+  quota: {
+    ...DEFAULT_LIMITS.quota,
+    guest: {
+      forgesPerDay: int('GUEST_FORGES_PER_DAY', DEFAULT_LIMITS.quota.guest.forgesPerDay),
+      dictationMinutesPerDay: int('GUEST_DICTATION_MINUTES_PER_DAY', DEFAULT_LIMITS.quota.guest.dictationMinutesPerDay),
+    },
+  },
+};
+
+const { sql, db } = await database();
+const guests = createGuests(db, { secret: env.GUEST_SECRET ?? randomBytes(32).toString('hex') });
 // No LLM port yet: forge runs its deterministic path (card render, chips, checks)
-// until a model provider is configured.
+// until a model provider is configured. Core takes no per-user context yet, so
+// the second argument (counts, memories, frecency) is not passed on.
 const cards = await loadCatalog(path.resolve(import.meta.dirname, '../../../catalog'));
 const app = createApp({
   forge: (req) => forge(req, { cards, clock: systemClock }),
-  events: createEventStore(await database()),
+  events: createEventStore(sql),
+  db,
+  auth: createAuth({ db, guests, supabase }),
+  guests,
+  authAdmin: env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY ? createAuthAdmin({ url: env.SUPABASE_URL, serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY }) : undefined,
+  limits,
+  // Behind a proxy (Fly sets Fly-Client-IP), name its header in TRUST_PROXY_HEADER; otherwise the socket address is used.
+  clientIp: (c) => (env.TRUST_PROXY_HEADER ? c.req.header(env.TRUST_PROXY_HEADER) : undefined) ?? getConnInfo(c).remote.address ?? 'unknown',
 });
-const port = Number(process.env.PORT ?? 8787);
+const port = Number(env.PORT ?? 8787);
 serve({ fetch: app.fetch, port }, (info) => {
-  jsonLog({ level: 'info', msg: 'listening', port: info.port, cards: cards.length, db: process.env.DATABASE_URL ? 'postgres' : 'pglite-memory' });
+  jsonLog({
+    level: 'info',
+    msg: 'listening',
+    port: info.port,
+    cards: cards.length,
+    db: env.DATABASE_URL ? 'postgres' : 'pglite-memory',
+    auth: supabase ? 'supabase+guest' : 'dev: guest tokens only',
+  });
 });

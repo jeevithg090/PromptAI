@@ -10,7 +10,7 @@ import type { EventBatchResponse } from '@promptai/contract';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
 import type { EventStore } from '../src/event-store.ts';
-import { ackingTransient, eventId, faulty, okForge, pglite, quiet, rng, storedEvents, type Fault } from './helpers.ts';
+import { ackingTransient, as, eventId, faulty, okForge, pglite, quiet, rng, storedEvents, stubCaller, type Fault } from './helpers.ts';
 
 type Mode = 'acknowledgement-rule' | 'ack-transient-2xx';
 type Wire = { id: string; type: string; at: string; props?: Record<string, number> };
@@ -133,15 +133,21 @@ describe('S6: /v1/events idempotency and retry', () => {
       let arrived = 0;
       const released: number[] = [];
       const scheduled: EventStore = {
-        async insert(events) {
+        async insert(events, pid) {
           const n = arrived++;
           await s.schedule(Promise.resolve(), 'write');
           released.push(n);
           totals.writes++;
-          return withFaults.insert(events);
+          return withFaults.insert(events, pid);
         },
       };
-      const app = createApp({ forge: async () => okForge, events: mode === 'ack-transient-2xx' ? ackingTransient(scheduled) : scheduled, log: quiet });
+      const app = createApp({
+        forge: async () => okForge,
+        events: mode === 'ack-transient-2xx' ? ackingTransient(scheduled) : scheduled,
+        db: db.orm,
+        auth: as(stubCaller),
+        log: quiet,
+      });
       const A = device(1, a.kinds);
       const B = device(2, b.kinds);
       const stats: Stats = { requests: 0, rounds: 0 };
@@ -196,7 +202,13 @@ describe('S6: /v1/events idempotency and retry', () => {
       if (r < 0.4) return after++, { when: 'after', code };
       return NONE;
     });
-    const app = createApp({ forge: async () => okForge, events: mode === 'ack-transient-2xx' ? ackingTransient(store) : store, log: quiet });
+    const app = createApp({
+      forge: async () => okForge,
+      events: mode === 'ack-transient-2xx' ? ackingTransient(store) : store,
+      db: db.orm,
+      auth: as(stubCaller),
+      log: quiet,
+    });
     const all = Array<boolean>(1000).fill(true);
     const A = device(1, all);
     const B = device(2, all);
