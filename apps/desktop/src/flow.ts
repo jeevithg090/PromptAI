@@ -7,7 +7,7 @@
  *                 ↘          ↘        ↘ (target changed: ready + confirmApp)
  *                  error ←────┴────────┘ (retry → drafting)
  */
-import type { Assumption, ForgeRequest, ForgeResponse, NativeCommand, NativeEvent } from '@promptai/contract';
+import type { Assumption, EventType, ForgeRequest, ForgeResponse, NativeCommand, NativeEvent } from '@promptai/contract';
 import { cleanTranscript } from '@promptai/core';
 
 type DistributiveOmit<T, K extends PropertyKey> = T extends unknown ? Omit<T, K> : never;
@@ -20,6 +20,13 @@ export interface AppRef {
   pid?: number;
 }
 
+/** Content-free event props (apps/app/src/events/queue.ts checks them). */
+export type EventProps = Record<string, string | number | boolean | null>;
+export type Rating = 'worked' | 'didnt_work';
+
+/** A command spoken while the Draft sheet is open. */
+export type VoiceCommand = { id: 'insert' } | { id: 'copy' } | { id: 'dismiss' } | { id: 'pick'; slotId: string; value: string };
+
 export interface FlowPorts {
   /** Resolves with the reply's data; rejects on ok:false, timeout or helper exit. */
   native: { request(cmd: NativeRequest): Promise<Record<string, unknown>> };
@@ -27,6 +34,20 @@ export interface FlowPorts {
   /** show() must not take focus from the user's app. */
   panel: { show(): void; hide(): void };
   clipboard: { writeText(text: string): void };
+  /**
+   * Clipboard + ⌘V into the user's app (src/auto-paste.ts). null in a channel
+   * that forbids it (mas-lite): Insert then copies and the user presses ⌘V.
+   */
+  autoPaste: ((text: string) => Promise<'pasted' | 'copied'>) | null;
+  /** The main-process events queue. */
+  events?: { track(type: EventType, props: EventProps): void };
+  /**
+   * VOICE COMMANDS HOOK. W1's `matchVoiceCommand` (packages/core) plugs in
+   * here; the lead wires it in main.ts after merge. It gets the cleaned
+   * transcript of a capture that began while the sheet showed a draft, and
+   * returns a command to run on that draft, or null to draft the words as usual.
+   */
+  matchVoiceCommand?(transcript: string, sheet: { draft: ForgeResponse; answers: Answers }): VoiceCommand | null;
 }
 
 /** ⌃⌥Space: kVK_Space with control + option. */
@@ -48,7 +69,7 @@ export type FlowState =
   /** confirmApp: the frontmost app changed since capture; Insert again means "insert there". */
   | ({ phase: 'ready'; confirmApp?: AppRef } & Drafted)
   | ({ phase: 'inserting' } & Drafted)
-  | ({ phase: 'done'; outcome: 'pasted' | 'copied'; app: AppRef | null } & Drafted)
+  | ({ phase: 'done'; outcome: 'pasted' | 'copied'; app: AppRef | null; rated?: Rating } & Drafted)
   | {
       phase: 'error';
       target: AppRef | null;
@@ -64,6 +85,9 @@ export type FlowState =
 export function unresolvedPicks(draft: ForgeResponse, answers: Answers): Assumption[] {
   return draft.assumptions.filter((a) => a.kind === 'pick' && answers[a.slotId] === undefined);
 }
+
+/** An issue the checks marked `block` keeps Insert off (Copy still works). */
+const blocked = (draft: ForgeResponse) => (draft.issues ?? []).some((i) => i.severity === 'block');
 
 function toAppRef(data: Record<string, unknown>): AppRef | null {
   if (typeof data.bundleId !== 'string' || typeof data.name !== 'string') return null;
@@ -85,16 +109,26 @@ export function createFlow(ports: FlowPorts) {
   const listeners = new Set<(s: FlowState) => void>();
   /** Bumped by every new capture, retry, redraft and dismiss; stale async results check it. */
   let session = 0;
-  let capture: { target: Promise<AppRef | null>; started: Promise<boolean>; stopping: boolean; final: string | null } | null = null;
+  let capture: {
+    target: Promise<AppRef | null>;
+    started: Promise<boolean>;
+    stopping: boolean;
+    final: string | null;
+    /** The draft on screen when the capture began, for a voice command. */
+    sheet: Extract<FlowState, { phase: 'ready' | 'done' }> | null;
+  } | null = null;
 
   const current = (): FlowState => state;
   const set = (next: FlowState) => {
     state = next;
     for (const l of listeners) l(state);
   };
+  const track = (type: EventType, s: Drafted, extra: EventProps = {}) =>
+    ports.events?.track(type, { decisionId: s.draft.decisionId ?? null, toolId: s.draft.toolId, surface: 'desktop', ...extra });
 
   async function hotkeyDown() {
     if (state.phase === 'listening' || state.phase === 'drafting' || state.phase === 'inserting') return;
+    const sheet = ports.matchVoiceCommand && (state.phase === 'ready' || state.phase === 'done') ? state : null;
     const id = ++session;
     // Order matters: record the capture target first, then show the panel, then open the mic.
     const target = ports.native.request({ cmd: 'frontmost' }).then(toAppRef, () => null);
@@ -110,7 +144,7 @@ export function createFlow(ports: FlowPorts) {
         return false;
       },
     );
-    capture = { target, started, stopping: false, final: null };
+    capture = { target, started, stopping: false, final: null, sheet };
     const app = await target;
     const now = current(); // re-read: `state` changed while we waited
     if (id === session && now.phase === 'listening') set({ ...now, target: app });
@@ -142,25 +176,48 @@ export function createFlow(ports: FlowPorts) {
       set({ phase: 'error', target, message: "Didn't catch anything. Hold ⌃⌥Space and speak.", transcript: '', answers: {}, canRetry: false });
       return;
     }
+    const command = c.sheet ? ports.matchVoiceCommand?.(transcript, c.sheet) : null;
+    if (command && c.sheet) {
+      set(c.sheet);
+      await runVoiceCommand(command);
+      return;
+    }
     await draft(id, transcript, target, {});
+  }
+
+  async function runVoiceCommand(command: VoiceCommand) {
+    switch (command.id) {
+      case 'insert':
+        return insert();
+      case 'copy':
+        return copy();
+      case 'dismiss':
+        return dismiss();
+      case 'pick':
+        return answerChip(command.slotId, command.value);
+    }
   }
 
   async function draft(id: number, transcript: string, target: AppRef | null, answers: Answers) {
     set({ phase: 'drafting', target, transcript, answers });
     const req: ForgeRequest = {
       text: transcript,
+      surface: 'desktop',
       ...(target ? { hostApp: target.bundleId } : {}),
       ...(Object.keys(answers).length > 0 ? { answers } : {}),
     };
     try {
       const result = await ports.forge.forge(req);
-      if (id === session) set({ phase: 'ready', target, transcript, draft: result, answers });
+      if (id !== session) return;
+      const ready: Drafted = { target, transcript, draft: result, answers };
+      set({ phase: 'ready', ...ready });
+      track('brief.shown', ready, { assumptions: result.assumptions.length, unsourced: result.unsourced.length, covered: result.coverage.covered, total: result.coverage.total });
     } catch (err) {
       if (id === session) set({ phase: 'error', target, message: `Couldn't draft: ${reason(err)}`, transcript, answers, canRetry: true });
     }
   }
 
-  async function paste(s: Drafted, app: AppRef) {
+  async function paste(s: Drafted, app: AppRef, autoPaste: (text: string) => Promise<'pasted' | 'copied'>) {
     const id = session;
     const text = forInsert(s.draft.brief);
     set({ phase: 'inserting', ...s });
@@ -168,31 +225,40 @@ export function createFlow(ports: FlowPorts) {
     ports.panel.hide();
     let outcome: 'pasted' | 'copied';
     try {
-      const data = await ports.native.request({ cmd: 'paste', text });
-      outcome = data.result === 'pasted' ? 'pasted' : 'copied';
+      outcome = await autoPaste(text);
     } catch {
       ports.clipboard.writeText(text);
       outcome = 'copied';
     }
     if (id !== session) return;
     set({ phase: 'done', ...s, outcome, app });
+    track(outcome === 'pasted' ? 'brief.inserted' : 'brief.copied', s, { via: 'insert' });
     ports.panel.show();
   }
 
   async function insert() {
-    if (state.phase !== 'ready' || unresolvedPicks(state.draft, state.answers).length > 0) return;
+    if (state.phase !== 'ready' || unresolvedPicks(state.draft, state.answers).length > 0 || blocked(state.draft)) return;
     const s = state;
     const { target, transcript, draft: d, answers } = s;
     const drafted: Drafted = { target, transcript, draft: d, answers };
+    const autoPaste = ports.autoPaste;
+    if (!autoPaste) {
+      // This channel never posts ⌘V: copy, and the receipt says to press it.
+      ports.clipboard.writeText(forInsert(d.brief));
+      set({ phase: 'done', ...drafted, outcome: 'copied', app: target });
+      track('brief.copied', drafted, { via: 'insert' });
+      return;
+    }
     const now = await ports.native.request({ cmd: 'frontmost' }).then(toAppRef, () => null);
     if (state !== s) return;
     if (!now) {
       // Can't tell where ⌘V would land: copy instead of guessing.
       ports.clipboard.writeText(forInsert(d.brief));
       set({ phase: 'done', ...drafted, outcome: 'copied', app: target });
+      track('brief.copied', drafted, { via: 'insert' });
       return;
     }
-    if (sameApp(now, target) || sameApp(now, s.confirmApp ?? null)) return paste(drafted, now);
+    if (sameApp(now, target) || sameApp(now, s.confirmApp ?? null)) return paste(drafted, now, autoPaste);
     set({ ...s, confirmApp: now });
   }
 
@@ -201,6 +267,7 @@ export function createFlow(ports: FlowPorts) {
       const { target, transcript, draft: d, answers } = state;
       ports.clipboard.writeText(forInsert(d.brief));
       set({ phase: 'done', target, transcript, draft: d, answers, outcome: 'copied', app: target });
+      track('brief.copied', { target, transcript, draft: d, answers }, { via: 'copy' });
     } else if (state.phase === 'error' && state.transcript) {
       ports.clipboard.writeText(state.transcript);
       set({ ...state, copied: true });
@@ -218,7 +285,14 @@ export function createFlow(ports: FlowPorts) {
       set({ ...rest, answers });
       return;
     }
+    track('chip.flipped', state, { slotId, kind: chip.kind, option: chip.options.indexOf(value) + 1 });
     await draft(++session, state.transcript, state.target, answers);
+  }
+
+  function rate(rating: string) {
+    if (state.phase !== 'done' || state.rated || (rating !== 'worked' && rating !== 'didnt_work')) return;
+    track('outcome.rated', state, { rating, outcome: state.outcome });
+    set({ ...state, rated: rating });
   }
 
   async function retry() {
@@ -228,6 +302,7 @@ export function createFlow(ports: FlowPorts) {
 
   function dismiss() {
     const wasListening = state.phase === 'listening';
+    if (state.phase === 'ready') track('brief.dismissed', state);
     session++;
     capture = null;
     ports.panel.hide();
@@ -273,6 +348,7 @@ export function createFlow(ports: FlowPorts) {
     copy,
     answerChip,
     retry,
+    rate,
     dismiss,
   };
 }

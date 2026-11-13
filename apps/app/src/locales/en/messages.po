@@ -1,0 +1,848 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-11-13 15:48+0000\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+
+#: src/DraftSheet.tsx
+msgid "(not from what you said)"
+msgstr "(not from what you said)"
+
+#. placeholder {0}: shown.length
+#: src/places/Library.tsx
+msgid "{0, plural, one {# saved brief} other {# saved briefs}}"
+msgstr "{0, plural, one {# saved brief} other {# saved briefs}}"
+
+#. placeholder {0}: chip.label
+#: src/DraftSheet.tsx
+msgid "{0}, pick one"
+msgstr "{0}, pick one"
+
+#: src/DraftSheet.tsx
+msgid "{count, plural, one {One detail you didn’t say} other {# details you didn’t say}}"
+msgstr "{count, plural, one {One detail you didn’t say} other {# details you didn’t say}}"
+
+#: src/DraftSheet.tsx
+msgid "{o} (suggested)"
+msgstr "{o} (suggested)"
+
+#: src/places/You.tsx
+#: src/shell/Palette.tsx
+msgid "Account"
+msgstr "Account"
+
+#: src/DraftSheet.tsx
+msgid "Added for you"
+msgstr "Added for you"
+
+#: src/places/You.tsx
+msgid "Adds counts from your choices, never your words, to the defaults other people start with."
+msgstr "Adds counts from your choices, never your words, to the defaults other people start with."
+
+#: src/DraftSheet.tsx
+msgid "After: the brief"
+msgstr "After: the brief"
+
+#. placeholder {0}: blocked.length
+#: src/DraftSheet.tsx
+msgid "Answer {0} picks above to insert."
+msgstr "Answer {0} picks above to insert."
+
+#: src/DraftSheet.tsx
+msgid "Answer the pick above to insert."
+msgstr "Answer the pick above to insert."
+
+#: src/ReportDialog.tsx
+msgid "Anything else we should know?"
+msgstr "Anything else we should know?"
+
+#: src/places/You.tsx
+msgid "Arrives in a later update."
+msgstr "Arrives in a later update."
+
+#: src/DraftSheet.tsx
+msgid "Assumed"
+msgstr "Assumed"
+
+#: src/DraftSheet.tsx
+msgid "Before: your words"
+msgstr "Before: your words"
+
+#. placeholder {0}: issue.message
+#: src/DraftSheet.tsx
+msgid "Blocks insert: {0}"
+msgstr "Blocks insert: {0}"
+
+#: src/DraftSheet.tsx
+msgid "Brief for"
+msgstr "Brief for"
+
+#: src/places/Library.tsx
+msgid "Briefs you keep show up here"
+msgstr "Briefs you keep show up here"
+
+#: src/places/You.tsx
+#: src/ReportDialog.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/shell/places.ts
+msgid "Capture"
+msgstr "Capture"
+
+#. placeholder {0}: draft.unsourced.join(', ')
+#: src/DraftSheet.tsx
+msgid "Check before sending: {0}. They’re dotted-underlined in the brief."
+msgstr "Check before sending: {0}. They’re dotted-underlined in the brief."
+
+#: src/DraftSheet.tsx
+#: src/ReportDialog.tsx
+msgid "Close"
+msgstr "Close"
+
+#: src/DraftSheet.tsx
+msgid "Close (Esc)"
+msgstr "Close (Esc)"
+
+#: src/shell/SignInDialog.tsx
+msgid "Code"
+msgstr "Code"
+
+#: src/shell/App.tsx
+#: src/shell/Palette.tsx
+msgid "Commands"
+msgstr "Commands"
+
+#: src/shell/App.tsx
+msgid "Commands (⌘K)"
+msgstr "Commands (⌘K)"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Continue"
+msgstr "Continue"
+
+#: src/shell/SignInDialog.tsx
+msgid "Continue with Apple"
+msgstr "Continue with Apple"
+
+#: src/shell/SignInDialog.tsx
+msgid "Continue with Google"
+msgstr "Continue with Google"
+
+#: src/DraftSheet.tsx
+#: src/places/Library.tsx
+msgid "Copied"
+msgstr "Copied"
+
+#: src/DraftSheet.tsx
+msgid "Copied {label}"
+msgstr "Copied {label}"
+
+#: src/DraftSheet.tsx
+msgid "Copied to the clipboard."
+msgstr "Copied to the clipboard."
+
+#: src/DraftSheet.tsx
+#: src/places/Library.tsx
+#: src/shell/Palette.tsx
+msgid "Copy"
+msgstr "Copy"
+
+#. placeholder {0}: a.title
+#: src/places/Library.tsx
+msgid "Copy {0}"
+msgstr "Copy {0}"
+
+#: src/DraftSheet.tsx
+msgid "Copy {label}"
+msgstr "Copy {label}"
+
+#: src/DraftSheet.tsx
+msgid "Copy instead"
+msgstr "Copy instead"
+
+#: src/DraftSheet.tsx
+msgid "Copy your words"
+msgstr "Copy your words"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Couldn’t check that: {failed}"
+msgstr "Couldn’t check that: {failed}"
+
+#. placeholder {0}: a.title
+#: src/places/Library.tsx
+msgid "Couldn’t delete “{0}”."
+msgstr "Couldn’t delete “{0}”."
+
+#: src/places/You.tsx
+msgid "Couldn’t delete. Nothing was removed. Try again."
+msgstr "Couldn’t delete. Nothing was removed. Try again."
+
+#. placeholder {0}: (err as Error).message ?? String(err)
+#: src/web-bridge.ts
+msgid "Couldn't draft: {0}"
+msgstr "Couldn't draft: {0}"
+
+#: src/places/You.tsx
+msgid "Couldn’t export. Try again."
+msgstr "Couldn’t export. Try again."
+
+#: src/places/You.tsx
+msgid "Couldn’t load or change your memory."
+msgstr "Couldn’t load or change your memory."
+
+#: src/places/Library.tsx
+msgid "Couldn’t load your Library."
+msgstr "Couldn’t load your Library."
+
+#: src/places/You.tsx
+msgid "Couldn’t save that choice. Try again."
+msgstr "Couldn’t save that choice. Try again."
+
+#: src/firstrun/FirstRun.tsx
+msgid "Couldn’t save your answer. Try again."
+msgstr "Couldn’t save your answer. Try again."
+
+#: src/DraftSheet.tsx
+msgid "Couldn’t save. Try again."
+msgstr "Couldn’t save. Try again."
+
+#: src/ReportDialog.tsx
+msgid "Couldn’t send the report. Try again."
+msgstr "Couldn’t send the report. Try again."
+
+#. placeholder {0}: draft.toolName
+#: src/DraftSheet.tsx
+msgid "Covered {said} of the {total} things {0} needs."
+msgstr "Covered {said} of the {total} things {0} needs."
+
+#: src/DraftSheet.tsx
+msgid "Covers {covered} of {total}."
+msgstr "Covers {covered} of {total}."
+
+#: src/firstrun/FirstRun.tsx
+msgid "Date of birth"
+msgstr "Date of birth"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Day"
+msgstr "Day"
+
+#: src/places/Library.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#. placeholder {0}: a.title
+#: src/places/Library.tsx
+msgid "Delete {0}"
+msgstr "Delete {0}"
+
+#: src/places/You.tsx
+msgid "Delete account"
+msgstr "Delete account"
+
+#: src/places/You.tsx
+msgid "Delete guest data"
+msgstr "Delete guest data"
+
+#: src/places/You.tsx
+msgid "Delete your account?"
+msgstr "Delete your account?"
+
+#: src/places/You.tsx
+msgid "Delete your guest data?"
+msgstr "Delete your guest data?"
+
+#. placeholder {0}: a.title
+#: src/places/Library.tsx
+msgid "Deleted “{0}”."
+msgstr "Deleted “{0}”."
+
+#. placeholder {0}: auth.devCode
+#: src/shell/SignInDialog.tsx
+msgid "Development sign-in: the code is {0}."
+msgstr "Development sign-in: the code is {0}."
+
+#: src/DraftSheet.tsx
+msgid "Dictate"
+msgstr "Dictate"
+
+#: src/DraftSheet.tsx
+msgid "Dictation on the web is coming once our speech provider is chosen. Type for now, or use the Mac app."
+msgstr "Dictation on the web is coming once our speech provider is chosen. Type for now, or use the Mac app."
+
+#: src/DraftSheet.tsx
+msgid "Did it work?"
+msgstr "Did it work?"
+
+#: src/shell/Palette.tsx
+msgid "Dismiss the draft"
+msgstr "Dismiss the draft"
+
+#: src/DraftSheet.tsx
+#: src/shell/Palette.tsx
+msgid "Draft"
+msgstr "Draft"
+
+#: src/DraftSheet.tsx
+#: src/places/Capture.tsx
+msgid "Draft a brief"
+msgstr "Draft a brief"
+
+#: src/shell/places.ts
+msgid "Draft sheet"
+msgstr "Draft sheet"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Draft with AI providers?"
+msgstr "Draft with AI providers?"
+
+#: src/DraftSheet.tsx
+msgid "Drafting"
+msgstr "Drafting"
+
+#: src/DraftSheet.tsx
+msgid "Drafting…"
+msgstr "Drafting…"
+
+#: src/shell/SignInDialog.tsx
+msgid "Email"
+msgstr "Email"
+
+#: src/shell/SignInDialog.tsx
+msgid "Email me a code"
+msgstr "Email me a code"
+
+#: src/places/You.tsx
+msgid "Encrypted at rest on PromptAI’s servers."
+msgstr "Encrypted at rest on PromptAI’s servers."
+
+#: src/firstrun/FirstRun.tsx
+msgid "Enter a real date, like 14 5 1990."
+msgstr "Enter a real date, like 14 5 1990."
+
+#: src/places/You.tsx
+msgid "Export my data"
+msgstr "Export my data"
+
+#: src/places/You.tsx
+msgid "Export ready"
+msgstr "Export ready"
+
+#: src/places/You.tsx
+msgid "Forget"
+msgstr "Forget"
+
+#. placeholder {0}: m.text
+#: src/places/You.tsx
+msgid "Forget “{0}”"
+msgstr "Forget “{0}”"
+
+#: src/places/You.tsx
+msgid "Forgotten"
+msgstr "Forgotten"
+
+#: src/shell/Palette.tsx
+msgid "Go to"
+msgstr "Go to"
+
+#: src/shell/App.tsx
+msgid "Go to Capture"
+msgstr "Go to Capture"
+
+#: src/places/You.tsx
+msgid "Guest"
+msgstr "Guest"
+
+#: src/places/Library.tsx
+msgid "Guest briefs aren’t kept. Sign up to keep them."
+msgstr "Guest briefs aren’t kept. Sign up to keep them."
+
+#: src/DraftSheet.tsx
+msgid "Guest briefs aren’t kept. With an account, this one goes to your Library."
+msgstr "Guest briefs aren’t kept. With an account, this one goes to your Library."
+
+#: src/places/You.tsx
+msgid "Guests have no memory. Nothing you draft as a guest is remembered."
+msgstr "Guests have no memory. Nothing you draft as a guest is remembered."
+
+#: src/ReportDialog.tsx
+msgid "Harassment or hate"
+msgstr "Harassment or hate"
+
+#: src/places/You.tsx
+msgid "Help improve defaults for everyone"
+msgstr "Help improve defaults for everyone"
+
+#: src/places/You.tsx
+msgid "History location"
+msgstr "History location"
+
+#: src/DraftSheet.tsx
+msgid "Hold {HOLD_KEYS} and say what you need."
+msgstr "Hold {HOLD_KEYS} and say what you need."
+
+#: src/places/Capture.tsx
+msgid "Hold {HOLD_KEYS} in any app and say what you need. Release to draft."
+msgstr "Hold {HOLD_KEYS} in any app and say what you need. Release to draft."
+
+#: src/firstrun/FirstRun.tsx
+msgid "If you say No, PromptAI drafts without them. Skipping counts as No."
+msgstr "If you say No, PromptAI drafts without them. Skipping counts as No."
+
+#: src/shell/App.tsx
+msgid "Incognito"
+msgstr "Incognito"
+
+#: src/places/You.tsx
+msgid "Incognito for this session"
+msgstr "Incognito for this session"
+
+#: src/DraftSheet.tsx
+#: src/shell/Palette.tsx
+msgid "Insert"
+msgstr "Insert"
+
+#. placeholder {0}: s.confirmApp.name
+#: src/DraftSheet.tsx
+msgid "Insert into {0}?"
+msgstr "Insert into {0}?"
+
+#: src/DraftSheet.tsx
+msgid "Insert into {name}"
+msgstr "Insert into {name}"
+
+#: src/DraftSheet.tsx
+msgid "Insert into {name}?"
+msgstr "Insert into {name}?"
+
+#: src/DraftSheet.tsx
+msgid "Insert is off until the blocking issue above is fixed. Copy still works."
+msgstr "Insert is off until the blocking issue above is fixed. Copy still works."
+
+#: src/DraftSheet.tsx
+msgid "Inserted"
+msgstr "Inserted"
+
+#: src/DraftSheet.tsx
+msgid "Inserted into {app}"
+msgstr "Inserted into {app}"
+
+#: src/DraftSheet.tsx
+msgid "Inserted into {app}. Nothing was sent."
+msgstr "Inserted into {app}. Nothing was sent."
+
+#: src/DraftSheet.tsx
+msgid "Inserted. Nothing was sent."
+msgstr "Inserted. Nothing was sent."
+
+#: src/DraftSheet.tsx
+msgid "Inserting…"
+msgstr "Inserting…"
+
+#: src/ReportDialog.tsx
+msgid "It copies someone else’s work"
+msgstr "It copies someone else’s work"
+
+#: src/DraftSheet.tsx
+msgid "It didn’t"
+msgstr "It didn’t"
+
+#: src/ReportDialog.tsx
+msgid "It exposes someone’s private information"
+msgstr "It exposes someone’s private information"
+
+#: src/ReportDialog.tsx
+msgid "It puts a child at risk"
+msgstr "It puts a child at risk"
+
+#: src/DraftSheet.tsx
+msgid "It worked"
+msgstr "It worked"
+
+#: src/ReportDialog.tsx
+msgid "It’s illegal"
+msgstr "It’s illegal"
+
+#: src/ReportDialog.tsx
+msgid "It’s wrong or harmful"
+msgstr "It’s wrong or harmful"
+
+#: src/shell/SignInDialog.tsx
+msgid "Keep your briefs and what PromptAI learns about you."
+msgstr "Keep your briefs and what PromptAI learns about you."
+
+#: src/places/Library.tsx
+#: src/shell/places.ts
+msgid "Library"
+msgstr "Library"
+
+#: src/DraftSheet.tsx
+msgid "Listening"
+msgstr "Listening"
+
+#: src/DraftSheet.tsx
+msgid "Listening…"
+msgstr "Listening…"
+
+#: src/shell/App.tsx
+msgid "Loading"
+msgstr "Loading"
+
+#: src/places/Library.tsx
+msgid "Loading your Library"
+msgstr "Loading your Library"
+
+#: src/places/You.tsx
+msgid "Memory"
+msgstr "Memory"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Month"
+msgstr "Month"
+
+#: src/firstrun/FirstRun.tsx
+msgid "No"
+msgstr "No"
+
+#: src/shell/Palette.tsx
+msgid "No matching command"
+msgstr "No matching command"
+
+#: src/places/Library.tsx
+msgid "No saved briefs yet"
+msgstr "No saved briefs yet"
+
+#: src/shell/App.tsx
+msgid "Nothing drafted yet"
+msgstr "Nothing drafted yet"
+
+#: src/places/You.tsx
+msgid "Nothing from this session is kept in your Library. Turns off when you close PromptAI."
+msgstr "Nothing from this session is kept in your Library. Turns off when you close PromptAI."
+
+#: src/places/Library.tsx
+msgid "Nothing matches “{query}”"
+msgstr "Nothing matches “{query}”"
+
+#: src/places/You.tsx
+msgid "Nothing remembered yet"
+msgstr "Nothing remembered yet"
+
+#: src/places/Library.tsx
+msgid "Open"
+msgstr "Open"
+
+#. placeholder {0}: a.title
+#: src/places/Library.tsx
+msgid "Open {0}"
+msgstr "Open {0}"
+
+#: src/shell/SignInDialog.tsx
+msgid "or"
+msgstr "or"
+
+#: src/places/You.tsx
+msgid "Personalize for me"
+msgstr "Personalize for me"
+
+#: src/DraftSheet.tsx
+msgid "Pick one"
+msgstr "Pick one"
+
+#: src/shell/App.tsx
+msgid "Places"
+msgstr "Places"
+
+#: src/DraftSheet.tsx
+msgid "Press ⌘V in {app} to paste it."
+msgstr "Press ⌘V in {app} to paste it."
+
+#: src/DraftSheet.tsx
+msgid "Press ⌘V where you want it."
+msgstr "Press ⌘V where you want it."
+
+#: src/places/You.tsx
+#: src/shell/Palette.tsx
+msgid "Privacy"
+msgstr "Privacy"
+
+#: src/places/You.tsx
+msgid "Profile"
+msgstr "Profile"
+
+#: src/DraftSheet.tsx
+msgid "PromptAI"
+msgstr "PromptAI"
+
+#: src/firstrun/FirstRun.tsx
+msgid "PromptAI is for adults 18 and over."
+msgstr "PromptAI is for adults 18 and over."
+
+#: src/firstrun/FirstRun.tsx
+msgid "PromptAI isn’t available to you"
+msgstr "PromptAI isn’t available to you"
+
+#: src/places/You.tsx
+msgid "PromptAI learns your defaults, words and skill from what you keep. Pause it any time."
+msgstr "PromptAI learns your defaults, words and skill from what you keep. Pause it any time."
+
+#: src/DraftSheet.tsx
+msgid "Ran on: Dictation: on this Mac · Draft: server"
+msgstr "Ran on: Dictation: on this Mac · Draft: server"
+
+#: src/DraftSheet.tsx
+msgid "Ran on: Draft: server"
+msgstr "Ran on: Draft: server"
+
+#: src/DraftSheet.tsx
+msgid "Ready"
+msgstr "Ready"
+
+#: src/DraftSheet.tsx
+msgid "Release {HOLD_KEYS} to draft."
+msgstr "Release {HOLD_KEYS} to draft."
+
+#: src/ReportDialog.tsx
+msgid "Report sent"
+msgstr "Report sent"
+
+#: src/DraftSheet.tsx
+#: src/ReportDialog.tsx
+msgid "Report this output"
+msgstr "Report this output"
+
+#: src/places/Library.tsx
+msgid "Restored"
+msgstr "Restored"
+
+#: src/places/Library.tsx
+msgid "Save a brief from its receipt after you insert or copy it."
+msgstr "Save a brief from its receipt after you insert or copy it."
+
+#: src/DraftSheet.tsx
+msgid "Save to Library"
+msgstr "Save to Library"
+
+#: src/DraftSheet.tsx
+msgid "Saved to Library"
+msgstr "Saved to Library"
+
+#: src/shell/App.tsx
+msgid "Saved to your Library."
+msgstr "Saved to your Library."
+
+#: src/places/Library.tsx
+msgid "Search saved briefs"
+msgstr "Search saved briefs"
+
+#: src/ReportDialog.tsx
+msgid "Send report"
+msgstr "Send report"
+
+#: src/ReportDialog.tsx
+msgid "Sexual content"
+msgstr "Sexual content"
+
+#: src/shell/SignInDialog.tsx
+msgid "Sign in"
+msgstr "Sign in"
+
+#: src/places/You.tsx
+#: src/shell/Palette.tsx
+#: src/shell/SignInDialog.tsx
+msgid "Sign in or sign up"
+msgstr "Sign in or sign up"
+
+#: src/places/You.tsx
+msgid "Sign out"
+msgstr "Sign out"
+
+#: src/DraftSheet.tsx
+#: src/places/Library.tsx
+msgid "Sign up"
+msgstr "Sign up"
+
+#: src/DraftSheet.tsx
+msgid "Sign up to keep this"
+msgstr "Sign up to keep this"
+
+#: src/places/You.tsx
+msgid "Signed in"
+msgstr "Signed in"
+
+#: src/shell/App.tsx
+msgid "Signed in, but the brief wasn’t saved. Save it from Library later."
+msgstr "Signed in, but the brief wasn’t saved. Save it from Library later."
+
+#: src/places/You.tsx
+msgid "Since {since}"
+msgstr "Since {since}"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Skip"
+msgstr "Skip"
+
+#: src/ReportDialog.tsx
+msgid "Something else"
+msgstr "Something else"
+
+#: src/DraftSheet.tsx
+msgid "Something went wrong"
+msgstr "Something went wrong"
+
+#: src/ReportDialog.tsx
+msgid "Spam"
+msgstr "Spam"
+
+#: src/DraftSheet.tsx
+msgid "Speak now…"
+msgstr "Speak now…"
+
+#: src/shell/App.tsx
+msgid "Start in Capture."
+msgstr "Start in Capture."
+
+#: src/DraftSheet.tsx
+msgid "Still missing"
+msgstr "Still missing"
+
+#: src/DraftSheet.tsx
+msgid "suggested"
+msgstr "suggested"
+
+#: src/places/You.tsx
+msgid "Suggested, not used yet"
+msgstr "Suggested, not used yet"
+
+#: src/places/You.tsx
+msgid "Synced to your account"
+msgstr "Synced to your account"
+
+#: src/DraftSheet.tsx
+msgid "Thanks for telling us."
+msgstr "Thanks for telling us."
+
+#: src/ReportDialog.tsx
+msgid "Thanks. Your report reached us."
+msgstr "Thanks. Your report reached us."
+
+#: src/ReportDialog.tsx
+msgid "The report carries this draft’s id and what you write here, nothing else."
+msgstr "The report carries this draft’s id and what you write here, nothing else."
+
+#: src/places/You.tsx
+msgid "This deletes your profile, memory, Library and consent history from PromptAI’s servers. It can’t be undone."
+msgstr "This deletes your profile, memory, Library and consent history from PromptAI’s servers. It can’t be undone."
+
+#: src/places/You.tsx
+msgid "This device only"
+msgstr "This device only"
+
+#: src/DraftSheet.tsx
+msgid "This draft wasn't recorded by the server, so it can't be reported."
+msgstr "This draft wasn't recorded by the server, so it can't be reported."
+
+#: src/firstrun/FirstRun.tsx
+msgid "To draft a brief, PromptAI sends the words you type or say to {providers}. They process them transiently to write the draft."
+msgstr "To draft a brief, PromptAI sends the words you type or say to {providers}. They process them transiently to write the draft."
+
+#: src/DraftSheet.tsx
+msgid "Try again"
+msgstr "Try again"
+
+#: src/shell/Palette.tsx
+msgid "Turn incognito off"
+msgstr "Turn incognito off"
+
+#: src/shell/Palette.tsx
+msgid "Turn incognito on"
+msgstr "Turn incognito on"
+
+#: src/places/Library.tsx
+msgid "Undo"
+msgstr "Undo"
+
+#: src/firstrun/FirstRun.tsx
+msgid "We ask everyone. PromptAI keeps only the answer to whether you can use it, never the date."
+msgstr "We ask everyone. PromptAI keeps only the answer to whether you can use it, never the date."
+
+#: src/ReportDialog.tsx
+msgid "We review every report."
+msgstr "We review every report."
+
+#: src/shell/SignInDialog.tsx
+msgid "We sent a code to {email}."
+msgstr "We sent a code to {email}."
+
+#: src/DraftSheet.tsx
+msgid "What do you want the AI to do?"
+msgstr "What do you want the AI to do?"
+
+#: src/places/You.tsx
+msgid "What PromptAI remembers about you shows up here, and you can forget any of it."
+msgstr "What PromptAI remembers about you shows up here, and you can forget any of it."
+
+#: src/ReportDialog.tsx
+msgid "What’s wrong with it?"
+msgstr "What’s wrong with it?"
+
+#: src/firstrun/FirstRun.tsx
+msgid "When were you born?"
+msgstr "When were you born?"
+
+#: src/DraftSheet.tsx
+msgid "Why this is better"
+msgstr "Why this is better"
+
+#: src/DraftSheet.tsx
+msgid "Working"
+msgstr "Working"
+
+#: src/DraftSheet.tsx
+msgid "Write a launch email for our beta…"
+msgstr "Write a launch email for our beta…"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Year"
+msgstr "Year"
+
+#: src/firstrun/FirstRun.tsx
+msgid "Yes"
+msgstr "Yes"
+
+#: src/places/You.tsx
+#: src/shell/places.ts
+msgid "You"
+msgstr "You"
+
+#: src/DraftSheet.tsx
+msgid "You said"
+msgstr "You said"
+
+#: src/DraftSheet.tsx
+msgid "You said it"
+msgstr "You said it"
+
+#: src/DraftSheet.tsx
+msgid "You started in {started}."
+msgstr "You started in {started}."
+
+#: src/places/You.tsx
+msgid "You’re using PromptAI as a guest."
+msgstr "You’re using PromptAI as a guest."
+
+#: src/places/You.tsx
+msgid "Your data"
+msgstr "Your data"
+
+#: src/DraftSheet.tsx
+msgid "Your pick"
+msgstr "Your pick"
+
+#: src/DraftSheet.tsx
+msgid "Your words (kept)"
+msgstr "Your words (kept)"

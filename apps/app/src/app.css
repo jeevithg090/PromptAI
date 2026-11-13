@@ -88,3 +88,83 @@ body {
     display: none;
   }
 }
+
+/* The shell: a header with the places, then one scrolling place. */
+.pa-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+.pa-shell-head {
+  padding: var(--spacing-2) var(--spacing-4);
+  border-block-end: 1px solid var(--color-border);
+  -webkit-app-region: drag;
+}
+.pa-shell-head button,
+.pa-shell-head a {
+  -webkit-app-region: no-drag;
+}
+/* Narrow (a phone, the 520 px desktop panel): the places get a row of their own under the brand and ⌘K. */
+@media (max-width: 560px) {
+  .pa-shell-nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+}
+.pa-shell-main {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+.pa-shell-main > .pa-panel {
+  height: 100%;
+}
+.pa-place,
+.pa-step {
+  max-width: 720px;
+  margin-inline: auto;
+  padding: var(--spacing-4);
+}
+.pa-step {
+  padding-block-start: var(--spacing-8);
+}
+
+/* The date-of-birth fieldset reads as one question. */
+.pa-dob {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.pa-legend {
+  padding: 0;
+  margin-block-end: var(--spacing-2);
+  font-weight: 600;
+}
+
+.pa-coverage {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--spacing-2);
+}
+
+/* One coarse-pointer rule (blueprint §15): every control is at least 44 px to a finger. */
+@media (pointer: coarse) {
+  button,
+  a[href],
+  [role='tab'],
+  [role='option'],
+  input[type='text'],
+  input[type='search'],
+  input[type='email'],
+  input:not([type]),
+  textarea {
+    min-height: 44px;
+  }
+  button,
+  [role='tab'] {
+    min-width: 44px;
+  }
+}

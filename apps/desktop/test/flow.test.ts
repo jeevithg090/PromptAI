@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ForgeRequest, ForgeResponse } from '@promptai/contract';
-import { createFlow, unresolvedPicks, type FlowPorts, type FlowState, type NativeRequest } from '../src/flow.ts';
+import { createAutoPaste } from '../src/auto-paste.ts';
+import { createFlow, unresolvedPicks, type FlowPorts, type FlowState, type NativeRequest, type VoiceCommand } from '../src/flow.ts';
 
 const NOTES = { bundleId: 'com.apple.Notes', name: 'Notes', pid: 41 };
 const SLACK = { bundleId: 'com.tinyspeck.slackmacgap', name: 'Slack', pid: 77 };
@@ -31,7 +32,15 @@ function deferred<T>() {
 
 type Handler = (cmd: NativeRequest) => Promise<Record<string, unknown>>;
 
-function setup(opts: { native?: Partial<Record<NativeRequest['cmd'], Handler>>; forge?: (req: ForgeRequest) => Promise<ForgeResponse> } = {}) {
+function setup(
+  opts: {
+    native?: Partial<Record<NativeRequest['cmd'], Handler>>;
+    forge?: (req: ForgeRequest) => Promise<ForgeResponse>;
+    /** The mas-lite channel: no auto-paste. */
+    noAutoPaste?: boolean;
+    matchVoiceCommand?: FlowPorts['matchVoiceCommand'];
+  } = {},
+) {
   const sent: NativeRequest[] = [];
   const handlers: Record<string, Handler> = {
     frontmost: async () => NOTES,
@@ -40,16 +49,21 @@ function setup(opts: { native?: Partial<Record<NativeRequest['cmd'], Handler>>; 
     paste: async () => ({ result: 'pasted' }),
     ...opts.native,
   };
+  const native = {
+    request: vi.fn((cmd: NativeRequest) => {
+      sent.push(cmd);
+      return handlers[cmd.cmd]!(cmd);
+    }),
+  };
+  const tracked: { type: string; props: Record<string, unknown> }[] = [];
   const ports: FlowPorts = {
-    native: {
-      request: vi.fn((cmd: NativeRequest) => {
-        sent.push(cmd);
-        return handlers[cmd.cmd]!(cmd);
-      }),
-    },
+    native,
     forge: { forge: vi.fn(opts.forge ?? (async () => DRAFT)) },
     panel: { show: vi.fn(), hide: vi.fn() },
     clipboard: { writeText: vi.fn() },
+    autoPaste: opts.noAutoPaste ? null : createAutoPaste(native),
+    events: { track: (type, props) => void tracked.push({ type, props }) },
+    ...(opts.matchVoiceCommand ? { matchVoiceCommand: opts.matchVoiceCommand } : {}),
   };
   const flow = createFlow(ports);
   const phases: FlowState['phase'][] = [];
@@ -63,7 +77,7 @@ function setup(opts: { native?: Partial<Record<NativeRequest['cmd'], Handler>>; 
     flow.handleNative({ event: 'transcript', text: words, final: true });
     await flow.handleNative({ event: 'hotkey', state: 'up' });
   }
-  return { flow, ports, sent, cmds, phases, speak };
+  return { flow, ports, sent, cmds, phases, speak, tracked };
 }
 
 const state = <P extends FlowState['phase']>(s: FlowState, phase: P) => {
@@ -87,7 +101,7 @@ describe('flow', () => {
     flow.handleNative({ event: 'transcript', text: 'write a launch email', final: true });
 
     await flow.handleNative({ event: 'hotkey', state: 'up' });
-    expect(ports.forge.forge).toHaveBeenCalledWith({ text: 'write a launch email', hostApp: 'com.apple.Notes' });
+    expect(ports.forge.forge).toHaveBeenCalledWith({ text: 'write a launch email', surface: 'desktop', hostApp: 'com.apple.Notes' });
     const ready = state(flow.getState(), 'ready');
     expect(ready.draft).toEqual(DRAFT);
 
@@ -162,7 +176,7 @@ describe('flow', () => {
 
     await flow.retry();
     expect(flow.getState().phase).toBe('ready');
-    expect(ports.forge.forge).toHaveBeenLastCalledWith({ text: 'plan my week', hostApp: 'com.apple.Notes' });
+    expect(ports.forge.forge).toHaveBeenLastCalledWith({ text: 'plan my week', surface: 'desktop', hostApp: 'com.apple.Notes' });
   });
 
   it('reports a failed dictation.start', async () => {
@@ -200,6 +214,7 @@ describe('flow', () => {
     await flow.answerChip('length', 'Long');
     expect(ports.forge.forge).toHaveBeenLastCalledWith({
       text: 'write a launch email',
+      surface: 'desktop',
       hostApp: 'com.apple.Notes',
       answers: { length: 'Long' },
     });
@@ -278,5 +293,74 @@ describe('flow', () => {
     forge.resolve(DRAFT);
     await pending;
     expect(flow.getState()).toEqual({ phase: 'idle' });
+  });
+
+  it('emits content-free events carrying the decisionId, and rates the receipt once', async () => {
+    const decisionId = '0190f5a2-7c1e-7d3a-9b2f-4f1e2d3c4b5a';
+    const { flow, speak, tracked } = setup({ forge: async () => ({ ...DRAFT, decisionId }) });
+    await speak('write a launch email');
+    await flow.answerChip('length', 'Long'); // a flip redrafts and shows a new brief
+    await flow.answerChip('length', 'Short');
+    await flow.insert();
+    flow.rate('worked');
+    flow.rate('didnt_work'); // once per receipt
+    expect(state(flow.getState(), 'done').rated).toBe('worked');
+    expect(tracked.map((e) => e.type)).toEqual(['brief.shown', 'chip.flipped', 'brief.shown', 'brief.inserted', 'outcome.rated']);
+    for (const e of tracked) expect(e.props).toMatchObject({ decisionId, toolId: 'claude', surface: 'desktop' });
+    expect(tracked[1]!.props).toMatchObject({ slotId: 'length', kind: 'pick', option: 2 });
+    expect(tracked[4]!.props).toMatchObject({ rating: 'worked', outcome: 'pasted' });
+    // Nothing the user said rides along.
+    expect(JSON.stringify(tracked)).not.toMatch(/launch email/);
+  });
+
+  it('records a copy and a dismissal', async () => {
+    const { flow, speak, tracked } = setup({ forge: async () => NO_PICKS });
+    await speak('write a launch email');
+    flow.copy();
+    await speak('write it again');
+    flow.dismiss();
+    expect(tracked.map((e) => [e.type, e.props.via ?? null])).toEqual([
+      ['brief.shown', null],
+      ['brief.copied', 'copy'],
+      ['brief.shown', null],
+      ['brief.dismissed', null],
+    ]);
+  });
+
+  it('keeps Insert off while an issue blocks it', async () => {
+    const { flow, cmds, speak } = setup({ forge: async () => ({ ...NO_PICKS, issues: [{ code: 'too_long', message: 'Over the limit', severity: 'block' }] }) });
+    await speak('write a launch email');
+    await flow.insert();
+    expect(cmds()).not.toContain('paste');
+    expect(flow.getState().phase).toBe('ready');
+  });
+
+  it('mas-lite: Insert copies and never posts ⌘V', async () => {
+    const { flow, ports, cmds, speak, tracked } = setup({ forge: async () => NO_PICKS, noAutoPaste: true });
+    await speak('write a launch email');
+    await flow.insert();
+    expect(cmds()).not.toContain('paste');
+    expect(ports.clipboard.writeText).toHaveBeenCalledWith('Write a launch email for the beta.');
+    const done = state(flow.getState(), 'done');
+    expect(done.outcome).toBe('copied');
+    expect(done.app).toEqual(NOTES); // the receipt says "Press ⌘V in Notes"
+    expect(tracked.at(-1)).toMatchObject({ type: 'brief.copied', props: { via: 'insert' } });
+  });
+
+  it('runs a voice command on the open sheet instead of drafting it (the hook W1 plugs into)', async () => {
+    const heard: string[] = [];
+    const matchVoiceCommand = (t: string): VoiceCommand | null => {
+      heard.push(t);
+      return t === 'copy it' ? { id: 'copy' } : null;
+    };
+    const { flow, ports, speak } = setup({ forge: async () => NO_PICKS, matchVoiceCommand });
+    await speak('write a launch email');
+    await speak('copy it');
+    expect(heard).toEqual(['copy it']); // only asked while a sheet was open
+    expect(ports.forge.forge).toHaveBeenCalledTimes(1);
+    expect(ports.clipboard.writeText).toHaveBeenCalledWith('Write a launch email for the beta.');
+    expect(state(flow.getState(), 'done').transcript).toBe('write a launch email');
+    await speak('plan my week'); // not a command: drafted as usual
+    expect(ports.forge.forge).toHaveBeenCalledTimes(2);
   });
 });

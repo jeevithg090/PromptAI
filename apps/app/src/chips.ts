@@ -11,6 +11,11 @@ export function chipOptions(chip: Assumption): string[] {
   return [chip.value, ...chip.options.filter((o) => o !== chip.value)];
 }
 
+/** Issues the checks marked `block`: Insert stays off while any is present (Copy still works). */
+export function blockingIssues(draft: ForgeResponse) {
+  return (draft.issues ?? []).filter((i) => i.severity === 'block');
+}
+
 /** Splits the brief so specifics that trace to nothing the user said can be marked. */
 export function markUnsourced(brief: string, unsourced: string[]): { text: string; unsourced: boolean }[] {
   const terms = unsourced.filter((t) => t.trim()).sort((a, b) => b.length - a.length);

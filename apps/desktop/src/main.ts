@@ -1,16 +1,25 @@
 /**
  * Electron main: spawns pf-native, owns the Draft sheet panel and runs the flow.
  * Env: PROMPTAI_NATIVE_BIN (helper path), PROMPTAI_SERVER_URL (forge server),
- * PROMPTAI_APP_URL (load the panel from a Vite dev server instead of dist/).
+ * PROMPTAI_APP_URL (load the panel from a Vite dev server instead of dist/),
+ * PROMPTAI_USER_DATA (a userData folder of its own, for tests).
+ * The channel (direct | mas-lite) is fixed at build time: scripts/channels.mjs.
  */
 import path from 'node:path';
 import { app, BrowserWindow, clipboard, ipcMain, screen, type IpcMainInvokeEvent } from 'electron';
+import { createHttpApi } from '@promptai/app/api';
+import { createEventQueue } from '@promptai/app/events-queue';
+import { createApiProxy } from './api-proxy.ts';
+import { createAutoPaste } from './auto-paste.ts';
+import { fileQueueStore } from './events-store.ts';
 import { createFlow, HOTKEY } from './flow.ts';
 import { createForgeClient } from './forge.ts';
 import { IPC } from './ipc.ts';
 import { createNativeClient } from './native.ts';
 
 const PANEL = { width: 520, height: 640 };
+
+if (process.env.PROMPTAI_USER_DATA) app.setPath('userData', process.env.PROMPTAI_USER_DATA);
 
 const nativeBin =
   process.env.PROMPTAI_NATIVE_BIN ??
@@ -21,6 +30,8 @@ const serverUrl = process.env.PROMPTAI_SERVER_URL ?? 'http://localhost:8787';
 
 let panel: BrowserWindow | null = null;
 let quitting = false;
+/** From the panel: the bearer token for /v1, and whether first run is done. */
+let session: { token: string | null; ready: boolean } = { token: null, ready: false };
 
 function createPanel(): BrowserWindow {
   const win = new BrowserWindow({
@@ -76,11 +87,32 @@ function showPanel() {
 app.whenReady().then(() => {
   panel = createPanel();
 
+  const token = () => session.token;
+  const server = createHttpApi({ baseUrl: serverUrl, token });
+  const events = createEventQueue({
+    send: (batch) => server.sendEvents(batch),
+    store: fileQueueStore(path.join(app.getPath('userData'), 'events-queue.json')),
+    log: (m) => console.error(`[events] ${m}`),
+  });
+
   const flow = createFlow({
     native: { request: (cmd) => native.request(cmd) },
-    forge: createForgeClient(serverUrl),
+    forge: createForgeClient(serverUrl, fetch, 30_000, token),
     panel: { show: showPanel, hide: () => panel?.hide() },
     clipboard: { writeText: (text) => clipboard.writeText(text) },
+    // A literal from the build, so a mas-lite bundle drops auto-paste.ts entirely (scripts/build.mjs checks).
+    autoPaste: __PROMPTAI_AUTO_PASTE__ ? createAutoPaste({ request: (cmd) => native.request(cmd) }) : null,
+    events: {
+      track(type, props) {
+        try {
+          events.track(type, props);
+        } catch (err) {
+          console.error(`[events] ${String(err)}`);
+        }
+      },
+    },
+    // VOICE COMMANDS HOOK: pass W1's matcher here once it is merged, e.g.
+    // matchVoiceCommand: (transcript, sheet) => matchVoiceCommand(transcript, sheet),
   });
   flow.subscribe((state) => panel?.webContents.send(IPC.state, state));
 
@@ -94,13 +126,21 @@ app.whenReady().then(() => {
           .catch((err: unknown) => console.error(`[promptai] hotkey.register failed: ${String(err)}`));
         return;
       }
+      // First run (date of birth, consent) comes before any use: the hotkey shows the panel, and only that.
+      if (event.event === 'hotkey' && !session.ready) {
+        if (event.state === 'down') showPanel();
+        return;
+      }
       void flow.handleNative(event);
     },
   });
 
+  const fromPanel = (e: IpcMainInvokeEvent) => {
+    if (e.sender !== panel?.webContents) throw new Error('unexpected sender');
+  };
   const handle = (channel: string, fn: (...args: string[]) => unknown) =>
     ipcMain.handle(channel, (e: IpcMainInvokeEvent, ...args: unknown[]) => {
-      if (e.sender !== panel?.webContents) throw new Error('unexpected sender');
+      fromPanel(e);
       return fn(...args.map(String));
     });
   handle(IPC.getState, () => flow.getState());
@@ -109,10 +149,24 @@ app.whenReady().then(() => {
   handle(IPC.answerChip, (slotId = '', value = '') => flow.answerChip(slotId, value));
   handle(IPC.retry, () => flow.retry());
   handle(IPC.dismiss, () => flow.dismiss());
+  handle(IPC.rate, (rating = '') => flow.rate(rating));
+  ipcMain.handle(IPC.setSession, (e, s: { token?: unknown; ready?: unknown } | null) => {
+    fromPanel(e);
+    session = { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true };
+    // First run (date of birth, consent) shows itself right after install rather than waiting for the hotkey.
+    if (!session.ready) showPanel();
+    if (session.token) void events.flush();
+  });
+  const proxy = createApiProxy(serverUrl);
+  ipcMain.handle(IPC.api, (e, req: unknown) => {
+    fromPanel(e);
+    return proxy(req);
+  });
 
   app.on('before-quit', () => {
     quitting = true;
     native.close();
+    void events.flush();
   });
 });
 

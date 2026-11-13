@@ -1,15 +1,16 @@
 /** POST /v1/forge (packages/contract/src/forge.ts). */
 import { forgeResponseSchema, type ForgeRequest, type ForgeResponse } from '@promptai/contract';
 
-export function createForgeClient(baseUrl: string, fetchImpl: typeof fetch = fetch, timeoutMs = 30_000) {
+export function createForgeClient(baseUrl: string, fetchImpl: typeof fetch = fetch, timeoutMs = 30_000, token: () => string | null = () => null) {
   const url = new URL('/v1/forge', baseUrl).toString();
   return {
     async forge(req: ForgeRequest): Promise<ForgeResponse> {
       let res: Response;
+      const bearer = token();
       try {
         res = await fetchImpl(url, {
           method: 'POST',
-          headers: { 'content-type': 'application/json' },
+          headers: { 'content-type': 'application/json', ...(bearer ? { authorization: `Bearer ${bearer}` } : {}) },
           body: JSON.stringify(req),
           signal: AbortSignal.timeout(timeoutMs),
         });
