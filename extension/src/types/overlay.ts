@@ -1,6 +1,6 @@
 export type OverlayStep =
   | { phase: 'initial' }
-  | { phase: 'clarifying'; sessionId: string; questions: ClarifyingQuestion[]; taskType: string }
+  | { phase: 'clarifying'; sessionId: string; questions: ClarifyingQuestion[]; taskType: string; entities: Record<string, string> }
   | { phase: 'drafting' }
   | { phase: 'result'; sessionId: string; response: DesignedResponse }
   | { phase: 'error'; message: string };

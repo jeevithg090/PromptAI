@@ -89,6 +89,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
     if (!idea.trim()) return;
     setStep({ phase: 'drafting' });
     setApiError(null);
+    setAnswers({}); // a new session starts with no answers
 
     try {
       const { status, data } = await callApi('/draft', {
@@ -147,14 +148,19 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
       const current = step;
       if (current.phase !== 'clarifying') return;
 
-      setAnswers(newAnswers);
+      // The server keeps no answers between calls: send every round's answers,
+      // and the task type and entities so the resume doesn't re-run intent.
+      const allAnswers = { ...answers, ...newAnswers };
+      setAnswers(allAnswers);
       setStep({ phase: 'drafting' });
 
       try {
         const { data } = await callApi(`/draft/${current.sessionId}/clarify`, {
           platform_id: toRegistryId(platformId),
           idea: idea.trim(),
-          clarifications: justGenerate ? {} : newAnswers,
+          clarifications: allAnswers,
+          task_type: current.taskType,
+          entities: current.entities,
           just_generate: justGenerate,
         });
 
@@ -163,7 +169,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
         setStep({ phase: 'error', message: String(err) });
       }
     },
-    [step, platformId, idea, callApi],
+    [step, answers, platformId, idea, callApi],
   );
 
   const handleDraftResult = useCallback(
@@ -174,6 +180,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
           sessionId: data.session_id,
           questions: (data.questions ?? []) as ClarifyingQuestion[],
           taskType: data.task_type ?? 'text',
+          entities: data.entities ?? {},
         });
       } else if (data.status === 'ok') {
         setStep({
@@ -370,6 +377,7 @@ interface BackendDraftResponse {
   reason?: string;
   degraded?: boolean;
   task_type?: string;
+  entities?: Record<string, string>;
   questions?: ClarifyingQuestion[];
   response?: DesignedResponse;
 }
