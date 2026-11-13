@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.ts';
-import { isTransientDbError, type EventStore, type StoredEvent } from '../src/event-store.ts';
+import { createEventStore, isTransientDbError, type EventStore, type StoredEvent } from '../src/event-store.ts';
 import { eventId, okForge, pgError, pglite, quiet, storedEvents } from './helpers.ts';
 
 const at = '2026-11-13T10:00:00.123Z';
@@ -86,6 +86,16 @@ describe('POST /v1/events', () => {
     const res = await appWith(failing(pgError('42P01'))).request('/v1/events', post({ events: [{ id: eventId(3, 3), type: 'a', at }] }));
     expect(res.status).toBe(500);
     expect(await res.json()).toEqual({ error: 'store_failed' });
+  });
+});
+
+describe('createEventStore', () => {
+  it('inserts in id order, so concurrent overlapping batches lock rows in the same order', async () => {
+    const params: unknown[][] = [];
+    const store = createEventStore({ query: async (_text, p) => void params.push(p ?? []) });
+    const ids = [eventId(0xab, 3).toUpperCase(), eventId(0xab, 1), eventId(0xab, 2)];
+    await store.insert(ids.map((id) => ({ id, type: 'a', at, props: {} })));
+    expect(params[0]?.filter((_, i) => i % 4 === 0)).toEqual([ids[1], ids[2], ids[0]]);
   });
 });
 

@@ -24,7 +24,7 @@ export interface AppDeps {
 /** Hard limit on one forge request (blueprint §11 budgets forge itself at 20 s). */
 export const FORGE_TIMEOUT_MS = 25_000;
 
-const jsonLog: Log = (entry) => process.stdout.write(`${JSON.stringify({ time: new Date().toISOString(), ...entry })}\n`);
+export const jsonLog: Log = (entry) => process.stdout.write(`${JSON.stringify({ time: new Date().toISOString(), ...entry })}\n`);
 
 /** Error name and code only: messages can carry the data that caused them. */
 const errorFields = (err: unknown) => ({ error: err instanceof Error ? err.name : typeof err, code: (err as { code?: unknown } | null)?.code });

@@ -1,7 +1,7 @@
 import { PGlite } from '@electric-sql/pglite';
 import type { ForgeResponse } from '@promptai/contract';
 import type { Log } from '../src/app.ts';
-import { createEventStore, isTransientDbError, migrate, type EventStore } from '../src/event-store.ts';
+import { createEventStore, isTransientDbError, migrate, type EventStore, type StoredEvent } from '../src/event-store.ts';
 
 export const quiet: Log = () => {};
 
@@ -46,10 +46,10 @@ export function rng(seed: number) {
  */
 export type Fault = { when: 'none' } | { when: 'before' | 'after'; code: '40P01' | '40001' };
 
-export function faulty(real: EventStore, nextFault: () => Fault): EventStore {
+export function faulty(real: EventStore, nextFault: (events: readonly StoredEvent[]) => Fault): EventStore {
   return {
     async insert(events) {
-      const fault = nextFault();
+      const fault = nextFault(events);
       if (fault.when === 'before') throw pgError(fault.code);
       await real.insert(events);
       if (fault.when === 'after') throw pgError(fault.code);
