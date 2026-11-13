@@ -12,6 +12,7 @@
   "dependencies": {
     "@electric-sql/pglite": "^0.5.16",
     "@hono/node-server": "^2.1.8",
+    "@promptai/ai": "workspace:*",
     "@promptai/contract": "workspace:*",
     "@promptai/core": "workspace:*",
     "@promptai/db": "workspace:*",

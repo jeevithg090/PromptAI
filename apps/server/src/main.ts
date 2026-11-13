@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { getConnInfo } from '@hono/node-server/conninfo';
@@ -7,11 +8,12 @@ import { drizzle as drizzlePg } from 'drizzle-orm/node-postgres';
 import { drizzle as drizzlePglite } from 'drizzle-orm/pglite';
 import { createRemoteJWKSet } from 'jose';
 import pg from 'pg';
+import { createLlmPort, gatewayTransport, parseRoutes } from '@promptai/ai';
 import { forge, type Clock } from '@promptai/core';
 import { migrate, schema, type Db } from '@promptai/db';
 import { createApp, DEFAULT_LIMITS, jsonLog, type Limits } from './app.ts';
 import { createAuth, createAuthAdmin, createGuests, type SupabaseAuthConfig } from './auth.ts';
-import { loadCatalog } from './catalog.ts';
+import { loadCatalog, loadLocales } from './catalog.ts';
 import { createEventStore, type Sql } from './event-store.ts';
 
 const env = process.env;
@@ -85,12 +87,22 @@ const limits: Limits = {
 
 const { sql, db } = await database();
 const guests = createGuests(db, { secret: env.GUEST_SECRET ?? randomBytes(32).toString('hex') });
-// No LLM port yet: forge runs its deterministic path (card render, chips, checks)
-// until a model provider is configured. Core takes no per-user context yet, so
-// the second argument (counts, memories, frecency) is not passed on.
-const cards = await loadCatalog(path.resolve(import.meta.dirname, '../../../catalog'));
+const catalogDir = path.resolve(import.meta.dirname, '../../../catalog');
+const cards = await loadCatalog(catalogDir);
+const locales = await loadLocales(catalogDir);
+// With AI_GATEWAY_API_KEY set, forge gets a model port; without it, forge runs its
+// deterministic path (card render, chips, checks). See packages/ai/README.md.
+const routes = parseRoutes(await readFile(path.join(catalogDir, 'routes.yaml'), 'utf8'));
+const transport = env.AI_GATEWAY_API_KEY ? gatewayTransport(env.AI_GATEWAY_API_KEY) : undefined;
 const app = createApp({
-  forge: (req) => forge(req, { cards, clock: systemClock }),
+  forge: async (req, ctx) => {
+    // One port per request: a refusal latches the port so nothing is re-sent.
+    const llm = transport ? createLlmPort({ routes, transport, clock: systemClock }) : undefined;
+    const res = await forge(req, { cards, clock: systemClock, locales, now: new Date().toISOString(), ...ctx, ...(llm ? { llm } : {}) });
+    if (!llm) return res;
+    const { tokensIn, tokensOut, costUsd } = llm.usage();
+    return { ...res, usage: { ...res.usage, tokensIn, tokensOut, costUsd } };
+  },
   events: createEventStore(sql),
   db,
   auth: createAuth({ db, guests, supabase }),
@@ -107,6 +119,8 @@ serve({ fetch: app.fetch, port }, (info) => {
     msg: 'listening',
     port: info.port,
     cards: cards.length,
+    locales: locales.length,
+    model: transport ? 'gateway' : 'none (deterministic)',
     db: env.DATABASE_URL ? 'postgres' : 'pglite-memory',
     auth: supabase ? 'supabase+guest' : 'dev: guest tokens only',
   });

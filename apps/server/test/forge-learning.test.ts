@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { describe, expect, it, vi } from 'vitest';
 import type { ForgeResponse } from '@promptai/contract';
+import { contextKey } from '@promptai/core';
 import { decisions, profiles, slotCounts, toolUsage, usageCounters } from '@promptai/db';
 import { DEFAULT_LIMITS, type AppDeps, type Limits } from '../src/app.ts';
 import type { ForgeContext } from '../src/learning.ts';
@@ -86,7 +87,7 @@ describe('POST /v1/forge', () => {
     await w.call('POST', '/v1/forge', token, { text: 'b' });
     const ctx = forge.mock.calls.at(-1)![1] as ForgeContext;
     expect(ctx).toEqual({
-      counts: [{ slotId: 'tone', value: 'friendly', contextKey: 'claude|Slack', weight: 1, at: flippedAt }],
+      counts: [{ slotId: 'tone', value: 'friendly', contextKey: contextKey({ toolId: 'claude', hostApp: 'Slack' }), weight: 1, at: flippedAt }],
       memories: [{ id: keep.body.id, kind: 'rule', text: 'no emoji' }],
       toolUsage: [{ toolId: 'claude', hostApp: 'Slack', surface: 'web', at: flippedAt }],
     });
@@ -133,8 +134,8 @@ describe('outcome events', () => {
     expect(d).toMatchObject({ outcome: 'inserted', rating: 'worked', chosen: { tone: { value: 'friendly', at: t(2) } } });
     const counts = await w.orm.select().from(slotCounts).where(eq(slotCounts.pid, pid)).orderBy(slotCounts.at);
     expect(counts.map((c) => [c.slotId, c.value, c.weight, c.contextKey, c.toolId])).toEqual([
-      ['tone', 'concise', 1, 'claude|Gmail', 'claude'],
-      ['tone', 'friendly', 1, 'claude|Gmail', 'claude'],
+      ['tone', 'concise', 1, contextKey({ toolId: 'claude', hostApp: 'Gmail' }), 'claude'],
+      ['tone', 'friendly', 1, contextKey({ toolId: 'claude', hostApp: 'Gmail' }), 'claude'],
     ]);
     expect(await w.orm.select({ toolId: toolUsage.toolId, hostApp: toolUsage.hostApp, surface: toolUsage.surface }).from(toolUsage)).toEqual([
       { toolId: 'claude', hostApp: 'Gmail', surface: 'web' },

@@ -64,11 +64,13 @@ export const textReply = (text: string, tokens = usage(1_200, 300)): GenerateRes
 export const understandInput = {
   text: 'write a midjourney prompt of a cat at night, 16:9',
   locale: 'en',
-  tool: { id: 'midjourney', name: 'Midjourney', family: 'image.generate' },
+  language: { spoken: ['en'] },
+  tool: { id: 'midjourney', name: 'Midjourney', family: 'image.generate', audience: 'private_ai' as const },
   slots: [
     { id: 'aspect_ratio', label: 'Aspect ratio', options: ['1:1', '16:9', '9:16'] },
     { id: 'style', label: 'Style', options: ['photorealistic', 'illustration', 'anime'] },
   ],
+  memories: [] as Array<{ id: string; kind: string; text: string }>,
 };
 
 export const frame = {
@@ -91,4 +93,5 @@ export const repairInput = {
   goal: 'a cat at night shot on a Canon R5',
   brief: 'a cat at night shot on a Canon R5 --ar 16:9',
   problems: ['"Canon R5" is not in the user\'s words; remove it or use only what they said'],
+  replyLanguage: 'en',
 };

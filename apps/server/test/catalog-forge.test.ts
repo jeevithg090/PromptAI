@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { mkdtemp, mkdir, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -5,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { forge, type Clock } from '@promptai/core';
 import { forgeResponseSchema } from '@promptai/contract';
 import { createApp } from '../src/app.ts';
-import { loadCatalog } from '../src/catalog.ts';
+import { loadCatalog, loadLocales } from '../src/catalog.ts';
 import { account, as, pglite } from './helpers.ts';
 
 /** The real catalog through the real core forge, as main.ts wires it. */
@@ -65,5 +66,34 @@ describe('catalog + core forge', () => {
     await mkdir(path.join(root, 'families'));
     await writeFile(path.join(root, 'tools', 'broken', 'card.yaml'), 'id: broken\n');
     await expect(loadCatalog(root)).rejects.toThrow(/tools\/broken\/card\.yaml/);
+  });
+});
+
+describe('the learning loop (real catalog, core and db)', () => {
+  it("turns two chip flips into the next draft's default, sourced from counts", async () => {
+    const cards = await loadCatalog(CATALOG);
+    const locales = await loadLocales(CATALOG);
+    const { orm, store } = await pglite();
+    const auth = as(await account(orm));
+    const app = createApp({
+      forge: (req, ctx) => forge(req, { cards, clock, locales, now: new Date().toISOString(), ...ctx }),
+      events: store,
+      db: orm,
+      auth,
+      log: () => {},
+    });
+    const ask = { text: 'write a midjourney prompt of a fox in the snow' };
+    const framing = (body: unknown) => forgeResponseSchema.parse(body).assumptions.find((a) => a.slotId === 'composition')!;
+
+    for (let round = 0; round < 2; round++) {
+      const draft = forgeResponseSchema.parse((await post(app, ask)).body);
+      expect(framing(draft).value).toBe('medium shot'); // the card default until the counts say otherwise
+      const flip = { id: randomUUID(), type: 'chip.flipped', at: new Date().toISOString(), props: { decisionId: draft.decisionId!, slotId: 'composition', value: 'wide shot' } };
+      const res = await app.request('/v1/events', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ events: [flip] }) });
+      expect(res.status).toBe(200);
+    }
+
+    const learned = framing((await post(app, ask)).body);
+    expect(learned).toMatchObject({ value: 'wide shot', source: 'count' });
   });
 });

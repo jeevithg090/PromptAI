@@ -6,7 +6,7 @@
 
 const ISO = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d{1,9})?)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/i;
 
-export const DAY_MS = 86_400_000;
+const DAY_MS = 86_400_000;
 
 /** Days from 1970-01-01 to a proleptic Gregorian date (Hinnant's days_from_civil). */
 function daysFromCivil(y: number, m: number, d: number): number {

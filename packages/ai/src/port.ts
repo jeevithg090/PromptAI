@@ -119,7 +119,9 @@ export function createLlmPort({ routes, transport, clock }: { routes: Routes; tr
   return {
     understand: (input, { timeoutMs }) => call('understand', prompts.understand, {
       card: { tool: input.tool, slots: input.slots },
-      ask: { locale: input.locale, text: input.text },
+      // core has already filtered memories by the card's audience (destination rule)
+      ...(input.memories.length > 0 ? { memory: input.memories.map((m) => ({ kind: m.kind, text: m.text })) } : {}),
+      ask: { locale: input.locale, language: input.language, text: input.text },
     }, intentFrameSchema, timeoutMs),
     // core's repair is compose's one LLM pass over the problems the checks found
     repair: (input, { timeoutMs }) => call('compose', prompts.repair, { ask: input }, repairOutputSchema, timeoutMs),

@@ -45,7 +45,9 @@ export const FIXED_CLOCK: Clock = {
 export async function loadCards(catalogDir: string): Promise<Card[]> {
   const toolDirs = await readdir(path.join(catalogDir, 'tools'), { withFileTypes: true });
   const files = toolDirs.filter((d) => d.isDirectory()).map((d) => path.join(catalogDir, 'tools', d.name, 'card.yaml'));
-  for (const f of await readdir(path.join(catalogDir, 'families'))) if (f.endsWith('.yaml')) files.push(path.join(catalogDir, 'families', f));
+  for (const f of await readdir(path.join(catalogDir, 'families'))) {
+    if (f.endsWith('.yaml') && !f.endsWith('.evals.yaml')) files.push(path.join(catalogDir, 'families', f));
+  }
   const cards: Card[] = [];
   for (const file of files.sort()) {
     try {
@@ -85,14 +87,30 @@ export function check(e: EvalCase['expect'], res: ForgeResponseParsed): string[]
 export type ToolResult = { toolId: string; file: string } & ({ error: string } | { cases: Array<{ name: string; failures: string[] }> });
 export type G1Report = { tools: ToolResult[]; withoutEvals: string[] };
 
-/** Run every <evalsDir>/tools/<id>/evals.yaml against the cards in catalogDir. */
+/** Every eval file: <dir>/tools/<id>/evals.yaml and <dir>/families/<id>.evals.yaml. */
+async function evalFiles(evalsDir: string): Promise<Array<{ toolId: string; file: string }>> {
+  const found: Array<{ toolId: string; file: string }> = [];
+  for (const d of await readdir(path.join(evalsDir, 'tools'), { withFileTypes: true })) {
+    const file = path.join(evalsDir, 'tools', d.name, 'evals.yaml');
+    if (d.isDirectory() && existsSync(file)) found.push({ toolId: d.name, file });
+  }
+  const familiesDir = path.join(evalsDir, 'families');
+  if (existsSync(familiesDir)) {
+    for (const f of await readdir(familiesDir)) {
+      if (!f.endsWith('.evals.yaml')) continue;
+      // The card id comes from the sibling card file (families/writing.doc.yaml has id writing-doc).
+      const card = parseCard(await readFile(path.join(familiesDir, f.replace(/\.evals\.yaml$/, '.yaml')), 'utf8'));
+      found.push({ toolId: card.id, file: path.join(familiesDir, f) });
+    }
+  }
+  return found.sort((a, b) => a.toolId.localeCompare(b.toolId));
+}
+
+/** Run every eval file under evalsDir against the cards in catalogDir. */
 export async function runG1(catalogDir: string, evalsDir = catalogDir): Promise<G1Report> {
   const cards = await loadCards(catalogDir);
-  const toolDirs = (await readdir(path.join(evalsDir, 'tools'), { withFileTypes: true })).filter((d) => d.isDirectory()).map((d) => d.name).sort();
   const tools: ToolResult[] = [];
-  for (const toolId of toolDirs) {
-    const file = path.join(evalsDir, 'tools', toolId, 'evals.yaml');
-    if (!existsSync(file)) continue;
+  for (const { toolId, file } of await evalFiles(evalsDir)) {
     if (!cards.some((c) => c.id === toolId)) {
       tools.push({ toolId, file, error: `no card with id "${toolId}" in ${catalogDir}` });
       continue;

@@ -4,6 +4,7 @@
  * it, and the outcome events that update both.
  */
 import { and, desc, eq, gte, inArray, isNull, lte, or, sql } from 'drizzle-orm';
+import { contextKey, weightFor } from '@promptai/core';
 import { decisions, memoryItems, slotCounts, toolUsage, uuidv7, type Db, type DecisionContext } from '@promptai/db';
 import type { ForgeRequestParsed, ForgeResponseParsed, MemoryItem } from '@promptai/contract';
 import type { Caller } from './auth.ts';
@@ -24,7 +25,6 @@ const POLICY_VERSION = 'p1-rules';
  * The L1 context (blueprint §8: tool × host). Provisional until core exports
  * its own key: rows for every tool are passed, so the key carries the tool.
  */
-const contextKey = (toolId: string, hostApp: string | null) => `${toolId}|${hostApp ?? '-'}`;
 
 /** About six half-lives of the 30-day count decay, and of the 14-day frecency τ. */
 const COUNT_DAYS = 180;
@@ -133,7 +133,7 @@ export async function applyOutcomes(db: Db, caller: Caller, events: readonly Sto
       if (learn) {
         await db
           .insert(slotCounts)
-          .values({ pid, toolId, slotId, value, contextKey: contextKey(toolId, hostApp), weight: 1, at, decisionId, eventId: e.id })
+          .values({ pid, toolId, slotId, value, contextKey: contextKey({ toolId, hostApp }), weight: weightFor('flip'), at, decisionId, eventId: e.id })
           .onConflictDoNothing({ target: slotCounts.eventId });
       }
       await db

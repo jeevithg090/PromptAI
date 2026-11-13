@@ -37,6 +37,19 @@ describe('understand', () => {
     });
   });
 
+  it('sends memories in the memory block and the language with the ask', async () => {
+    const { port, calls } = setup(() => textReply(JSON.stringify(frame)));
+    await port.understand(
+      { ...understandInput, language: { spoken: ['en-IN', 'hi'] }, memories: [{ id: 'm1', kind: 'preference', text: 'prefers watercolor' }] },
+      BUDGET,
+    );
+    const sent = JSON.stringify(calls()[0]!.prompt);
+    expect(sent).toContain('<memory>');
+    expect(sent).toContain('prefers watercolor');
+    expect(sent).not.toContain('"m1"'); // ids stay server-side
+    expect(sent).toContain('en-IN');
+  });
+
   it.each([
     ['text that is not JSON', 'Sure! Here is the frame you asked for.'],
     ['JSON outside the IntentFrame schema', JSON.stringify({ ...frame, risk: 'maybe' })],
