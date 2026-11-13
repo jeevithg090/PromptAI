@@ -79,12 +79,12 @@ const envSchema = z.object({
   // Behavior config
   LOG_LEVEL: z.preprocess((v) => (v === '' ? undefined : v), z.enum(['debug', 'info', 'warn', 'error']).default('info')),
   MAX_TOKENS_PER_SESSION: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(10000)),
-  CONTENT_SAFETY_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  CONTENT_SAFETY_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('true')),
   CLARIFY_MAX_QUESTIONS: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).max(8).default(4)),
   CRITIC_MAX_REFINEMENTS: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).max(2).default(2)), // hard cap, §10.4
   RATE_LIMIT_REQUESTS_PER_MINUTE: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(30)),
-  BUDGET_ENFORCEMENT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
-  VISUAL_PREVIEW_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
+  BUDGET_ENFORCEMENT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('true')),
+  VISUAL_PREVIEW_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('false')),
 
   // Postgres pool size (§23.4). Default 10 suits a long-lived local/server
   // process fielding many concurrent requests; a Lambdalith should override to
@@ -94,11 +94,11 @@ const envSchema = z.object({
   // Load-testing seam (T3.7): force every generate() to the deterministic mock
   // adapter so load tests measure OUR system, not the provider's free-tier rate
   // limits. NEVER allowed in production — refused at startup below.
-  PROVIDER_FORCE_MOCK: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
+  PROVIDER_FORCE_MOCK: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('false')),
 
   // Local dev
   PORT: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().default(3001)),
-  DEV_AUTH_BYPASS: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('false')),
+  DEV_AUTH_BYPASS: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('false')),
   PLATFORM_REGISTRY_PATH: optional(z.string()),
   CLARIFICATION_QUESTIONS_PATH: optional(z.string()),
   STRATEGY_PROFILES_PATH: optional(z.string()),
@@ -120,13 +120,13 @@ const envSchema = z.object({
   ADMIN_API_KEY: optional(z.string()),
 
   // Demo/try-it-now flow (T4.3).
-  DEMO_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  DEMO_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('true')),
   DEMO_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(5)),
 
   // Voice dictation / STT (F1.3). Groq Whisper is the backend fallback; the key
   // is GROQ_API_KEY (already configured). Default daily cap is a per-user abuse
   // control; plans may raise it (PlanService).
-  STT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  STT_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('true')),
   STT_REQUESTS_PER_DAY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().int().min(1).default(50)),
 
   // Share links (F2.4).
@@ -138,7 +138,7 @@ const envSchema = z.object({
 
   // PKB retrieval (T5.2).
   PKB_MIN_SIMILARITY: z.preprocess((v) => (v === '' ? undefined : v), z.coerce.number().min(0).max(1).default(0.45)),
-  LIVE_FETCH_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.default('true')),
+  LIVE_FETCH_ENABLED: z.preprocess((v) => (v === '' ? undefined : v), boolString.prefault('true')),
 
   // T7.7 — Plan definitions path (§28.2).
   PLANS_PATH: optional(z.string()),

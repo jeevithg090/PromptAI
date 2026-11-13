@@ -29,7 +29,7 @@ type QuestionTemplate = z.infer<typeof questionTemplateSchema>;
 const taxonomyFileSchema = z.object({
   schema_version: z.string(),
   note: z.string().optional(),
-  task_types: z.record(z.array(questionTemplateSchema)),
+  task_types: z.record(z.string(), z.array(questionTemplateSchema)),
 });
 
 let cached: z.infer<typeof taxonomyFileSchema> | null = null;

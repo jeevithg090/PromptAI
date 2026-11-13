@@ -36,7 +36,7 @@ export const modelCapabilitySchema = z.object({
   cost_tier: z.number().int().min(1).max(5),
   latency_tier: z.number().int().min(1).max(5),
   strengths: z.array(z.string()),
-  benchmark_scores: z.record(z.string()).optional(),
+  benchmark_scores: z.record(z.string(), z.string()).optional(),
   reasoning_efforts: reasoningEffortSchema.optional(),
   notes: z.string().optional(),
 });
@@ -47,7 +47,7 @@ export const capabilityMatrixSchema = z.object({
   note: z.string().optional(),
   last_verified: z.string(),
   models: z.array(modelCapabilitySchema),
-  task_profiles: z.record(z.object({
+  task_profiles: z.record(z.string(), z.object({
     description: z.string(),
     ideal_strengths: z.array(z.string()),
     cost_sensitivity: z.string().optional(),

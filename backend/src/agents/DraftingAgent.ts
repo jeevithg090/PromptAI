@@ -31,7 +31,7 @@ type StrategyProfile = z.infer<typeof strategyProfileSchema>;
 const profilesFileSchema = z.object({
   schema_version: z.string(),
   note: z.string().optional(),
-  profiles: z.record(strategyProfileSchema),
+  profiles: z.record(z.string(), strategyProfileSchema),
 });
 
 let cachedProfiles: z.infer<typeof profilesFileSchema> | null = null;
