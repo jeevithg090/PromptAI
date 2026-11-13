@@ -21,7 +21,7 @@ const api: PromptAIApi = {
   retry: () => ipcRenderer.invoke(IPC.retry),
   dismiss: () => ipcRenderer.invoke(IPC.dismiss),
   rate: (rating) => ipcRenderer.invoke(IPC.rate, String(rating)),
-  setSession: (s) => ipcRenderer.invoke(IPC.setSession, { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true }),
+  setSession: (s) => ipcRenderer.invoke(IPC.setSession, { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true, incognito: s?.incognito === true }),
   api: (req) =>
     ipcRenderer.invoke(IPC.api, {
       method: String(req.method),

@@ -199,6 +199,8 @@ export type DecisionContext = {
   surface: (typeof SURFACES)[number];
   locale: string;
   cardVersion: string | null;
+  /** An incognito draft: recorded so it can be reported, never learned from. Absent on older rows. */
+  incognito?: boolean;
 };
 /** A chip the draft showed. Values and options come from the card or the user's own counts and memories. */
 export type ShownChip = { slotId: string; value: string; source: string; kind: 'assumption' | 'pick'; options: string[] };

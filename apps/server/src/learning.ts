@@ -8,7 +8,7 @@ import { contextKey, weightFor } from '@promptai/core';
 import { decisions, memoryItems, slotCounts, toolUsage, uuidv7, type Db, type DecisionContext } from '@promptai/db';
 import type { ForgeRequestParsed, ForgeResponseParsed, MemoryItem } from '@promptai/contract';
 import type { Caller } from './auth.ts';
-import { personalizes } from './consent.ts';
+import { granted, latestConsents, personalizes } from './consent.ts';
 import type { StoredEvent } from './event-store.ts';
 
 /** One L1 signal: core folds these into per-slot Dirichlet counts with decay. */
@@ -16,7 +16,13 @@ type CountRow = { slotId: string; value: string; contextKey: string; weight: num
 type ForgeMemory = { id: string; kind: MemoryItem['kind']; text: string };
 type ToolUsageRow = { toolId: string; hostApp: string | null; surface: DecisionContext['surface']; at: string };
 /** The second argument to `deps.forge`. */
-export type ForgeContext = { counts: CountRow[]; memories: ForgeMemory[]; toolUsage: ToolUsageRow[] };
+export type ForgeContext = {
+  counts: CountRow[];
+  memories: ForgeMemory[];
+  toolUsage: ToolUsageRow[];
+  /** The caller said Yes to AI processing (consent ledger, `llm_processing`); skipping is No. */
+  allowModel: boolean;
+};
 
 /** The decision policy behind today's drafts: core's deterministic rules. Bump it when the pick rule changes. */
 const POLICY_VERSION = 'p1-rules';
@@ -47,7 +53,9 @@ export function pidOf(caller: Caller): string {
  * that don't exist yet) and global or scoped to the hinted tool.
  */
 export async function loadForgeContext(db: Db, caller: Caller, req: ForgeRequestParsed, now: Date): Promise<ForgeContext> {
-  if (!(await personalizes(db, caller))) return { counts: [], memories: [], toolUsage: [] };
+  const consents = await latestConsents(db, caller.id);
+  const allowModel = granted(consents, 'llm_processing');
+  if (req.incognito || caller.kind !== 'account' || !granted(consents, 'personalize')) return { counts: [], memories: [], toolUsage: [], allowModel };
   const pid = pidOf(caller);
   const scoped = req.toolHint ? or(eq(memoryItems.scope, 'global'), and(eq(memoryItems.scope, 'tool'), eq(memoryItems.scopeRef, req.toolHint))) : eq(memoryItems.scope, 'global');
   const [counts, memories, usage] = await Promise.all([
@@ -71,6 +79,7 @@ export async function loadForgeContext(db: Db, caller: Caller, req: ForgeRequest
       .limit(USAGE_LIMIT),
   ]);
   return {
+    allowModel,
     counts: counts.map((r) => ({ ...r, at: r.at.toISOString() })),
     memories: memories.flatMap((m) => (m.text === null ? [] : [{ id: m.id, kind: m.kind, text: m.text }])),
     toolUsage: usage.map((r) => ({ ...r, at: r.at.toISOString() })),
@@ -85,7 +94,7 @@ export async function recordDecision(db: Db, caller: Caller, req: ForgeRequestPa
     pid: pidOf(caller),
     point: 'forge.draft',
     sessionId: req.sessionId ?? null,
-    context: { toolId: res.toolId, hostApp: req.hostApp ?? null, surface: req.surface, locale: req.language?.spoken[0] ?? req.locale, cardVersion: res.cardVersion ?? null },
+    context: { toolId: res.toolId, hostApp: req.hostApp ?? null, surface: req.surface, locale: req.language?.spoken[0] ?? req.locale, cardVersion: res.cardVersion ?? null, incognito: req.incognito },
     shown: res.assumptions.map((a) => ({ slotId: a.slotId, value: a.value, source: a.source, kind: a.kind, options: a.options })),
     policyVersion: POLICY_VERSION,
   });
@@ -126,11 +135,13 @@ export async function applyOutcomes(db: Db, caller: Caller, events: readonly Sto
     // Client clocks are not trusted past the draft's creation and the present.
     const at = new Date(Math.min(now.getTime(), Math.max(d.createdAt.getTime(), Date.parse(e.at))));
     const { toolId, hostApp, surface } = d.context;
+    // An incognito draft keeps its decision row (Report needs the id) but teaches nothing.
+    const learnHere = learn && d.context.incognito !== true;
 
     if (e.type === 'chip.flipped') {
       const { slotId, value } = e.props;
       if (typeof slotId !== 'string' || typeof value !== 'string' || !d.shown.some((s) => s.slotId === slotId && s.options.includes(value))) continue;
-      if (learn) {
+      if (learnHere) {
         await db
           .insert(slotCounts)
           .values({ pid, toolId, slotId, value, contextKey: contextKey({ toolId, hostApp }), weight: weightFor('flip'), at, decisionId, eventId: e.id })
@@ -153,7 +164,7 @@ export async function applyOutcomes(db: Db, caller: Caller, events: readonly Sto
         .update(decisions)
         .set({ outcome, outcomeAt: at })
         .where(and(eq(decisions.id, decisionId), or(isNull(decisions.outcomeAt), lte(decisions.outcomeAt, at))));
-      if (learn && outcome !== 'dismissed') {
+      if (learnHere && outcome !== 'dismissed') {
         await db.insert(toolUsage).values({ pid, toolId, hostApp, surface, at, eventId: e.id }).onConflictDoNothing({ target: toolUsage.eventId });
       }
     }

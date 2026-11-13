@@ -63,8 +63,11 @@ export interface PromptAIBridge {
   rate(rating: Rating): Promise<void>;
   /** Web only: draft from typed text instead of dictation. */
   submit?(text: string): Promise<void>;
-  /** Desktop only: main sends /v1/forge and /v1/events itself, so it needs the token, and holds dictation until first run is done. */
-  setSession?(session: { token: string | null; ready: boolean }): Promise<void>;
+  /**
+   * The session the shell owns. Desktop: main sends /v1/forge and /v1/events itself, so it needs the token, and holds
+   * dictation until first run is done. Both: drafts made while `incognito` is on read and write no memory or counts.
+   */
+  setSession?(session: { token: string | null; ready: boolean; incognito: boolean }): Promise<void>;
   /** Desktop only: the other /v1 routes, through main. */
   api?(req: ApiRequest): Promise<ApiReply>;
 }

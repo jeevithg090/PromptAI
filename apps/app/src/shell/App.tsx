@@ -146,8 +146,8 @@ export function App({ bridge, api, auth, tokens }: AppProps) {
 
   // Main sends /v1/forge and /v1/events itself on desktop, and holds dictation until first run is done.
   useEffect(() => {
-    void bridge.setSession?.({ token, ready: gate === 'ready' });
-  }, [bridge, token, gate]);
+    void bridge.setSession?.({ token, ready: gate === 'ready', incognito });
+  }, [bridge, token, gate, incognito]);
 
   useEffect(
     () =>

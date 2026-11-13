@@ -22,6 +22,8 @@ export function bundleOptions(name) {
     format: 'cjs',
     target: 'node22',
     external: ['electron'],
+    // the catalog's locale packs ship inside main.cjs (voice-command grammar)
+    loader: { '.yaml': 'text' },
     define: channelDefines(name),
     // Folds the channel flags so a forbidden branch is gone from the bundle, not just unreachable.
     minifySyntax: true,

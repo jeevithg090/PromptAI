@@ -90,6 +90,7 @@ describe('POST /v1/forge', () => {
       counts: [{ slotId: 'tone', value: 'friendly', contextKey: contextKey({ toolId: 'claude', hostApp: 'Slack' }), weight: 1, at: flippedAt }],
       memories: [{ id: keep.body.id, kind: 'rule', text: 'no emoji' }],
       toolUsage: [{ toolId: 'claude', hostApp: 'Slack', surface: 'web', at: flippedAt }],
+      allowModel: false, // no AI-processing consent was given
     });
     await w.call('POST', '/v1/forge', token, { text: 'c', toolHint: 'cursor' });
     expect((forge.mock.calls.at(-1)![1] as ForgeContext).memories.map((m) => m.text).sort()).toEqual(['no emoji', 'use pnpm']);
@@ -101,7 +102,7 @@ describe('POST /v1/forge', () => {
     await w.call('POST', '/v1/me/memory', token, { kind: 'rule', scope: 'global', scopeRef: null, sensitivity: 'normal', text: 'no emoji' });
     await w.call('PUT', '/v1/me/consent', token, { entries: [{ purpose: 'personalize', granted: false, version: 'c1' }] });
     const res = await w.call('POST', '/v1/forge', token, { text: 'a' });
-    expect(forge.mock.calls.at(-1)![1]).toEqual({ counts: [], memories: [], toolUsage: [] });
+    expect(forge.mock.calls.at(-1)![1]).toEqual({ counts: [], memories: [], toolUsage: [], allowModel: false });
     const decisionId = res.body.decisionId;
     await w.call('POST', '/v1/events', token, { events: [ev('chip.flipped', { decisionId, slotId: 'tone', value: 'friendly' }), ev('brief.copied', { decisionId })] });
     expect(await w.orm.$count(slotCounts, eq(slotCounts.pid, pid))).toBe(0);
@@ -229,5 +230,46 @@ describe('quotas and the cost ceiling', () => {
     expect(refused.body.error).toBe('cost_ceiling');
     const rows = await w.orm.select().from(usageCounters).where(eq(usageCounters.userId, id));
     expect(Object.fromEntries(rows.map((r) => [r.metric, r.value]))).toEqual({ forges: 2, cost_microusd: 40_000 });
+  });
+});
+
+describe('consent and incognito', () => {
+  it('allows the model only after a Yes to AI processing, and a later No takes it back', async () => {
+    const { w, token, forge } = await setup();
+    await w.call('POST', '/v1/forge', token, { text: 'a' });
+    expect((forge.mock.calls.at(-1)![1] as ForgeContext).allowModel).toBe(false); // skipping is No
+    await w.call('PUT', '/v1/me/consent', token, { entries: [{ purpose: 'llm_processing', granted: true, version: 'c1' }] });
+    await w.call('POST', '/v1/forge', token, { text: 'b' });
+    expect((forge.mock.calls.at(-1)![1] as ForgeContext).allowModel).toBe(true);
+    await w.call('PUT', '/v1/me/consent', token, { entries: [{ purpose: 'llm_processing', granted: false, version: 'c1' }] });
+    await w.call('POST', '/v1/forge', token, { text: 'c' });
+    expect((forge.mock.calls.at(-1)![1] as ForgeContext).allowModel).toBe(false);
+  });
+
+  it('an incognito draft reads no memory or counts and teaches nothing, but can still be reported', async () => {
+    const { w, token, forge, pid } = await setup();
+    await w.call('POST', '/v1/me/memory', token, { kind: 'rule', scope: 'global', scopeRef: null, sensitivity: 'normal', text: 'no emoji' });
+    const res = await w.call('POST', '/v1/forge', token, { text: 'a', hostApp: 'Slack', incognito: true });
+    expect(forge.mock.calls.at(-1)![1]).toMatchObject({ counts: [], memories: [], toolUsage: [] });
+    const decisionId = res.body.decisionId;
+    expect(decisionId).toEqual(expect.any(String));
+    await w.call('POST', '/v1/events', token, { events: [ev('chip.flipped', { decisionId, slotId: 'tone', value: 'friendly' }), ev('brief.inserted', { decisionId })] });
+    expect(await w.orm.select().from(slotCounts).where(eq(slotCounts.pid, pid))).toEqual([]);
+    expect(await w.orm.select().from(toolUsage).where(eq(toolUsage.pid, pid))).toEqual([]);
+    const report = await w.call('POST', '/v1/report', token, { decisionId, reason: 'wrong_or_harmful' });
+    expect(report.status).toBe(201);
+  });
+});
+
+describe('CORS', () => {
+  it('answers a PWA preflight before auth, and only for allowed origins', async () => {
+    const w = await world({ deps: { corsOrigins: ['http://localhost:5173'] } });
+    const preflight = (origin: string) =>
+      w.app.request('/v1/forge', { method: 'OPTIONS', headers: { origin, 'access-control-request-method': 'POST', 'access-control-request-headers': 'authorization,content-type' } });
+    const ok = await preflight('http://localhost:5173');
+    expect(ok.status).toBeLessThan(300);
+    expect(ok.headers.get('access-control-allow-origin')).toBe('http://localhost:5173');
+    const other = await preflight('https://evil.example');
+    expect(other.headers.get('access-control-allow-origin')).toBeNull();
   });
 });

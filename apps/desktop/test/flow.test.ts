@@ -363,4 +363,33 @@ describe('flow', () => {
     await speak('plan my week'); // not a command: drafted as usual
     expect(ports.forge.forge).toHaveBeenCalledTimes(2);
   });
+
+  it('"just draft it" accepts every unanswered pick, so Insert unblocks', async () => {
+    const { flow, speak } = setup({ matchVoiceCommand: (t) => (t === 'just draft it' ? { id: 'accept_suggestions' } : null) });
+    await speak('write a launch email');
+    expect(state(flow.getState(), 'ready').answers).toEqual({});
+    await speak('just draft it');
+    expect(state(flow.getState(), 'ready').answers).toEqual({ length: 'Short' }); // the pick's suggestion
+  });
+
+  it('a spoken instruction redrafts the same words with it, keeping the answers', async () => {
+    const { flow, ports, speak } = setup({
+      forge: async () => NO_PICKS,
+      matchVoiceCommand: (t) => (t === 'make it shorter' ? { id: 'refine', instruction: 'Make it shorter.' } : null),
+    });
+    await speak('write a launch email');
+    await speak('make it shorter');
+    expect(vi.mocked(ports.forge.forge).mock.calls.at(-1)![0].text).toBe('write a launch email\nMake it shorter.');
+    expect(state(flow.getState(), 'ready').transcript).toBe('write a launch email\nMake it shorter.');
+  });
+});
+
+describe('voice commands from the locale pack', () => {
+  it('maps the grammar onto actions on the open draft', async () => {
+    const { toFlowCommand } = await import('../src/voice.ts');
+    expect(toFlowCommand({ kind: 'insert' })).toEqual({ id: 'insert' });
+    expect(toFlowCommand({ kind: 'cancel' })).toEqual({ id: 'dismiss' });
+    expect(toFlowCommand({ kind: 'just_draft' })).toEqual({ id: 'accept_suggestions' });
+    expect(toFlowCommand({ kind: 'refine', instruction: 'Change the tone to formal.' })).toEqual({ id: 'refine', instruction: 'Change the tone to formal.' });
+  });
 });

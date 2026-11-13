@@ -211,6 +211,15 @@ describe('browser fallback', () => {
     await waitFor(() => expect(writeClipboard).toHaveBeenCalledWith(DRAFT.brief));
     await screen.findByText('Copied to the clipboard.');
   });
+
+  it('marks drafts incognito while the session is incognito', async () => {
+    const fetch = vi.fn(async () => Response.json(DRAFT));
+    const bridge = createWebBridge({ api: createHttpApi({ baseUrl: 'http://localhost:8787', fetch: fetch as typeof globalThis.fetch }) });
+    await bridge.setSession?.({ token: null, ready: true, incognito: true });
+    await bridge.submit?.('write a launch email');
+    const [, init] = fetch.mock.calls[0] as unknown as [URL, RequestInit];
+    expect(JSON.parse(String(init.body))).toEqual({ text: 'write a launch email', incognito: true });
+  });
 });
 
 describe('receipt, channels and checks', () => {

@@ -96,9 +96,11 @@ const routes = parseRoutes(await readFile(path.join(catalogDir, 'routes.yaml'), 
 const transport = env.AI_GATEWAY_API_KEY ? gatewayTransport(env.AI_GATEWAY_API_KEY) : undefined;
 const app = createApp({
   forge: async (req, ctx) => {
+    const { allowModel, ...personal } = ctx;
+    // No AI-processing consent, no model: forge drafts on its deterministic path.
     // One port per request: a refusal latches the port so nothing is re-sent.
-    const llm = transport ? createLlmPort({ routes, transport, clock: systemClock }) : undefined;
-    const res = await forge(req, { cards, clock: systemClock, locales, now: new Date().toISOString(), ...ctx, ...(llm ? { llm } : {}) });
+    const llm = transport && allowModel ? createLlmPort({ routes, transport, clock: systemClock }) : undefined;
+    const res = await forge(req, { cards, clock: systemClock, locales, now: new Date().toISOString(), ...personal, ...(llm ? { llm } : {}) });
     if (!llm) return res;
     const { tokensIn, tokensOut, costUsd } = llm.usage();
     return { ...res, usage: { ...res.usage, tokensIn, tokensOut, costUsd } };
@@ -109,6 +111,8 @@ const app = createApp({
   guests,
   authAdmin: env.SUPABASE_URL && env.SUPABASE_SERVICE_ROLE_KEY ? createAuthAdmin({ url: env.SUPABASE_URL, serviceRoleKey: env.SUPABASE_SERVICE_ROLE_KEY }) : undefined,
   limits,
+  // ALLOWED_ORIGINS: comma-separated PWA origins. Dev defaults to Vite's dev and preview servers.
+  corsOrigins: (env.ALLOWED_ORIGINS ?? (production ? '' : 'http://localhost:5173,http://localhost:4173')).split(',').map((o) => o.trim()).filter(Boolean),
   // Behind a proxy (Fly sets Fly-Client-IP), name its header in TRUST_PROXY_HEADER; otherwise the socket address is used.
   clientIp: (c) => (env.TRUST_PROXY_HEADER ? c.req.header(env.TRUST_PROXY_HEADER) : undefined) ?? getConnInfo(c).remote.address ?? 'unknown',
 });

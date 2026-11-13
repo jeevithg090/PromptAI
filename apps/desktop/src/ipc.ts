@@ -28,7 +28,7 @@ export interface PromptAIApi {
   dismiss(): Promise<void>;
   rate(rating: Rating): Promise<void>;
   /** The bearer token main sends with /v1/forge and /v1/events, and whether first run is done (dictation waits for it). */
-  setSession(session: { token: string | null; ready: boolean }): Promise<void>;
+  setSession(session: { token: string | null; ready: boolean; incognito: boolean }): Promise<void>;
   /** The panel's other /v1 calls (src/api-proxy.ts). */
   api(req: ApiRequest): Promise<ApiReply>;
 }

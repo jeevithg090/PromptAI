@@ -25,7 +25,15 @@ export type EventProps = Record<string, string | number | boolean | null>;
 export type Rating = 'worked' | 'didnt_work';
 
 /** A command spoken while the Draft sheet is open. */
-export type VoiceCommand = { id: 'insert' } | { id: 'copy' } | { id: 'dismiss' } | { id: 'pick'; slotId: string; value: string };
+export type VoiceCommand =
+  | { id: 'insert' }
+  | { id: 'copy' }
+  | { id: 'dismiss' }
+  | { id: 'pick'; slotId: string; value: string }
+  /** "Just draft it": accept every unanswered pick's suggestion. */
+  | { id: 'accept_suggestions' }
+  /** Redraft the same words with a spoken instruction ("make it shorter"). */
+  | { id: 'refine'; instruction: string };
 
 export interface FlowPorts {
   /** Resolves with the reply's data; rejects on ok:false, timeout or helper exit. */
@@ -195,6 +203,19 @@ export function createFlow(ports: FlowPorts) {
         return dismiss();
       case 'pick':
         return answerChip(command.slotId, command.value);
+      case 'accept_suggestions': {
+        if (state.phase !== 'ready') return;
+        const { draft: d, answers } = state;
+        for (const a of d.assumptions) {
+          if (a.kind === 'pick' && answers[a.slotId] === undefined && a.value !== '') await answerChip(a.slotId, a.value);
+        }
+        return;
+      }
+      case 'refine': {
+        if ((state.phase !== 'ready' && state.phase !== 'done') || !command.instruction) return;
+        const { target, transcript, answers } = state;
+        return draft(session, `${transcript}\n${command.instruction}`, target, answers);
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import { Hono, type Context } from 'hono';
+import { cors } from 'hono/cors';
 import { requestId } from 'hono/request-id';
 import { and, eq } from 'drizzle-orm';
 import {
@@ -63,6 +64,15 @@ export function createApp(deps: AppDeps) {
   };
 
   app.use(requestId());
+  // The PWA calls the API from its own origin; preflights must pass before auth. Desktop goes through main, not CORS.
+  if (deps.corsOrigins?.length) {
+    app.use('/v1/*', cors({
+      origin: [...deps.corsOrigins],
+      allowHeaders: ['authorization', 'content-type', 'x-device-id'],
+      exposeHeaders: ['x-request-id', 'x-forges-remaining', 'retry-after'],
+      maxAge: 600,
+    }));
+  }
   app.use(async (c, next) => {
     const start = performance.now();
     await next();

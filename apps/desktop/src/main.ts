@@ -12,10 +12,18 @@ import { createEventQueue } from '@promptai/app/events-queue';
 import { createApiProxy } from './api-proxy.ts';
 import { createAutoPaste } from './auto-paste.ts';
 import { fileQueueStore } from './events-store.ts';
-import { createFlow, HOTKEY } from './flow.ts';
+import { lookupPack, matchVoiceCommand, parseLocalePack } from '@promptai/core';
+import enPack from '../../../catalog/locales/en/pack.yaml';
+import enInPack from '../../../catalog/locales/en-IN/pack.yaml';
+import hiLatnPack from '../../../catalog/locales/hi-Latn/pack.yaml';
+import { createFlow, HOTKEY, LOCALE } from './flow.ts';
+import { toFlowCommand } from './voice.ts';
 import { createForgeClient } from './forge.ts';
 import { IPC } from './ipc.ts';
 import { createNativeClient } from './native.ts';
+
+/** The voice-command grammar for the dictation locale (catalog/locales). */
+const voicePack = lookupPack([enPack, enInPack, hiLatnPack].map(parseLocalePack), LOCALE);
 
 const PANEL = { width: 520, height: 640 };
 
@@ -31,7 +39,7 @@ const serverUrl = process.env.PROMPTAI_SERVER_URL ?? 'http://localhost:8787';
 let panel: BrowserWindow | null = null;
 let quitting = false;
 /** From the panel: the bearer token for /v1, and whether first run is done. */
-let session: { token: string | null; ready: boolean } = { token: null, ready: false };
+let session: { token: string | null; ready: boolean; incognito: boolean } = { token: null, ready: false, incognito: false };
 
 function createPanel(): BrowserWindow {
   const win = new BrowserWindow({
@@ -88,6 +96,7 @@ app.whenReady().then(() => {
   panel = createPanel();
 
   const token = () => session.token;
+  const forgeClient = createForgeClient(serverUrl, fetch, 30_000, token);
   const server = createHttpApi({ baseUrl: serverUrl, token });
   const events = createEventQueue({
     send: (batch) => server.sendEvents(batch),
@@ -97,7 +106,10 @@ app.whenReady().then(() => {
 
   const flow = createFlow({
     native: { request: (cmd) => native.request(cmd) },
-    forge: createForgeClient(serverUrl, fetch, 30_000, token),
+    forge: {
+      // Incognito (set from the panel's You place) rides on every draft request.
+      forge: (req) => forgeClient.forge(session.incognito ? { ...req, incognito: true } : req),
+    },
     panel: { show: showPanel, hide: () => panel?.hide() },
     clipboard: { writeText: (text) => clipboard.writeText(text) },
     // A literal from the build, so a mas-lite bundle drops auto-paste.ts entirely (scripts/build.mjs checks).
@@ -111,8 +123,11 @@ app.whenReady().then(() => {
         }
       },
     },
-    // VOICE COMMANDS HOOK: pass W1's matcher here once it is merged, e.g.
-    // matchVoiceCommand: (transcript, sheet) => matchVoiceCommand(transcript, sheet),
+    // Speaking while a draft is on screen runs a command on it ("insert", "make it shorter").
+    matchVoiceCommand: (transcript) => {
+      const spoken = voicePack ? matchVoiceCommand(transcript, voicePack) : null;
+      return spoken ? toFlowCommand(spoken) : null;
+    },
   });
   flow.subscribe((state) => panel?.webContents.send(IPC.state, state));
 
@@ -150,9 +165,9 @@ app.whenReady().then(() => {
   handle(IPC.retry, () => flow.retry());
   handle(IPC.dismiss, () => flow.dismiss());
   handle(IPC.rate, (rating = '') => flow.rate(rating));
-  ipcMain.handle(IPC.setSession, (e, s: { token?: unknown; ready?: unknown } | null) => {
+  ipcMain.handle(IPC.setSession, (e, s: { token?: unknown; ready?: unknown; incognito?: unknown } | null) => {
     fromPanel(e);
-    session = { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true };
+    session = { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true, incognito: s?.incognito === true };
     // First run (date of birth, consent) shows itself right after install rather than waiting for the hotkey.
     if (!session.ready) showPanel();
     if (session.token) void events.flush();

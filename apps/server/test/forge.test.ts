@@ -44,7 +44,7 @@ describe('POST /v1/forge', () => {
     const res = await app(forge).request('/v1/forge', post({ text: '  write a haiku  ' }));
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ...forgeResponseSchema.parse(okForge), decisionId: expect.any(String) });
-    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', surface: 'web', locale: 'en', answers: {} }, { counts: [], memories: [], toolUsage: [] });
+    expect(forge).toHaveBeenCalledWith({ text: 'write a haiku', surface: 'web', locale: 'en', answers: {}, incognito: false }, { counts: [], memories: [], toolUsage: [], allowModel: false });
   });
 
   it('400s with issues on an invalid request, without calling forge', async () => {

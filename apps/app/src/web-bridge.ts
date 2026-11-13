@@ -23,6 +23,7 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
   const listeners = new Set<(s: PanelState) => void>();
   let state: PanelState = { phase: 'idle' };
   let session = 0;
+  let incognito = false;
   const set = (next: PanelState) => {
     state = next;
     for (const l of listeners) l(state);
@@ -36,7 +37,7 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
     const id = ++session;
     set({ phase: 'drafting', target: null, transcript: text, answers });
     try {
-      const result = await opts.api.forge({ text, ...(Object.keys(answers).length > 0 ? { answers } : {}) });
+      const result = await opts.api.forge({ text, ...(Object.keys(answers).length > 0 ? { answers } : {}), ...(incognito ? { incognito: true } : {}) });
       if (id !== session) return;
       set({ phase: 'ready', target: null, transcript: text, draft: result, answers });
       track('brief.shown', { assumptions: result.assumptions.length, unsourced: result.unsourced.length, covered: result.coverage.covered, total: result.coverage.total });
@@ -54,6 +55,9 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
       return () => {
         listeners.delete(listener);
       };
+    },
+    setSession: async (s) => {
+      incognito = s.incognito;
     },
     submit: async (text) => {
       if (text.trim()) await draft(text.trim(), {});

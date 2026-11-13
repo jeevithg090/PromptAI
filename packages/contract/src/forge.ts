@@ -81,6 +81,8 @@ export const forgeRequestSchema = z.object({
   answers: z.record(z.string().max(100), z.string().max(2_000)).default({}),
   /** Groups a draft and its redrafts for decision rows. */
   sessionId: z.uuid().optional(),
+  /** Incognito (blueprint §13): no memory, counts or history are read or written for this draft. */
+  incognito: z.boolean().default(false),
 });
 export type ForgeRequest = z.input<typeof forgeRequestSchema>;
 export type ForgeRequestParsed = z.output<typeof forgeRequestSchema>;

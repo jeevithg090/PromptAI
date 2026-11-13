@@ -36,6 +36,8 @@ export interface AppDeps {
   clientIp?: (c: Context) => string;
   now?: () => Date;
   log?: Log;
+  /** Browser origins allowed to call /v1 (the PWA). Empty: no CORS headers at all. */
+  corsOrigins?: readonly string[];
 }
 
 export type AppEnv = { Variables: RequestIdVariables & { caller: Caller } };
