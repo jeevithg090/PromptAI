@@ -1,0 +1,12 @@
+- name: plain words into a shared page
+  input: { text: "project kickoff notes, we agreed to launch in march", toolHint: notion }
+  expect: { toolId: notion, briefIncludes: ["project kickoff notes, we agreed to launch in march"], briefExcludes: ["Assumptions"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: named by an alias
+  input: { text: "add to notion a reading list for the weekend" }
+  expect: { toolId: notion, maxIssues: { block: 0 } }
+- name: "a notion is not Notion"
+  input: { text: "I have a notion that we should rewrite the onboarding flow" }
+  expect: { toolId: generic, maxIssues: { block: 0 } }
+- name: Notion as host
+  input: { text: "decisions from the design review", hostApp: notion.id }
+  expect: { toolId: notion, briefIncludes: ["decisions from the design review"], maxIssues: { block: 0 } }

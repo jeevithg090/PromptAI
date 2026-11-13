@@ -1,0 +1,12 @@
+- name: named, Persona-Task-Context-Format
+  input: { text: "ask gemini to plan a 3 day trip to Jaipur for my family" }
+  expect: { toolId: gemini, briefIncludes: ["Persona:", "Task: Ask gemini to plan a 3 day trip to Jaipur", "Format:"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: an audience option said
+  input: { text: "gemini, explain how vaccines work for children" }
+  expect: { toolId: gemini, briefIncludes: ["You are writing for children"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: the Gemini web app as host
+  input: { text: "write a short poem about the monsoon", hostApp: gemini.google.com }
+  expect: { toolId: gemini, briefIncludes: ["Task: Write a short poem about the monsoon."], maxIssues: { block: 0 } }
+- name: a Gemini video is the video card, not the chat card
+  input: { text: "make a gemini video of waves at dawn, 9:16" }
+  expect: { toolId: gemini-omni-video, briefIncludes: ["waves at dawn"], maxIssues: { block: 0 } }

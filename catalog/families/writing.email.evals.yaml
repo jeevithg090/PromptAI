@@ -1,0 +1,6 @@
+- name: a mail app with no card; the message is the user's words
+  input: { text: "running late, start the call without me", hostApp: com.apple.mail }
+  expect: { toolId: writing-email, briefIncludes: ["running late, start the call without me"], briefExcludes: ["Assumptions"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: hinted by the client
+  input: { text: "thanks, see you thursday", toolHint: writing-email }
+  expect: { toolId: writing-email, briefIncludes: ["thanks, see you thursday"], maxIssues: { block: 0 } }

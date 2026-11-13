@@ -1,0 +1,6 @@
+- name: an editor with no card; plain text
+  input: { text: "agenda for friday: budget, hiring, offsite", hostApp: com.microsoft.word }
+  expect: { toolId: writing-doc, briefIncludes: ["agenda for friday: budget, hiring, offsite"], briefExcludes: ["#"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: named by an alias
+  input: { text: "put this in a confluence page: the release checklist" }
+  expect: { toolId: writing-doc, maxIssues: { block: 0 } }

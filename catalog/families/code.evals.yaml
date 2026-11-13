@@ -1,0 +1,6 @@
+- name: a coding agent with no card gets the Agent Brief
+  input: { text: "ask openai codex to add retries to the http client" }
+  expect: { toolId: code, briefIncludes: ["Goal:", "Done when:", "Stop and ask before"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: a host app bundle id
+  input: { text: "speed up the search page", hostApp: com.exafunction.windsurf }
+  expect: { toolId: code, briefIncludes: ["Goal: Speed up the search page."], maxIssues: { block: 0 } }

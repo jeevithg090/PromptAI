@@ -1,0 +1,12 @@
+- name: the message is the user's own words
+  input: { text: "hi priya, running ten minutes late, start without me", toolHint: gmail }
+  expect: { toolId: gmail, briefIncludes: ["hi priya, running ten minutes late, start without me"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: dictated line breaks survive
+  input: { text: "thanks for the update new line I will send the deck by friday", toolHint: gmail }
+  expect: { toolId: gmail, briefIncludes: ["thanks for the update\nI will send the deck by friday"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: fillers are cleaned, nothing is added
+  input: { text: "um so the launch moved to next week, uh, details to follow", toolHint: gmail }
+  expect: { toolId: gmail, briefIncludes: ["the launch moved to next week"], briefExcludes: ["um ", "Assumptions", "Tone:", "Audience"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: Gmail in the browser as host
+  input: { text: "can we move our call to thursday", hostApp: mail.google.com }
+  expect: { toolId: gmail, briefIncludes: ["can we move our call to thursday"], maxIssues: { block: 0 } }

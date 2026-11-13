@@ -1,0 +1,6 @@
+- name: an answer engine with no card
+  input: { text: "phind: how do I paginate a postgres query efficiently" }
+  expect: { toolId: search, briefIncludes: ["Output format:", "Sources: prefer the most recent sources."], maxIssues: { block: 0 } }
+- name: a recency option said
+  input: { text: "kagi assistant, best budget laptops, only the past month" }
+  expect: { toolId: search, briefIncludes: ["Sources: only the past month."], maxIssues: { block: 0 } }

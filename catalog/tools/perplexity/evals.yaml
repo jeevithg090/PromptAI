@@ -1,0 +1,9 @@
+- name: a recency option said
+  input: { text: "ask perplexity for research on intermittent fasting, only the past year" }
+  expect: { toolId: perplexity, briefIncludes: ["Sources: only the past year."], noUnsourced: true, maxIssues: { block: 0 } }
+- name: an answer format said
+  input: { text: "perplexity: compare the top 3 note taking apps, a comparison table please" }
+  expect: { toolId: perplexity, briefIncludes: ["Output format: A comparison table."], noUnsourced: true, maxIssues: { block: 0 } }
+- name: the Perplexity Mac app as host; names in the words are sourced
+  input: { text: "what changed in the EU AI Act this month", hostApp: ai.perplexity.mac }
+  expect: { toolId: perplexity, briefIncludes: ["What changed in the EU AI Act this month.", "Sources: prefer the most recent sources."], noUnsourced: true, maxIssues: { block: 0 } }

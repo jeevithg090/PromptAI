@@ -1,0 +1,6 @@
+- name: a chat assistant with no card of its own
+  input: { text: "ask deepseek to explain monads to experts" }
+  expect: { toolId: chat, briefIncludes: ["Audience: experts"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: another alias
+  input: { text: "microsoft copilot, draft a polite reminder about the invoice" }
+  expect: { toolId: chat, maxIssues: { block: 0 } }

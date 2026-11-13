@@ -3,7 +3,7 @@
  * Every rule leans toward keeping words: a filler left in is a cosmetic miss,
  * a meaningful word removed is a meaning error.
  */
-import { applyReplacements, removeFillers, scaleNumbers, type LocalePack } from './locale.ts';
+import { applyReplacements, fillerPattern, scaleNumbers, type LocalePack } from './locale.ts';
 import { foldDigits, foldNumberGrouping } from './text.ts';
 
 /** Marks "capitalize the next letter" where a removed word carried a sentence's capital. */
@@ -79,7 +79,9 @@ export function cleanTranscript(text: string, locale = 'en', pack?: LocalePack):
   if (!/^(?:en|hi)(?:-|$)/i.test(locale)) return t.replace(/[ \t]+/g, ' ').replace(/ ?\n ?/g, '\n').trim();
   t = t.replace(LAYOUT, (_m, cmd: string | undefined) => (cmd?.toLowerCase() === 'paragraph' ? '\n\n' : '\n'));
   t = t.replace(FILLER, (m, word: string) => (word.length > 1 && word === word.toUpperCase() ? m : capIf(word)));
-  if (pack) t = applyReplacements(removeFillers(t, pack), pack);
+  const packFillers = pack && fillerPattern(pack);
+  if (packFillers) t = t.replace(packFillers, (_m, word: string) => capIf(word));
+  if (pack) t = applyReplacements(t, pack);
   t = t.replace(YOU_KNOW, (_m, phrase: string) => capIf(phrase));
   t = t.replace(LIKE_COMMAS, ' ');
   t = t.replace(LIKE_OPENER, (_m, lead: string, word: string) => lead + capIf(word).trim());

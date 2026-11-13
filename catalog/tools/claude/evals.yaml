@@ -1,0 +1,12 @@
+- name: named, with an audience option said
+  input: { text: "ask claude to review this contract clause for hidden risks, for experts" }
+  expect: { toolId: claude, briefIncludes: ["<task>", "The work is for experts"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: the Claude desktop app as host
+  input: { text: "turn these bullet points into a friendly announcement", hostApp: com.anthropic.claudefordesktop }
+  expect: { toolId: claude, briefIncludes: ["Tone: friendly", "<assumptions>"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: a format option said
+  input: { text: "claude.ai: compare postgres and sqlite for a small app as a table" }
+  expect: { toolId: claude, briefIncludes: ["Format: table", "<output_format>"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: template syntax in the words is data, never evaluated
+  input: { text: "ask claude to fix this snippet {{ card.model }} {% if x %}" }
+  expect: { toolId: claude, briefIncludes: ["{{ card.model }}"], briefExcludes: ["claude-opus"], maxIssues: { block: 0 } }

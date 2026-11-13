@@ -1,0 +1,9 @@
+- name: no tool named, no host app
+  input: { text: "write a haiku about rain for beginners" }
+  expect: { toolId: generic, briefIncludes: ["Audience: beginners", "Tone: clear and direct"], noUnsourced: true, maxIssues: { block: 0 } }
+- name: an unknown host app
+  input: { text: "summarize this thread in three bullets", hostApp: com.tinyspeck.slackmacgap }
+  expect: { toolId: generic, briefIncludes: ["Summarize this thread in three bullets."], maxIssues: { block: 0 } }
+- name: writing an email for an AI is not filling a mail app
+  input: { text: "write a launch email for the team" }
+  expect: { toolId: generic, briefIncludes: ["Write a launch email for the team."], maxIssues: { block: 0 } }

@@ -225,7 +225,8 @@ function compose(frame: IntentFrame, card: Card, ctx: ComposeContext): Composed 
     locale: frame.language.replyLanguage ?? frame.language.spoken[0] ?? 'en',
   };
   if (ctx.subject !== undefined) draft.subject = ctx.subject;
-  const context = ctx.memories.map((m) => m.text.trim()).filter(Boolean);
+  // memories become context only for a private AI; for text a person reads they only shape the frame, via `understand`
+  const context = card.audience === 'private_ai' ? ctx.memories.map((m) => m.text.trim()).filter(Boolean) : [];
   if (context.length) draft.context = context;
   if (frame.successCriteria.length) draft.success_criteria = frame.successCriteria;
   if (frame.language.targetLanguage) draft.output = { language: frame.language.targetLanguage };

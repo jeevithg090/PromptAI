@@ -19,6 +19,7 @@ function compilePhrase(phrase: string, allowCapture: boolean): string {
   let src = '';
   let captures = 0;
   for (const t of tokens) {
+    if (t === '[' || t === ']' || t === '{' || t === '}') throw new Error(`unbalanced bracket in "${phrase}"`);
     if (t === '{x}') { captures++; src += '(.+?) '; continue; }
     if (t.startsWith('[')) {
       const alts = t.slice(1, -1).split('|').map((a) => a.trim().split(/\s+/).map(esc).join(' ')).filter(Boolean);
@@ -91,11 +92,10 @@ const WORD_EDGE_L = String.raw`(?<![\p{L}\p{N}'’-])`;
 const WORD_EDGE_R = String.raw`(?![\p{L}\p{N}'’-])`;
 const alternation = (words: Iterable<string>) => [...words].sort((a, b) => b.length - a.length).map(esc).join('|');
 
-/** Standalone fillers, with an adjoining comma, like the built-in "um" rule. */
-export function removeFillers(t: string, pack: LocalePack): string {
-  if (pack.fillers.length === 0) return t;
-  const re = new RegExp(String.raw`(?:,[ \t]*)?${WORD_EDGE_L}(?:${alternation(pack.fillers)})${WORD_EDGE_R}(?:[ \t]*,)?`, 'giu');
-  return t.replace(re, ' ');
+/** Standalone fillers with an adjoining comma, like the built-in "um" rule; group 1 is the filler. Null when the pack has none. */
+export function fillerPattern(pack: LocalePack): RegExp | null {
+  if (pack.fillers.length === 0) return null;
+  return new RegExp(String.raw`(?:,[ \t]*)?${WORD_EDGE_L}(${alternation(pack.fillers)})${WORD_EDGE_R}(?:[ \t]*,)?`, 'giu');
 }
 
 export function applyReplacements(t: string, pack: LocalePack): string {
