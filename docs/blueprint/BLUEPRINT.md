@@ -10,7 +10,7 @@
 
 | # | Conflict | Decision | Evidence |
 |---|---|---|---|
-| 1 | Tauri vs Electron | **Electron** (owner decision, 2026-11-13), with one small Carbon N-API addon for key-up and paste and a Swift helper for Apple speech; nothing above `PlatformPort` changes. One language end to end and no Rust owner, for a ~110 MiB larger download | Handy (MIT, 38.3k★) uses its own `handy-keys` hook on macOS/Windows, the Tauri plugin only on Linux (`settings.rs`); Electron `globalShortcut` fires on press only ([docs](https://www.electronjs.org/docs/latest/api/global-shortcut)). `spikes/electron-shell`: Electron 45 is a 112 MiB download vs 5–9 MiB for Tauri builds, but the runtime gap is only +25–27 MiB with the same idle CPU and first paint |
+| 1 | Tauri vs Electron | **Electron** (owner decision, 2026-11-13), with one Swift helper (`pf-native`, stdio JSON lines) for the Carbon hotkey, Apple speech and paste; nothing above `PlatformPort` changes. One language end to end and no Rust owner, for a ~110 MiB larger download | Handy (MIT, 38.3k★) uses its own `handy-keys` hook on macOS/Windows, the Tauri plugin only on Linux (`settings.rs`); Electron `globalShortcut` fires on press only ([docs](https://www.electronjs.org/docs/latest/api/global-shortcut)). `spikes/electron-shell`: Electron 45 is a 112 MiB download vs 5–9 MiB for Tauri builds, but the runtime gap is only +25–27 MiB with the same idle CPU and first paint |
 | 2 | Sync | **Plain REST, idempotent event POSTs; no sync endpoint; transient DB errors return 5xx so clients retry** | `spikes/local-first-sync`: last-writer-wins lost a counter increment. Wave 2: CRDTs only move conflict choices into Lamport counters, and acknowledging deadlocks with 2xx dropped 212 writes when two devices reconnected (0 with 5xx) |
 | 3 | E2EE | **Honest labels**: at-rest encryption, transactional delete; Evolu vault only if asked | Keys in Postgres don't crypto-shred backups; WebAuthn PRF gaps ([MDN BCD](https://github.com/mdn/browser-compat-data/blob/main/api/CredentialsContainer.json)) |
 | 4 | Where learning runs | **Server-side in `/v1/forge`**; core stays pure for a later move to devices | Every forge needs the server |
@@ -76,7 +76,7 @@ The loop is **Capture → Understand → Draft → Hand off → Learn → Coach*
 ```mermaid
 flowchart LR
   W[Web PWA] --> UI
-  D["Electron desktop: Carbon hotkey addon, paste, panel"] --> UI
+  D["Electron desktop: pf-native helper (hotkey, speech, paste), panel"] --> UI
   UI["SPA: Capture · Draft sheet · Library · You"] --- CC["core (client): redaction · tool regex · rules"]
   UI -- "PCM, short-lived token" --> STT[("STT vendor")]
   UI -- "typed client + SSE" --> API["Hono: ~12 routes"]
@@ -114,7 +114,7 @@ One Astryx 0.7.12 bundle runs everywhere; native code exists only for OS entry p
 | Platform | Shell | Native code | Astryx tier | Phase |
 |---|---|---|---|---|
 | Web | Vite SPA + vite-plugin-pwa | none | Tier 1 on Chrome 125+, Safari 26+, Firefox 147+; anchor polyfill ([support](https://astryx.atmeta.com/docs/browser-support)) | MVP |
-| macOS | Electron | N-API addon: Carbon `RegisterEventHotKey` (press and release) and CGEvent paste; clipboard restore; a `type: 'panel'` window; Swift helper over stdio for Apple speech | Chromium, Tier 1 | MVP |
+| macOS | Electron | Swift helper `pf-native` over stdio: Carbon `RegisterEventHotKey` (press and release), Apple speech, CGEvent paste with clipboard restore, frontmost app; a `type: 'panel'` window | Chromium, Tier 1 | MVP |
 | Windows | Electron | a native helper (low-level keyboard hook for key-up, SendInput paste) on the same stdio protocol | Chromium, Tier 1 | 2a |
 | Linux | Electron, best effort | Wayland: compositor keybinding + CLI trigger | possibly Tier 2; web build offered | Tier 2 |
 | Chrome/Edge/Firefox | WXT MV3 | none | chip in plain CSS with Astryx tokens | 2d |
@@ -122,9 +122,9 @@ One Astryx 0.7.12 bundle runs everywhere; native code exists only for OS entry p
 
 **No iOS keyboard.** Apple's guide says custom keyboards have no microphone access ([archived](https://developer.apple.com/library/archive/documentation/General/Conceptual/ExtensibilityPG/CustomKeyboard.html); current status *unverified*; a 2026 forum report says a keyboard extension gets no microphone even with Full Access). If one is ever built, its containing app records, and nothing is sold inside it. **Mobile wrapper:** Capacitor is confirmed; Expo DOM (4.9× larger, 1.2–4.3× slower to render) and Tauri mobile (no push, in-app purchase or audio plugins) are rejected (`spikes/astryx-mobile-web`).
 
-**Hotkeys and permissions.** The main process starts recording on the addon's key-down and stops on key-up; the renderer captures and streams. First run on macOS registers a standard combo through Carbon `RegisterEventHotKey`, which needs no Accessibility grant: the wave 2 sandbox probe registered press **and** release handlers with no prompt (no physical key was pressed; S2 confirms), so hold-to-talk works from the first run. The mic is asked at the first hold and Accessibility at the first insert (CGEvent paste needs it); the grant also unlocks modifier-only keys such as Right Option through an event tap. Under Secure Event Input, event taps go deaf, so the Carbon registration stays as the shadow. On Windows, UIPI blocks paste into elevated apps: fall back to copy. On Linux, key-up needs the `input` group. Set `backgroundThrottling: false` on the capture window and keep the panel visible in a session.
+**Hotkeys and permissions.** The main process starts recording on the helper's key-down event and stops on key-up; the renderer captures and streams. First run on macOS registers a standard combo through Carbon `RegisterEventHotKey`, which needs no Accessibility grant: the wave 2 sandbox probe registered press **and** release handlers with no prompt (no physical key was pressed; S2 confirms), so hold-to-talk works from the first run. The mic is asked at the first hold and Accessibility at the first insert (CGEvent paste needs it); the grant also unlocks modifier-only keys such as Right Option through an event tap. Under Secure Event Input, event taps go deaf, so the Carbon registration stays as the shadow. On Windows, UIPI blocks paste into elevated apps: fall back to copy. On Linux, key-up needs the `input` group. Set `backgroundThrottling: false` on the capture window and keep the panel visible in a session.
 
-**Why Electron** (owner decision, 2026-11-13, replacing the Tauri default): one language end to end and no Rust owner; Chromium on every desktop, so the SPA renders the same everywhere; mature packaging (electron-builder, notarization, differential updates). The cost is a ~110 MiB larger download (Electron 45 is 112 MiB to download and 259 MiB installed; published Tauri builds are 5–9 MiB), while the runtime gap is small: +25–27 MiB (1.3×) with the same idle CPU and first paint (`spikes/electron-shell`). Mitigations: bundled packages kept out of the asar (−60 MiB), a sandboxed renderer with context isolation, blockmap differential updates and an 8-week Chromium update cadence. `globalShortcut` reports key-down only, so key-up and paste come from a ~100-line Carbon N-API addon (estimate), never uiohook-napi (needs Accessibility, wraps LGPL code). S2 now checks the Electron shell's capabilities (key-up, panel focus, paste into the 10 apps) and measures `phys_footprint` over all processes (`electron-shell/bench/procstat.py`), not RSS.
+**Why Electron** (owner decision, 2026-11-13, replacing the Tauri default): one language end to end and no Rust owner; Chromium on every desktop, so the SPA renders the same everywhere; mature packaging (electron-builder, notarization, differential updates). The cost is a ~110 MiB larger download (Electron 45 is 112 MiB to download and 259 MiB installed; published Tauri builds are 5–9 MiB), while the runtime gap is small: +25–27 MiB (1.3×) with the same idle CPU and first paint (`spikes/electron-shell`). Mitigations: bundled packages kept out of the asar (−60 MiB), a sandboxed renderer with context isolation, blockmap differential updates and an 8-week Chromium update cadence. `globalShortcut` reports key-down only, so key-up and paste come from the same Swift helper that runs Apple speech: one native component, built with the Command Line Tools, and no native Node addon to rebuild for each Electron ABI. Never uiohook-napi (needs Accessibility, wraps LGPL code). S2 now checks the Electron shell's capabilities (key-up, panel focus, paste into the 10 apps) and measures `phys_footprint` over all processes (`electron-shell/bench/procstat.py`), not RSS.
 
 **`PlatformPort`** exposes `caps` {hotkey, holdToTalk, insertAtCursor, localStt {engines, locales}, shareIn, secureStore, observeEdit, capture, ocr, a11y facts}, `audio`, `insert(text, target) → inserted | pasted | copied | declined`, `store` and `secrets`. Screens read `caps`, never the platform.
 
@@ -382,7 +382,7 @@ Before the gates open, learning is judged within each user: chip-flip and "defau
 
 **CI/CD:** one affected-only workflow (actionlint, zizmor, gitleaks, OIDC). The server deploys continuously from main; the content bundle ships through G1 (validate → eval → sign → flip); clients release only when their code changes (electron-builder with notarization and Windows signing, WXT zips plus AMO sources, Fastlane). CalVer, additive-only APIs, a minimum client version.
 
-**Ownership.** Named owners and runbooks for server/core/AI, SPA, the Electron shell (main process, N-API addon, Swift helper), and catalog/evals/triage (the owner, ~2 h a week). With one engineer, increments run strictly in sequence. Swift or Kotlin stays under ~300 lines.
+**Ownership.** Named owners and runbooks for server/core/AI, SPA, the Electron shell (main process and the `pf-native` Swift helper), and catalog/evals/triage (the owner, ~2 h a week). With one engineer, increments run strictly in sequence. Swift or Kotlin stays under ~300 lines.
 
 **Coding agents:** `AGENTS.md` per package, imported by `CLAUDE.md`; skills `add-tool-card`, `write-eval`, `db-migration`, `release-desktop`, `astryx-ui` (CLI and MCP), plus Hallmark and dataviz; Astryx MCP in `.mcp.json`; one `pnpm verify`; hooks guarding generated files and applied migrations; ~106k words of planning docs move to `docs/archive/`.
 
@@ -393,7 +393,7 @@ Checked with `gh api` (Hugging Face for weights) on 2026-11-10 (wave 2 rows on 2
 | Tool | Licence | Verdict |
 |---|---|---|
 | astryx, stylex, lexical, vite, tailwindcss, recharts, immer; jsdiff, css-anchor-positioning | MIT; BSD-3 | ADOPT |
-| electron, electron-builder, node-addon-api | MIT | ADOPT |
+| electron, electron-builder | MIT | ADOPT |
 | handy-computer/handy-keys | MIT (36★, **2026-08-07**, tiny bus factor) | ADOPT, **vendored** |
 | cjpais/Handy (paste and Secure-Input modules, attributed); transcribe.cpp | MIT (38.3k★); MIT (2.2k★) | REFERENCE; ASSESS (2d, unmeasured) |
 | capacitor (8.6; 9 beta), wxt, vite-plugin-pwa, hono, zod, hey-api, drizzle-orm, pg-boss, tanstack/query, altcha, lingui | MIT | ADOPT |
@@ -453,7 +453,7 @@ Each increment adds at most one new surface and starts only when the previous on
 
 ## 20. Risks
 
-Host and OS absorption (Wispr Flow dictates on Mac, Windows, iOS and Android, [pricing](https://wisprflow.ai/pricing); iOS 27 dictation; host memory), countered by cross-tool intent completion, personal defaults and coaching · synthetic evidence (refit on beta logs) · rubber-stamped chips (pick chips, catch rate, S7) · Electron's download size and Chromium cadence (asar trimming, differential updates, 8-week upgrades) and one native addon to maintain (S2) · Astryx pre-1.0 with ~20 releases in 10 weeks (pin, screenshot gate) · one STT vendor and one gateway (batch recovery, adapter) · iOS review under 4.2 and 5.1.2(i) · model licences (Parakeet attribution, no NVIDIA defaults) · heavy-dictation costs (quotas) · population cold start (scale gates) · noisy rewards (owned signals, sampled ratings) · bus factor (owners, runbooks, sequential increments) · GPU contention on the user's machine (measure with a foreground app) · licence traps (NVIDIA OML, the S1-mini naming term, openmdw) · the unmeasured on-device ASR runtime · App Review inconsistency (2.4.5 enforcement exceeds its text) · macOS pasteboard privacy alerts · Astryx's weight on phones · single-author eval sets · unknown Apple Intelligence enablement rates · the signing pipeline as a target.
+Host and OS absorption (Wispr Flow dictates on Mac, Windows, iOS and Android, [pricing](https://wisprflow.ai/pricing); iOS 27 dictation; host memory), countered by cross-tool intent completion, personal defaults and coaching · synthetic evidence (refit on beta logs) · rubber-stamped chips (pick chips, catch rate, S7) · Electron's download size and Chromium cadence (asar trimming, differential updates, 8-week upgrades) and one native helper to maintain (S2) · Astryx pre-1.0 with ~20 releases in 10 weeks (pin, screenshot gate) · one STT vendor and one gateway (batch recovery, adapter) · iOS review under 4.2 and 5.1.2(i) · model licences (Parakeet attribution, no NVIDIA defaults) · heavy-dictation costs (quotas) · population cold start (scale gates) · noisy rewards (owned signals, sampled ratings) · bus factor (owners, runbooks, sequential increments) · GPU contention on the user's machine (measure with a foreground app) · licence traps (NVIDIA OML, the S1-mini naming term, openmdw) · the unmeasured on-device ASR runtime · App Review inconsistency (2.4.5 enforcement exceeds its text) · macOS pasteboard privacy alerts · Astryx's weight on phones · single-author eval sets · unknown Apple Intelligence enablement rates · the signing pipeline as a target.
 
 ## Appendix A: Critique resolution
 
@@ -510,7 +510,7 @@ Host and OS absorption (Wispr Flow dictates on Mac, Windows, iOS and Android, [p
 
 Each line: decision, then the recommended default. **The owner approved every default on 2026-11-11.**
 
-- **B1 Desktop shell:** Electron, with a Carbon N-API addon and a Swift helper (owner decision, 2026-11-13, replacing the Tauri default)
+- **B1 Desktop shell:** Electron, with one Swift helper for hotkey, speech and paste (owner decision, 2026-11-13, replacing the Tauri default)
 - **B2 "Help improve defaults":** Ask once, no preselection; skipping means No, in every market
 - **B3 Server-held BYOK:** Retire it; offer a custom provider later
 - **B4 Markets and languages:** US and India; English UI with en-IN formats; English, Indian English and Hinglish dictation; Hindi UI after the beta
@@ -533,7 +533,7 @@ Each line: decision, then the recommended default. **The owner approved every de
 - **B21 S1-mini:** Accept its naming term (credit "S1-mini" by "Superwhisper") and TRIAL it on desktop
 - **B22 Entity:** Set up organization identities (Apple, Google, Microsoft) and a Windows signing route for an India-based entity
 - **B23 Apple Intelligence on the test Mac:** Enable it so the existing `afm/` CLIs can measure Apple Foundation Models before any device tier
-- **B24 Toolchain:** Xcode Command Line Tools build the addon and the Swift helper; full Xcode is needed only for iOS (2c). No Rust
+- **B24 Toolchain:** Xcode Command Line Tools build the Swift helper; full Xcode is needed only for iOS (2c). No Rust
 
 ## Appendix C: Evidence
 
