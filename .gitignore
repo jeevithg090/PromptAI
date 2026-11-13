@@ -8,3 +8,5 @@ out/
 !.env.example
 *.log
 .DS_Store
+# Content-bundle signing keys from `pnpm bundle:keys` (dev only; docs/gates.md)
+.keys/

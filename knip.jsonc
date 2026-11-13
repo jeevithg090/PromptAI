@@ -1,0 +1,40 @@
+{
+  // G0: unused files, exports and dependencies in apps/* and packages/*
+  // (docs/gates.md). The legacy dirs are not workspaces, so the root project
+  // is empty.
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "workspaces": {
+    ".": {
+      "project": []
+    },
+    "apps/app": {
+      // loaded by index.html before the app mounts
+      "entry": ["public/*.js"]
+    },
+    "apps/desktop": {
+      // esbuild entries (scripts/build.mjs) and the fake pf-native the e2e tests spawn
+      "entry": ["src/main.ts", "src/preload.ts", "test/fake-native.mjs"],
+      // its build copies @promptai/app's dist/ (resolved with require.resolve)
+      "ignoreDependencies": ["@promptai/app"]
+    },
+    "apps/native-macos": {
+      // a manual dictation check
+      "entry": ["scripts/*.mjs"],
+      // macOS system tools the helper test calls
+      "ignoreBinaries": ["pbcopy", "pbpaste"]
+    },
+    "apps/*": {},
+    "packages/*": {}
+  },
+  // Baseline: unused exports that existed when the gate was added
+  // (2026-11-13). This list only shrinks: remove the export, then its entry.
+  "ignoreIssues": {
+    "apps/app/src/bridge.ts": ["types"],
+    "apps/desktop/src/flow.ts": ["exports", "types"],
+    "apps/desktop/src/native.ts": ["types"],
+    "packages/core/src/compose/card.ts": ["exports"],
+    "packages/core/src/compose/ir.ts": ["exports"],
+    "packages/core/src/text.ts": ["exports"],
+    "packages/core/test/helpers.ts": ["exports"]
+  }
+}

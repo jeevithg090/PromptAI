@@ -1,0 +1,21 @@
+# Sample G1 cases that prove the runner (docs/gates.md). The real ones live in
+# catalog/tools/<id>/evals.yaml (W1). Run: pnpm gates:g1 --evals packages/gates/samples
+- name: names Claude and keeps the user's goal
+  input:
+    text: write a launch email for the PromptAI beta in Claude
+  expect:
+    toolId: claude
+    briefIncludes: [launch email, PromptAI beta, "<task>"]
+    noUnsourced: true
+    maxIssues: { block: 0 }
+
+- name: a tool hint picks the card, and nothing is invented
+  input:
+    text: summarise this article for beginners
+    toolHint: claude
+  expect:
+    toolId: claude
+    briefIncludes: [Summarise this article for beginners, beginners]
+    briefExcludes: ["--ar", "<documents>"]
+    noUnsourced: true
+    maxIssues: { block: 0 }

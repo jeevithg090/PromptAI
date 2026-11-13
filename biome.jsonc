@@ -1,0 +1,69 @@
+{
+  // G0 lint (docs/gates.md). Lint only: the formatter and import sorting stay
+  // off so no one's code is reformatted. The legacy dirs (backend/, web/,
+  // extension/, desktop/ and the rest) are out of scope.
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["apps/**", "packages/**"]
+  },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "style": {
+        // The tsconfig sets noUncheckedIndexedAccess, so `!` after a checked
+        // index is the codebase's idiom; string concatenation is a style choice.
+        "noNonNullAssertion": "off",
+        "useTemplate": "off"
+      }
+    }
+  },
+  // Baseline: findings that existed when the gate was added (2026-11-13),
+  // lowered to "info" in the one file each was found in, so they don't fail
+  // `pnpm lint` (--error-on-warnings); `pnpm exec biome lint` lists them. This
+  // list only shrinks: fix the finding, then delete its entry.
+  "overrides": [
+    {
+      "includes": ["apps/app/public/color-mode.js"],
+      "linter": { "rules": { "correctness": { "noInnerDeclarations": "info", "noUnusedVariables": "info" } } }
+    },
+    {
+      "includes": ["apps/app/src/DraftSheet.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": { "noStaticElementInteractions": "info" },
+          "correctness": { "useExhaustiveDependencies": "info" },
+          "suspicious": { "noArrayIndexKey": "info" }
+        }
+      }
+    },
+    {
+      "includes": ["apps/native-macos/test/pf-native.test.ts"],
+      "linter": { "rules": { "suspicious": { "noImplicitAnyLet": "info" } } }
+    },
+    {
+      "includes": ["apps/server/src/app.ts"],
+      "linter": { "rules": { "suspicious": { "noControlCharactersInRegex": "info" } } }
+    },
+    {
+      "includes": ["apps/server/test/s6-idempotency.test.ts"],
+      "linter": { "rules": { "complexity": { "noCommaOperator": "info" } } }
+    },
+    {
+      "includes": ["packages/core/src/compose/card.ts"],
+      "linter": { "rules": { "complexity": { "useOptionalChain": "info" } } }
+    },
+    {
+      "includes": ["packages/core/src/compose/render.ts"],
+      "linter": { "rules": { "suspicious": { "noAssignInExpressions": "info" } } }
+    },
+    {
+      "includes": ["packages/core/test/compose.fuzz.test.ts", "packages/core/test/compose.validate.test.ts"],
+      "linter": { "rules": { "suspicious": { "noExplicitAny": "info" } } }
+    }
+  ]
+}
