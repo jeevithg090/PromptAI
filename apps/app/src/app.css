@@ -1,0 +1,90 @@
+/* Layout only; colour, type, radius and motion come from the Astryx theme tokens. */
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--color-background-body);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-body);
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.pa-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 720px;
+  margin-inline: auto;
+}
+.pa-head {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-block-end: 1px solid var(--color-border);
+  /* The frameless panel is dragged by its header; buttons stay clickable. */
+  -webkit-app-region: drag;
+}
+.pa-head button {
+  -webkit-app-region: no-drag;
+}
+.pa-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: var(--spacing-4);
+}
+.pa-foot {
+  padding: var(--spacing-3) var(--spacing-4);
+  border-block-start: 1px solid var(--color-border);
+}
+.pa-grow {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pa-partial,
+.pa-said {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+/* The brief is shown exactly as it will be inserted. */
+.pa-brief {
+  margin: 0;
+  white-space: pre-wrap;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+/* Unsourced specifics: dotted underline plus hidden text, never colour alone. */
+.pa-unsourced {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: var(--color-warning, currentColor);
+}
+
+.pa-chip {
+  display: grid;
+  gap: var(--spacing-2);
+}
+/* A wrapping chip row. */
+.pa-chip-options [role='group'],
+.pa-chip-options > * {
+  flex-wrap: wrap;
+}
+.pa-suggested {
+  color: var(--color-text-secondary);
+}
+.pa-keys {
+  white-space: nowrap;
+}
+@media (pointer: coarse) {
+  .pa-keys {
+    display: none;
+  }
+}

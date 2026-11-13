@@ -7,3 +7,11 @@ packages:
 
 # Blueprint §13: never install a version published less than a day ago.
 minimumReleaseAge: 1440
+
+# Install scripts run only where they're needed: electron downloads its binary
+# and esbuild links its platform binary. Astryx's postinstall only prints a hint.
+allowBuilds:
+  electron: true
+  esbuild: true
+  electron-winstaller: false
+  '@astryxdesign/core': false

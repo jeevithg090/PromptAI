@@ -1,0 +1,30 @@
+# Unsigned macOS dir build: `pnpm --filter @promptai/desktop pack:mac` → release/mac-arm64/PromptAI.app
+#
+# NOTE (owner): notarized builds need a Developer ID Application certificate.
+# When it exists: drop `identity: null`, set `hardenedRuntime: true`, add
+# entitlements (com.apple.security.device.audio-input for the helper's mic),
+# set `notarize: true`, and provide APPLE_ID / APPLE_APP_SPECIFIC_PASSWORD /
+# APPLE_TEAM_ID (or an App Store Connect API key) in CI.
+appId: ai.promptai.desktop
+productName: PromptAI
+directories:
+  output: release
+# main and preload are bundled by esbuild and the panel UI is copied into dist/,
+# so no node_modules ship.
+files:
+  - dist/**/*
+  - "!dist/**/*.map"
+  - package.json
+asar: true
+# pf-native (apps/native-macos) ships next to the app; main looks for it at
+# Contents/Resources/pf-native when packaged.
+extraResources:
+  - from: ../native-macos/bin/pf-native
+    to: pf-native
+mac:
+  category: public.app-category.productivity
+  target: dir
+  identity: null
+  extendInfo:
+    # The helper is our child process, so macOS asks for the mic on PromptAI's behalf.
+    NSMicrophoneUsageDescription: PromptAI listens only while you hold the dictation keys.
