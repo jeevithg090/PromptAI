@@ -7,7 +7,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { chromium, type Browser, type Page } from 'playwright';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { APP_DIST, builtAppOrigin, startFront, startServer } from './harness.ts';
+import { APP_DIST, builtAppOrigin, completeFirstRun, startFront, startServer } from './harness.ts';
 
 const THEMES = ['light', 'dark'] as const;
 const WIDTHS = [320, 390, 1280] as const;
@@ -16,11 +16,9 @@ const WIDTHS = [320, 390, 1280] as const;
  * Baseline: violations that existed when the gate was added (2026-11-13),
  * printed but not failing. It only shrinks: fix one, then delete its entry.
  */
-const KNOWN: Record<string, string> = {
-  // The chip options' visible text ("1 beginners", "· suggested") is not part of
-  // their aria-label ("beginners (suggested)"): WCAG 2.5.3. apps/app/src/DraftSheet.tsx:345
-  'label-content-name-mismatch': 'chip option buttons in the draft (apps/app/src/DraftSheet.tsx:345)',
-};
+// Baseline of serious findings that existed when the gate was added. Empty: the
+// chip label mismatch (WCAG 2.5.3) was fixed on 2026-11-13. Only ever shrinks.
+const KNOWN: Record<string, string> = {};
 const knownSeen = new Set<string>();
 
 let server: Awaited<ReturnType<typeof startServer>>;
@@ -64,9 +62,13 @@ describe.each(THEMES)('%s theme', (theme) => {
     try {
       const page = await context.newPage();
       await page.goto(`${front.origin}/`);
+      const found: string[] = [];
+      await completeFirstRun(page, async (screen) => {
+        found.push(...(await seriousViolations(page)).map((v) => `first run (${screen}): ${v}`));
+      });
       const ask = page.getByRole('textbox').first();
       await ask.waitFor();
-      const found: string[] = (await seriousViolations(page)).map((v) => `ask form: ${v}`);
+      found.push(...(await seriousViolations(page)).map((v) => `ask form: ${v}`));
 
       await ask.fill('write a launch email for the beta in Claude');
       const forged = page.waitForResponse((r) => new URL(r.url()).pathname === '/v1/forge');

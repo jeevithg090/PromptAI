@@ -14,6 +14,7 @@ import { createServer, request, type IncomingMessage, type ServerResponse } from
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
 import { createInterface } from 'node:readline';
+import type { Page } from 'playwright';
 
 export const REPO = path.resolve(import.meta.dirname, '../../..');
 export const APP_DIST = path.join(REPO, 'apps/app/dist');
@@ -126,3 +127,23 @@ export async function startFront(opts: { upstream: string; listen?: URL; staticD
 
 /** A per-run marker for personal data: lowercase letters and digits only, so cleanup and tokenizers keep it whole. */
 export const canary = (label: string) => `gpcanary${label}${randomBytes(5).toString('hex')}`;
+
+/**
+ * First run (blueprint §15): the neutral date-of-birth screen, then provider
+ * consent (answered No, the privacy-preserving choice). Ends on Capture, after
+ * the app has solved the guest proof of work against the real server.
+ * `check` runs on each first-run screen, for gates that inspect them.
+ */
+export async function completeFirstRun(page: Page, check?: (screen: 'age' | 'consent') => Promise<void>): Promise<void> {
+  await page.getByRole('textbox', { name: 'Day' }).waitFor();
+  await check?.('age');
+  await page.getByRole('textbox', { name: 'Day' }).fill('14');
+  await page.getByRole('textbox', { name: 'Month' }).fill('5');
+  await page.getByRole('textbox', { name: 'Year' }).fill('1990');
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await page.getByRole('heading', { name: 'Draft with AI providers?' }).waitFor();
+  await check?.('consent');
+  await page.getByRole('button', { name: 'No' }).click();
+  await page.getByRole('heading', { name: 'Draft a brief' }).waitFor({ timeout: 30_000 });
+}
+

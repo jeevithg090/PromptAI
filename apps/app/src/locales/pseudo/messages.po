@@ -25,10 +25,6 @@ msgstr ""
 msgid "{count, plural, one {One detail you didn’t say} other {# details you didn’t say}}"
 msgstr ""
 
-#: src/DraftSheet.tsx
-msgid "{o} (suggested)"
-msgstr ""
-
 #: src/places/You.tsx
 #: src/shell/Palette.tsx
 msgid "Account"

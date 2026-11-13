@@ -30,10 +30,26 @@ document.documentElement.dir = dir;
 
 const desktop = window.promptai;
 const tokens: { current: string | null } = { current: null };
+
+/** A random id for this install, kept in local storage (in memory if storage is blocked). Never derived from the device. */
+let memoryDeviceId: string | undefined;
+function deviceId(): string {
+  try {
+    const saved = localStorage.getItem('promptai.deviceId');
+    if (saved) return saved;
+    const fresh = crypto.randomUUID();
+    localStorage.setItem('promptai.deviceId', fresh);
+    return fresh;
+  } catch {
+    memoryDeviceId ??= crypto.randomUUID();
+    return memoryDeviceId;
+  }
+}
 const api = createHttpApi({
   baseUrl: desktop ? DESKTOP_API_BASE : (import.meta.env.VITE_PROMPTAI_SERVER_URL ?? 'http://localhost:8787'),
   ...(desktop?.api ? { fetch: desktopFetch({ api: desktop.api }) } : {}),
   token: () => tokens.current,
+  deviceId,
 });
 
 function webBridge() {

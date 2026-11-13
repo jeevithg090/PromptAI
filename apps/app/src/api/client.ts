@@ -97,6 +97,8 @@ export interface HttpApiOptions {
   fetch?: typeof fetch;
   /** The bearer token for the next call: the account session, else the guest token. */
   token?: () => string | null;
+  /** A stable random id for this install; the guest challenge binds the guest profile to it. */
+  deviceId?: () => string;
   timeoutMs?: number;
 }
 
@@ -124,6 +126,8 @@ export function createHttpApi(opts: HttpApiOptions): ApiClient {
     if (body !== undefined) headers['content-type'] = 'application/json';
     const token = opts.token?.();
     if (token) headers.authorization = `Bearer ${token}`;
+    // Only the guest challenge needs the device id; no other route gets it.
+    if (path === '/v1/guest/challenge' && opts.deviceId) headers['x-device-id'] = opts.deviceId();
     try {
       return await fetchImpl(new URL(path, opts.baseUrl).toString(), {
         method,

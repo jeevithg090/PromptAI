@@ -9,7 +9,7 @@
  */
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import { afterAll, beforeAll, expect, it } from 'vitest';
-import { APP_DIST, builtAppOrigin, canary, startFront, startServer } from './harness.ts';
+import { APP_DIST, builtAppOrigin, canary, completeFirstRun, startFront, startServer } from './harness.ts';
 
 type Seen = { url: string; body: string; headers: string };
 
@@ -90,6 +90,7 @@ it('a typed brief reaches only the server, and never an event or a URL', async (
   try {
     const page = await context.newPage();
     await page.goto(`${origin}/`);
+    await completeFirstRun(page);
     await draft(page, `write a launch email for ${secret} in Claude`);
     await finish(page);
   } finally {
@@ -127,6 +128,7 @@ it('memory text reaches only the server, and never an event or a URL', async (ct
   try {
     const page = await context.newPage();
     await page.goto(`${origin}/`);
+    await completeFirstRun(page);
     const memory = page.getByRole('textbox', { name: /memor|remember/i });
     if ((await memory.count()) === 0) {
       ctx.skip('the app has no memory field yet (W3); extend this journey when it lands');

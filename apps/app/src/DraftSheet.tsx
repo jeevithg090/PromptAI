@@ -580,7 +580,8 @@ function Chip({ chip, answer, disabled, onAnswer }: { chip: Assumption; answer: 
             if (typeof v === 'string') onAnswer(v);
           }}>
           {options.map((o, i) => (
-            <ToggleButton key={o} value={o} label={i === 0 ? t`${o} (suggested)` : o}>
+            // The name is exactly the visible text, number key included (WCAG 2.5.3, label in name).
+            <ToggleButton key={o} value={o} label={`${i + 1} ${o}${i === 0 ? ` · ${t`suggested`}` : ''}`}>
               <Kbd keys={String(i + 1)} /> {o}
               {i === 0 && <span className="pa-suggested"> · {t`suggested`}</span>}
             </ToggleButton>

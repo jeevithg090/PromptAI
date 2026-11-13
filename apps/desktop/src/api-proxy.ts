@@ -18,7 +18,7 @@ export interface ApiReply {
 
 const ROUTES = /^\/v1\/(?:guest(?:\/challenge)?|me(?:\/[\w-]+){0,2}|report)$/;
 const METHODS = new Set(['GET', 'POST', 'PUT', 'DELETE']);
-const HEADERS = ['content-type', 'authorization'];
+const HEADERS = ['content-type', 'authorization', 'x-device-id'];
 const MAX_BODY = 64 * 1024;
 
 export function parseApiRequest(raw: unknown): ApiRequest {

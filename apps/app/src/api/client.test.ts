@@ -21,6 +21,17 @@ function client(respond: (url: string, init: RequestInit) => Response | Promise<
 }
 
 describe('http client', () => {
+  it('sends the device id on the guest challenge only', async () => {
+    const challenge = { parameters: { algorithm: 'SHA-256', nonce: 'n', salt: 's', cost: 1 } };
+    const fetch = vi.fn(async (url: string, _init: RequestInit) => (url.endsWith('/v1/guest/challenge') ? Response.json(challenge) : Response.json({ ageConfirmed: true })));
+    const api = createHttpApi({ baseUrl: BASE, fetch: fetch as unknown as typeof globalThis.fetch, deviceId: () => 'device-1234' });
+    await api.guestChallenge();
+    await api.confirmAge('1990-05-14');
+    const headers = fetch.mock.calls.map(([, init]) => (init as RequestInit).headers as Record<string, string>);
+    expect(headers[0]!['x-device-id']).toBe('device-1234');
+    expect(headers[1]!['x-device-id']).toBeUndefined();
+  });
+
   it('sends the bearer token and JSON to each contract route', async () => {
     const { api, fetch } = client((url) => (url.endsWith('/v1/me/age') ? Response.json({ ageConfirmed: true }) : new Response(null, { status: 204 })));
     await expect(api.confirmAge('1990-05-14')).resolves.toBe(true);
