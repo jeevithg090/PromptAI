@@ -22,7 +22,7 @@ const planSchema = z.object({
 
 const plansFileSchema = z.object({
   schema_version: z.string(),
-  plans: z.record(planSchema),
+  plans: z.record(z.string(), planSchema),
 });
 
 export type Plan = z.infer<typeof planSchema>;

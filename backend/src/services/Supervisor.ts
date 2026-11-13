@@ -159,6 +159,8 @@ export class Supervisor {
   private async runStep(step: { to: PipelineState; agentKey: string }, context: PipelineContext): Promise<NodeOutcome> {
     // "Just generate now" skips the clarifying step entirely (§10.6, §11.2).
     if (step.agentKey === 'clarify' && context.justGenerate) return cont();
+    // A resumed session carries its task type and entities; re-classifying could change the questions.
+    if (step.agentKey === 'intent' && context.taskType) return cont();
 
     const agent = this.agents[step.agentKey];
     if (!agent) {

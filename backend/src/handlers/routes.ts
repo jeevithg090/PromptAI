@@ -12,7 +12,7 @@ import { design } from '../services/ResponseDesign';
 import { persistSessionMetadata, meterUsage } from '../services/SessionService';
 import { checkMonthlyBudget } from '../services/BudgetService';
 import { getProgress } from '../services/SessionProgress';
-import { createShare, revokeShare, getShare, ShareBlocked, ShareNotFound } from '../services/ShareService';
+import { createShare, revokeShare, getShare, ShareBlocked, ShareNotFound, reportShare, listShareReports, takedownShare, isShareReportReason } from '../services/ShareService';
 import { compare } from '../services/CompareService';
 import { classifyOrFailClosed, ContentSafetyClassifier } from '../guardrails/ContentSafetyClassifier';
 import {
@@ -79,6 +79,28 @@ import { GroqSTTAdapter } from '../services/providers/GroqSTTAdapter';
 import { getProvider } from '../services/providers/ProviderRegistry';
 import { storeKey, resolveKey, revokeKey } from '../services/KeyCustody';
 import { getEntitlements, checkGate, getPlanConfig } from '../services/PlanService';
+import { resolveRoute } from '../services/ModelRouter';
+import { authAdminConfigured, deleteAuthUser } from '../services/AuthAdmin';
+import type { ModelComplexity } from '../types/Provider';
+
+/** The model steps of the agents createSupervisor binds a BYOK key to. */
+const BYOK_STEPS: ReadonlyArray<[string, ModelComplexity]> = [
+  ['intent_classification', 'small'],
+  ['drafting', 'large'],
+  ['critic', 'large'],
+  ['alternatives', 'small'],
+  ['prompt_import', 'large'],
+];
+
+class ByokError extends Error {
+  constructor(
+    readonly code: 'byok_connection_not_found' | 'byok_provider_mismatch',
+    readonly status: 400 | 404,
+    message: string
+  ) {
+    super(message);
+  }
+}
 
 /**
  * All API routes — spec §31.2 Step 9. HTTP entry points only; business logic
@@ -493,6 +515,20 @@ export function buildApp(): Hono<AppEnv> {
     }
   });
 
+  // PUBLIC report — a reason code only; no reporter identity or free text is stored.
+  app.post('/share/:slug/report', rateLimitMiddleware, async (c) => {
+    const { reason } = (await c.req.json().catch(() => ({}))) as { reason?: unknown };
+    if (!isShareReportReason(reason)) return c.json({ error: 'unknown reason' }, 400);
+    try {
+      const recorded = await reportShare(c.req.param('slug') ?? '', reason);
+      if (!recorded) return c.json({ error: 'not found' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (err) {
+      logger.warn({ type: 'share:report_error', reason: err instanceof Error ? err.message : String(err) });
+      return c.json({ error: 'report unavailable' }, 503);
+    }
+  });
+
   /**
    * Model & platform recommendation (§15, TA.2). Ranks models for a task and
    * returns the trade-offs — never a single bare winner (§15.2).
@@ -859,18 +895,37 @@ export function buildApp(): Hono<AppEnv> {
    */
   async function createSupervisor(context: PipelineContext): Promise<Supervisor> {
     let apiKeyOverride: string | undefined;
+    let keyProvider: string | undefined;
     if (context.connectionId) {
       const pool = getPool();
       const connRes = await pool.query(
-        `select secret_ref from provider_connections where id = $1 and user_id = $2 and status = 'active'`,
+        `select provider, secret_ref from provider_connections where id = $1 and user_id = $2 and status = 'active'`,
         [context.connectionId, context.userId]
       );
-      if (connRes.rows.length > 0) {
-        apiKeyOverride = await resolveKey(connRes.rows[0].secret_ref);
+      const conn = connRes.rows[0] as { provider: string; secret_ref: string } | undefined;
+      if (!conn) {
+        throw new ByokError('byok_connection_not_found', 404, 'That connection was not found or has been revoked.');
       }
+      // A key may only reach its own provider: reject rather than send it to whichever provider a step routes to.
+      const foreignSteps = BYOK_STEPS.filter(([step, complexity]) => resolveRoute(step, complexity).provider !== conn.provider);
+      if (foreignSteps.length > 0) {
+        throw new ByokError(
+          'byok_provider_mismatch',
+          400,
+          `Your ${conn.provider} key can't be used here: ${foreignSteps.map(([step]) => step).join(', ')} run on another provider.`
+        );
+      }
+      apiKeyOverride = await resolveKey(conn.secret_ref);
+      keyProvider = conn.provider;
     }
     const wrappedGenerate = apiKeyOverride
-      ? ((step: string, complexity: any, req: any) => generate(step, complexity, { ...req, apiKeyOverride })) as typeof generate
+      ? ((step: string, complexity: any, req: any) => {
+          // Also guards steps added after BYOK_STEPS: the key is never sent to another provider.
+          if (resolveRoute(step, complexity).provider !== keyProvider) {
+            throw new Error(`BYOK key not sent: step ${step} routes off ${keyProvider}`);
+          }
+          return generate(step, complexity, { ...req, apiKeyOverride });
+        }) as typeof generate
       : generate;
     return new Supervisor({
       intent: apiKeyOverride ? new IntentClassificationAgentClass(wrappedGenerate) : IntentClassificationAgent,
@@ -885,7 +940,13 @@ export function buildApp(): Hono<AppEnv> {
   }
 
   async function runPipeline(c: Context<AppEnv>, context: PipelineContext) {
-    const supervisor = await createSupervisor(context);
+    let supervisor: Supervisor;
+    try {
+      supervisor = await createSupervisor(context);
+    } catch (error) {
+      if (error instanceof ByokError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
 
     // Pre-flight budget check (§16, §22.4, T3.2) — BEFORE any model call.
     if (config.BUDGET_ENFORCEMENT_ENABLED) {
@@ -942,6 +1003,7 @@ export function buildApp(): Hono<AppEnv> {
         session_id: context.sessionId,
         final_state: result.finalState,
         task_type: result.context.taskType,
+        entities: result.context.entities ?? {}, // sent back on resume so intent is not re-run
         questions: result.context.pendingQuestions ?? [],
         can_generate_now: true, // caller may resubmit with just_generate to skip (§11.2)
         pipeline_trace: result.trace,
@@ -1059,6 +1121,8 @@ export function buildApp(): Hono<AppEnv> {
       sessionId, // reuse the same session id so metadata updates in place
       platform,
       userIdea: body.idea,
+      taskType: body.task_type,
+      entities: body.entities,
       clarifications: body.clarifications ?? {},
       justGenerate: body.just_generate ?? false,
       connectionId: body.connection_id,
@@ -1125,7 +1189,13 @@ export function buildApp(): Hono<AppEnv> {
       connectionId: body.connection_id,
     };
 
-    const supervisor = await createSupervisor(context);
+    let supervisor: Supervisor;
+    try {
+      supervisor = await createSupervisor(context);
+    } catch (error) {
+      if (error instanceof ByokError) return c.json({ error: error.code, message: error.message }, error.status);
+      throw error;
+    }
     const result = await supervisor.run(context);
 
     await Promise.allSettled([
@@ -1343,6 +1413,34 @@ export function buildApp(): Hono<AppEnv> {
     } catch (error) {
       logger.warn({ type: 'library:pending_error', reason: error instanceof Error ? error.message : String(error) });
       return c.json({ error: 'queue unavailable' }, 503);
+    }
+  });
+
+  /** Admin: reported share links, most reported first. */
+  app.get('/admin/share-reports', async (c) => {
+    const auth = requireAdmin(c);
+    if (!auth.ok) return auth.res;
+    try {
+      return c.json({ status: 'ok', reports: await listShareReports() });
+    } catch (error) {
+      logger.warn({ type: 'share:reports_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'reports unavailable' }, 503);
+    }
+  });
+
+  /** Admin: take a share link down, recording a reason code. */
+  app.post('/admin/share/:slug/takedown', async (c) => {
+    const auth = requireAdmin(c);
+    if (!auth.ok) return auth.res;
+    const { reason } = (await c.req.json().catch(() => ({}))) as { reason?: unknown };
+    if (!isShareReportReason(reason)) return c.json({ error: 'a valid reason code is required' }, 400);
+    try {
+      const done = await takedownShare(c.req.param('slug'), reason);
+      if (!done) return c.json({ error: 'no active link with that slug' }, 404);
+      return c.json({ status: 'ok' });
+    } catch (error) {
+      logger.warn({ type: 'share:takedown_error', reason: error instanceof Error ? error.message : String(error) });
+      return c.json({ error: 'takedown unavailable' }, 503);
     }
   });
 
@@ -2188,12 +2286,25 @@ export function buildApp(): Hono<AppEnv> {
    * Deletes user_keys, sessions, prompts (+ versions via FK cascade),
    * memory_entries, and projects. Anonymized outcome_signals are kept
    * (no user linkage exists). Ciphertext without keys is dead data —
-   * deleting keys satisfies erasure.
+   * deleting keys satisfies erasure. Stored BYOK keys are revoked in SSM
+   * first and the Supabase auth user is deleted last.
    */
   authed.delete('/me', async (c) => {
     const userId = c.get('userId');
+    // Without the admin API the login would outlive the data, so production refuses up front.
+    if (config.NODE_ENV === 'production' && !authAdminConfigured()) {
+      return c.json({ error: 'account deletion unavailable' }, 503);
+    }
     try {
       const pool = getPool();
+      // Revoke stored keys before their rows go, or the SSM parameters would be orphaned.
+      const conns = await pool.query(
+        `select secret_ref from provider_connections where user_id = $1 and status = 'active'`,
+        [userId]
+      );
+      for (const { secret_ref } of conns.rows as Array<{ secret_ref: string }>) {
+        await revokeKey(secret_ref);
+      }
       // Delete in dependency order to respect FK constraints.
       // prompt_versions cascade from prompts; prompts cascade from sessions.
       await pool.query(`delete from user_keys where user_id = $1`, [userId]);
@@ -2204,6 +2315,8 @@ export function buildApp(): Hono<AppEnv> {
       // Delete the app_users row last — this cascades to fewer tables.
       await pool.query(`delete from provider_connections where user_id = $1`, [userId]);
       await pool.query(`delete from app_users where id = $1`, [userId]);
+      // Last, so a failure above leaves the user able to sign in and retry.
+      await deleteAuthUser(userId);
       logger.info({ type: 'account:deleted', userId });
       return c.json({ status: 'ok' });
     } catch (error) {

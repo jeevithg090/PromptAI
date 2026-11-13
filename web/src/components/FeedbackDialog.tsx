@@ -7,10 +7,12 @@ import { api } from '@/lib/api';
 interface FeedbackDialogProps {
   taskType: string;
   platformId: string;
+  /** The draft's rubric scores; outcome analytics ignore feedback rows without them. */
+  rubricScores?: Record<string, 1 | 2 | 3>;
   onClose: () => void;
 }
 
-export default function FeedbackDialog({ taskType, platformId, onClose }: FeedbackDialogProps) {
+export default function FeedbackDialog({ taskType, platformId, rubricScores, onClose }: FeedbackDialogProps) {
   const [outcome, setOutcome] = useState<'worked' | 'didnt_work' | 'mixed' | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
@@ -23,6 +25,7 @@ export default function FeedbackDialog({ taskType, platformId, onClose }: Feedba
         task_type: taskType,
         platform_id: platformId,
         outcome: value,
+        rubric_scores: rubricScores,
       });
       if (res.status === 'ok') {
         setSubmitted(true);

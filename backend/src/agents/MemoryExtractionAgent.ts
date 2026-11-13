@@ -3,6 +3,7 @@ import { generate } from '../services/providers';
 import { logger } from '../utils/logger';
 import { extractJson } from '../utils/json';
 import type { Agent, AgentInput, AgentOutput, MemoryEntry } from '../types/Agent';
+import { givenAnswers } from './draftShared';
 
 /**
  * Memory Extraction Agent — spec §17.2, §31.3 Step 19.
@@ -52,8 +53,9 @@ export class MemoryExtractionAgent implements Agent {
       `Platform: ${context.platform.display_name}`,
       `Task type: ${context.taskType ?? 'unknown'}`,
     ];
-    if (context.clarifications && Object.keys(context.clarifications).length) {
-      parts.push(`Choices the user made: ${JSON.stringify(context.clarifications)}`);
+    const answers = givenAnswers(context.clarifications);
+    if (Object.keys(answers).length) {
+      parts.push(`Choices the user made: ${JSON.stringify(answers)}`);
     }
     if (context.finalDraft) {
       // Node types + values reveal stylistic preference without echoing the whole prompt.

@@ -15,7 +15,7 @@ import type { Agent, AgentInput, AgentOutput } from '../types/Agent';
 export const intentResultSchema = z.object({
   task_type: z.enum(TASK_TYPES),
   /** Flat entity map, e.g. { subject: "a horse", action: "running" } — keys vary by task type. */
-  entities: z.record(z.string()).default({}),
+  entities: z.record(z.string(), z.string()).default({}),
   /** Model's opinion of a better-suited platform, if obviously mismatched (§15 surfaces this later). */
   platform_hint: z.string().nullish(),
   confidence: z.number().min(0).max(1),

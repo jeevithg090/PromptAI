@@ -20,7 +20,8 @@ export async function callOpenAICompatibleChat(
   providerName: string,
   baseUrl: string,
   apiKey: string,
-  request: ProviderGenerateRequest
+  request: ProviderGenerateRequest,
+  extraBody: Record<string, unknown> = {}
 ): Promise<ProviderGenerateResponse> {
   const messages = request.systemPrompt
     ? [{ role: 'system', content: request.systemPrompt }, ...request.messages]
@@ -31,6 +32,7 @@ export async function callOpenAICompatibleChat(
     messages,
     max_tokens: request.maxTokens ?? 1024,
     temperature: request.temperature ?? 0.7,
+    ...extraBody,
   };
   if (request.responseFormat === 'json') {
     body.response_format = { type: 'json_object' };

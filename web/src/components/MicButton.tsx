@@ -20,19 +20,20 @@ export default function MicButton({ onText, className }: MicButtonProps) {
 
   if (state === 'unsupported') return null;
 
-  const label =
+  const status =
     state === 'listening' ? strings.mic.listening :
     state === 'processing' ? strings.mic.processing :
-    strings.mic.start;
+    '';
 
   return (
     <span className="inline-flex items-center gap-2">
+      {/* A toggle keeps one name; aria-pressed carries the state. */}
       <button
         type="button"
         onClick={active ? stop : () => void start()}
         aria-pressed={active}
-        aria-label={label}
-        title={label}
+        aria-label={strings.mic.start}
+        title={status || strings.mic.start}
         disabled={state === 'processing'}
         className={
           className ??
@@ -50,7 +51,9 @@ export default function MicButton({ onText, className }: MicButtonProps) {
           <line x1="12" y1="17" x2="12" y2="22" />
         </svg>
       </button>
-      {interim && <span className="text-xs italic text-gray-400" aria-live="polite">{interim}</span>}
+      {/* Announce state changes only; live interim text made one announcement per word. */}
+      <span className="sr-only" role="status">{status}</span>
+      {interim && <span className="text-xs italic text-gray-600" aria-hidden="true">{interim}</span>}
       {error && <span className="text-xs text-red-600" role="alert">{error}</span>}
     </span>
   );

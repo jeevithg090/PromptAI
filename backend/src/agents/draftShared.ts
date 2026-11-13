@@ -45,6 +45,11 @@ export const DRAFT_JSON_FEWSHOT = `Example (for a different idea, showing the ex
  *    itself treats "empty optional nodes" as fine (only vague *filled*
  *    nodes are penalized, docs/quality-rubric.md dimension 1).
  */
+/** Clarification answers with content; an empty answer only marks a skipped question. */
+export function givenAnswers(clarifications: Record<string, string> | undefined): Record<string, string> {
+  return Object.fromEntries(Object.entries(clarifications ?? {}).filter(([, value]) => value.trim() !== ''));
+}
+
 export function normalizeRawNodes(parsed: unknown, requiredOrder: PromptNode['type'][]): unknown {
   if (typeof parsed !== 'object' || parsed === null || !('nodes' in parsed)) return parsed;
   const nodes = (parsed as { nodes: unknown }).nodes;

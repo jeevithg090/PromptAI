@@ -25,7 +25,9 @@ export function ClarifyStep({ questions, taskType, onComplete }: ClarifyStepProp
 
   const handleSubmit = async (justGenerate: boolean) => {
     setSaving(true);
-    onComplete(answers, justGenerate);
+    // Unanswered questions go back as empty answers, which the server won't ask again.
+    const skipped = Object.fromEntries(questions.filter((q) => !answers[q.id]?.trim()).map((q) => [q.id, '']));
+    onComplete({ ...skipped, ...answers }, justGenerate);
   };
 
   return (

@@ -56,9 +56,14 @@ export async function resolveKey(secretRef: string): Promise<string> {
 }
 
 /**
- * Revoke a key by deleting the SSM parameter.
+ * Revoke a key by deleting the SSM parameter. Idempotent: a parameter that is
+ * already gone (a retried revoke or account deletion) counts as revoked.
  */
 export async function revokeKey(secretRef: string): Promise<void> {
-  await ssm.send(new DeleteParameterCommand({ Name: secretRef }));
+  try {
+    await ssm.send(new DeleteParameterCommand({ Name: secretRef }));
+  } catch (error) {
+    if ((error as { name?: string }).name !== 'ParameterNotFound') throw error;
+  }
   logger.info({ type: 'byok:key_revoked', secretRef: secretRef.replace(/\/[^/]+$/, '/***') });
 }
