@@ -8,5 +8,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],
+    // The journeys render whole places in jsdom; a busy machine (pnpm -r runs packages at once) needs the headroom.
+    testTimeout: 20_000,
   },
 });

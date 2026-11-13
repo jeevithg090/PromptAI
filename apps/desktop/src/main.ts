@@ -153,6 +153,8 @@ app.whenReady().then(() => {
   ipcMain.handle(IPC.setSession, (e, s: { token?: unknown; ready?: unknown } | null) => {
     fromPanel(e);
     session = { token: typeof s?.token === 'string' ? s.token : null, ready: s?.ready === true };
+    // First run (date of birth, consent) shows itself right after install rather than waiting for the hotkey.
+    if (!session.ready) showPanel();
     if (session.token) void events.flush();
   });
   const proxy = createApiProxy(serverUrl);

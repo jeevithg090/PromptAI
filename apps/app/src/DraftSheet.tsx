@@ -79,6 +79,11 @@ export function DraftSheet({ bridge, onClose }: { bridge: PromptAIBridge; onClos
   }, [said]);
 
   const drafted = state.phase === 'ready' || state.phase === 'inserting' || state.phase === 'done' ? state : null;
+  const bodyRef = useRef<HTMLDivElement>(null);
+  // After hand-off the receipt leads the sheet; bring it into view.
+  useEffect(() => {
+    if (state.phase === 'done') bodyRef.current?.scrollTo?.({ top: 0 });
+  }, [state.phase]);
   const blocked = drafted ? unresolvedPicks(drafted.draft, drafted.answers) : [];
   const blocking = drafted ? blockingIssues(drafted.draft) : [];
   const canInsert = canPaste && state.phase === 'ready' && blocked.length === 0 && blocking.length === 0;
@@ -124,7 +129,7 @@ export function DraftSheet({ bridge, onClose }: { bridge: PromptAIBridge; onClos
         )}
       </HStack>
 
-      <div className="pa-body">
+      <div className="pa-body" ref={bodyRef}>
         <Body state={state} bridge={bridge} blocked={blocked} />
       </div>
 
@@ -422,6 +427,8 @@ function Draft({ state, bridge, blocked }: { state: Drafted; bridge: PromptAIBri
         <Heading level={2}>{draft.toolName}</Heading>
       </VStack>
 
+      {state.phase === 'done' && <Receipt state={state} bridge={bridge} />}
+
       <Fields draft={draft} />
 
       {count > 0 && (
@@ -448,7 +455,6 @@ function Draft({ state, bridge, blocked }: { state: Drafted; bridge: PromptAIBri
 
       {state.phase === 'ready' && state.confirmApp && <ConfirmApp state={state} bridge={bridge} />}
 
-      {state.phase === 'done' && <Receipt state={state} bridge={bridge} />}
     </VStack>
   );
 }
