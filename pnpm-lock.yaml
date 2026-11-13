@@ -311,6 +311,9 @@ importers:
       '@promptai/ai':
         specifier: workspace:*
         version: link:../../packages/ai
+      '@promptai/bundle':
+        specifier: workspace:*
+        version: link:../../packages/bundle
       '@promptai/contract':
         specifier: workspace:*
         version: link:../../packages/contract

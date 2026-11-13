@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { serve } from '@hono/node-server';
 import { getConnInfo } from '@hono/node-server/conninfo';
@@ -13,7 +13,7 @@ import { forge, type Clock } from '@promptai/core';
 import { migrate, schema, type Db } from '@promptai/db';
 import { createApp, DEFAULT_LIMITS, jsonLog, type Limits } from './app.ts';
 import { createAuth, createAuthAdmin, createGuests, type SupabaseAuthConfig } from './auth.ts';
-import { loadCatalog, loadLocales } from './catalog.ts';
+import { cardsFrom, localesFrom, readCatalogDir, readSignedCatalog, type CatalogFiles } from './catalog.ts';
 import { createEventStore, type Sql } from './event-store.ts';
 
 const env = process.env;
@@ -39,6 +39,8 @@ if (production) {
     !env.SUPABASE_URL && 'SUPABASE_URL',
     !env.SUPABASE_SERVICE_ROLE_KEY && 'SUPABASE_SERVICE_ROLE_KEY (account deletion must delete the auth user)',
     !env.GUEST_SECRET && 'GUEST_SECRET (guest tokens must survive restarts and match across instances)',
+    !env.PROMPTAI_BUNDLE_DIR && 'PROMPTAI_BUNDLE_DIR (production serves only a signed catalog bundle)',
+    !env.PROMPTAI_TRUSTED_ROOTS && 'PROMPTAI_TRUSTED_ROOTS (the root public keys the bundle must chain to)',
   ].filter(Boolean);
   if (missing.length > 0) {
     console.error(`Refusing to start with NODE_ENV=production: set ${missing.join(', ')}.`);
@@ -87,12 +89,34 @@ const limits: Limits = {
 
 const { sql, db } = await database();
 const guests = createGuests(db, { secret: env.GUEST_SECRET ?? randomBytes(32).toString('hex') });
-const catalogDir = path.resolve(import.meta.dirname, '../../../catalog');
-const cards = await loadCatalog(catalogDir);
-const locales = await loadLocales(catalogDir);
+// The catalog: a signed content bundle when PROMPTAI_BUNDLE_DIR is set (required in
+// production, built with `pnpm bundle:build && pnpm bundle:sign`), else the repo's catalog/.
+const SERVER_VERSION = (JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8')) as { version: string }).version;
+let catalogFiles: CatalogFiles;
+let bundleVersion: number | null = null;
+if (env.PROMPTAI_BUNDLE_DIR) {
+  try {
+    const signed = await readSignedCatalog(env.PROMPTAI_BUNDLE_DIR, JSON.parse(env.PROMPTAI_TRUSTED_ROOTS ?? '[]') as string[], {
+      now: new Date(),
+      channel: env.PROMPTAI_BUNDLE_CHANNEL ?? 'stable',
+      clientVersion: SERVER_VERSION,
+    });
+    catalogFiles = signed.files;
+    bundleVersion = signed.version;
+  } catch (err) {
+    console.error(`Refusing to start: ${err instanceof Error ? err.message : String(err)}`);
+    process.exit(1);
+  }
+} else {
+  catalogFiles = await readCatalogDir(path.resolve(import.meta.dirname, '../../../catalog'));
+}
+const cards = cardsFrom(catalogFiles);
+const locales = localesFrom(catalogFiles);
 // With AI_GATEWAY_API_KEY set, forge gets a model port; without it, forge runs its
 // deterministic path (card render, chips, checks). See packages/ai/README.md.
-const routes = parseRoutes(await readFile(path.join(catalogDir, 'routes.yaml'), 'utf8'));
+const routesYaml = catalogFiles.get('routes.yaml');
+if (routesYaml === undefined) throw new Error('the catalog has no routes.yaml');
+const routes = parseRoutes(routesYaml);
 const transport = env.AI_GATEWAY_API_KEY ? gatewayTransport(env.AI_GATEWAY_API_KEY) : undefined;
 const app = createApp({
   forge: async (req, ctx) => {
@@ -124,6 +148,7 @@ serve({ fetch: app.fetch, port }, (info) => {
     port: info.port,
     cards: cards.length,
     locales: locales.length,
+    catalog: bundleVersion === null ? 'catalog/ (unsigned, dev)' : `signed bundle v${bundleVersion}`,
     model: transport ? 'gateway' : 'none (deterministic)',
     db: env.DATABASE_URL ? 'postgres' : 'pglite-memory',
     auth: supabase ? 'supabase+guest' : 'dev: guest tokens only',
