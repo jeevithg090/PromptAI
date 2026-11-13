@@ -5,6 +5,7 @@ import type { PanelState, PromptAIBridge } from './bridge.ts';
 import { chipOptions, markUnsourced, unresolvedPicks } from './chips.ts';
 import { DraftSheet } from './DraftSheet.tsx';
 import { createWebBridge } from './web-bridge.ts';
+import { createHttpApi } from './api/client.ts';
 
 const NOTES = { bundleId: 'com.apple.Notes', name: 'Notes', pid: 41 };
 const DRAFT: ForgeResponse = {
@@ -26,6 +27,7 @@ function fakeBridge(platform: 'desktop' | 'web' = 'desktop') {
   let listener: (s: PanelState) => void = () => {};
   const bridge = {
     platform,
+    caps: { insertAtCursor: platform === 'desktop', dictation: platform === 'desktop' },
     onState: (l: (s: PanelState) => void) => {
       listener = l;
       return () => {};
@@ -35,6 +37,7 @@ function fakeBridge(platform: 'desktop' | 'web' = 'desktop') {
     answerChip: vi.fn(async () => {}),
     retry: vi.fn(async () => {}),
     dismiss: vi.fn(async () => {}),
+    rate: vi.fn(async () => {}),
   } satisfies PromptAIBridge;
   render(<DraftSheet bridge={bridge} />);
   const push = (s: PanelState) => act(() => listener(s));
@@ -181,7 +184,7 @@ describe('browser fallback', () => {
   it('drafts typed text with /v1/forge and copies the brief', async () => {
     const fetch = vi.fn(async () => Response.json(DRAFT));
     const writeClipboard = vi.fn(async () => {});
-    const bridge = createWebBridge({ serverUrl: 'http://localhost:8787', fetch: fetch as typeof globalThis.fetch, writeClipboard });
+    const bridge = createWebBridge({ api: createHttpApi({ baseUrl: 'http://localhost:8787', fetch: fetch as typeof globalThis.fetch }), writeClipboard });
     render(<DraftSheet bridge={bridge} />);
 
     expect(screen.queryByRole('button', { name: 'Insert' })).toBeNull();

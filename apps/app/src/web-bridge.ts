@@ -1,18 +1,23 @@
 /**
  * Browser fallback when there is no desktop shell: type the ask, draft it with
- * /v1/forge, copy the brief. No dictation and no insert.
+ * /v1/forge, copy the brief. No dictation and no insert. Emits the same
+ * content-free events as the desktop flow (apps/desktop/src/flow.ts).
  */
-import { forgeResponseSchema, type ForgeRequest } from '@promptai/contract';
+import type { EventType } from '@promptai/contract';
+import type { ApiClient } from './api/client.ts';
 import type { Answers, PanelState, PromptAIBridge } from './bridge.ts';
+import type { EventProps } from './events/queue.ts';
 
 interface WebBridgeOptions {
-  serverUrl: string;
-  fetch?: typeof fetch;
+  api: ApiClient;
+  track?(type: EventType, props: EventProps): void;
   writeClipboard?(text: string): Promise<void>;
 }
 
+/** Never leave a trailing newline that could submit in the target app. */
+const forPaste = (text: string) => text.replace(/\s+$/, '');
+
 export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
-  const fetchImpl = opts.fetch ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
   const writeClipboard = opts.writeClipboard ?? ((text: string) => navigator.clipboard.writeText(text));
   const listeners = new Set<(s: PanelState) => void>();
   let state: PanelState = { phase: 'idle' };
@@ -21,29 +26,27 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
     state = next;
     for (const l of listeners) l(state);
   };
+  const track = (type: EventType, extra: EventProps = {}) => {
+    if (state.phase !== 'ready' && state.phase !== 'done') return;
+    opts.track?.(type, { decisionId: state.draft.decisionId ?? null, toolId: state.draft.toolId, surface: 'web', ...extra });
+  };
 
   async function draft(text: string, answers: Answers) {
     const id = ++session;
     set({ phase: 'drafting', target: null, transcript: text, answers });
-    const req: ForgeRequest = { text, ...(Object.keys(answers).length > 0 ? { answers } : {}) };
     try {
-      const res = await fetchImpl(new URL('/v1/forge', opts.serverUrl), {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify(req),
-      });
-      if (!res.ok) throw new Error(`the server answered ${res.status}`);
-      const parsed = forgeResponseSchema.safeParse(await res.json().catch(() => null));
-      if (!parsed.success) throw new Error('the server sent a draft this page cannot read');
-      if (id === session) set({ phase: 'ready', target: null, transcript: text, draft: parsed.data, answers });
+      const result = await opts.api.forge({ text, ...(Object.keys(answers).length > 0 ? { answers } : {}) });
+      if (id !== session) return;
+      set({ phase: 'ready', target: null, transcript: text, draft: result, answers });
+      track('brief.shown', { assumptions: result.assumptions.length, unsourced: result.unsourced.length, covered: result.coverage.covered, total: result.coverage.total });
     } catch (err) {
-      const message = err instanceof TypeError ? `couldn't reach the PromptAI server at ${opts.serverUrl}` : String((err as Error).message ?? err);
-      if (id === session) set({ phase: 'error', target: null, message: `Couldn't draft: ${message}`, transcript: text, answers, canRetry: true });
+      if (id === session) set({ phase: 'error', target: null, message: `Couldn't draft: ${(err as Error).message ?? String(err)}`, transcript: text, answers, canRetry: true });
     }
   }
 
   return {
     platform: 'web',
+    caps: { insertAtCursor: false, dictation: false },
     onState(listener) {
       listeners.add(listener);
       listener(state);
@@ -58,7 +61,8 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
     async copy() {
       if (state.phase === 'ready' || state.phase === 'done') {
         const { target, transcript, draft: d, answers } = state;
-        await writeClipboard(d.brief.replace(/\s+$/, ''));
+        await writeClipboard(forPaste(d.brief));
+        track('brief.copied');
         set({ phase: 'done', target, transcript, draft: d, answers, outcome: 'copied', app: null });
       } else if (state.phase === 'error' && state.transcript) {
         await writeClipboard(state.transcript);
@@ -71,12 +75,21 @@ export function createWebBridge(opts: WebBridgeOptions): PromptAIBridge {
       if (!chip || (value !== chip.value && !chip.options.includes(value))) return;
       const answers = { ...state.answers, [slotId]: value };
       if (value === chip.value) set({ ...state, answers });
-      else await draft(state.transcript, answers);
+      else {
+        track('chip.flipped', { slotId, kind: chip.kind, option: chip.options.indexOf(value) + 1 });
+        await draft(state.transcript, answers);
+      }
     },
     async retry() {
       if (state.phase === 'error' && state.canRetry) await draft(state.transcript, state.answers);
     },
+    async rate(rating) {
+      if (state.phase !== 'done' || state.rated) return;
+      track('outcome.rated', { rating, outcome: state.outcome });
+      set({ ...state, rated: rating });
+    },
     dismiss: async () => {
+      if (state.phase === 'ready') track('brief.dismissed');
       session++;
       set({ phase: 'idle' });
     },
