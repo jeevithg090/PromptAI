@@ -36,7 +36,7 @@ import {
 } from '@promptai/db';
 import type { Caller } from './auth.ts';
 import { latestConsents } from './consent.ts';
-import type { AppDeps, AppEnv, Log } from './app.ts';
+import type { AppDeps, AppEnv, Log } from './types.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const body = (c: Context) => c.req.json().catch(() => undefined);
@@ -51,7 +51,7 @@ export function isAdult(dob: string, now: Date): boolean {
   return now.getUTCFullYear() - y - (beforeBirthday ? 1 : 0) >= 18;
 }
 
-export async function profileOf(db: Db, caller: Caller): Promise<Profile> {
+async function profileOf(db: Db, caller: Caller): Promise<Profile> {
   return {
     id: caller.id,
     kind: caller.kind,
@@ -110,7 +110,7 @@ async function listLibrary(db: Db, userId: string, id?: string): Promise<Artifac
  * profile as a tombstone (so its unexpired tokens cannot recreate it) and
  * appends a content-free audit row under the now-unlinkable pid.
  */
-export async function erase(db: Db, caller: Caller, now: Date): Promise<void> {
+async function erase(db: Db, caller: Caller, now: Date): Promise<void> {
   await db.transaction(async (tx) => {
     await markErasure(tx);
     const uid = caller.id;

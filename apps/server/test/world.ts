@@ -11,9 +11,9 @@ import { okForge, pglite, quiet } from './helpers.ts';
 import { createApp, DEFAULT_LIMITS, type AppDeps, type Limits } from '../src/app.ts';
 import { createAuth, createGuests, type SupabaseAuthConfig } from '../src/auth.ts';
 
-export const ISSUER = 'https://test-project.supabase.co/auth/v1';
-export const HS_SECRET = 'test-only-hs256-secret-of-at-least-32-chars';
-export const CHEAP_POW = { cost: 1, counter: [1, 30] } as const;
+const ISSUER = 'https://test-project.supabase.co/auth/v1';
+const HS_SECRET = 'test-only-hs256-secret-of-at-least-32-chars';
+const CHEAP_POW = { cost: 1, counter: [1, 30] } as const;
 
 export async function signingKey(kid: string) {
   const { publicKey, privateKey } = await generateKeyPair('ES256', { extractable: true });
@@ -61,6 +61,7 @@ export async function world(opts: { limits?: Limits; supabase?: SupabaseAuthConf
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     const text = await res.text();
+    // biome-ignore lint/suspicious/noExplicitAny: tests read whatever JSON a route returned.
     return { status: res.status, headers: res.headers, body: (text ? JSON.parse(text) : null) as any };
   }
 

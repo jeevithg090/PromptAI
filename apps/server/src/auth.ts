@@ -12,7 +12,7 @@ import { profiles, type Db } from '@promptai/db';
 
 export type Caller = typeof profiles.$inferSelect;
 export type AuthFailure = 'missing' | 'malformed' | 'expired' | 'invalid';
-export type AuthResult = { ok: true; caller: Caller } | { ok: false; reason: AuthFailure };
+type AuthResult = { ok: true; caller: Caller } | { ok: false; reason: AuthFailure };
 /** Resolves an Authorization header to a caller. A deleted profile still resolves (its tombstone), so the route can refuse it. */
 export type Authenticate = (authorization: string | undefined) => Promise<AuthResult>;
 

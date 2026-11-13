@@ -11,20 +11,20 @@ import { personalizes } from './consent.ts';
 import type { StoredEvent } from './event-store.ts';
 
 /** One L1 signal: core folds these into per-slot Dirichlet counts with decay. */
-export type CountRow = { slotId: string; value: string; contextKey: string; weight: number; at: string };
-export type ForgeMemory = { id: string; kind: MemoryItem['kind']; text: string };
-export type ToolUsageRow = { toolId: string; hostApp: string | null; surface: DecisionContext['surface']; at: string };
+type CountRow = { slotId: string; value: string; contextKey: string; weight: number; at: string };
+type ForgeMemory = { id: string; kind: MemoryItem['kind']; text: string };
+type ToolUsageRow = { toolId: string; hostApp: string | null; surface: DecisionContext['surface']; at: string };
 /** The second argument to `deps.forge`. */
 export type ForgeContext = { counts: CountRow[]; memories: ForgeMemory[]; toolUsage: ToolUsageRow[] };
 
 /** The decision policy behind today's drafts: core's deterministic rules. Bump it when the pick rule changes. */
-export const POLICY_VERSION = 'p1-rules';
+const POLICY_VERSION = 'p1-rules';
 
 /**
  * The L1 context (blueprint §8: tool × host). Provisional until core exports
  * its own key: rows for every tool are passed, so the key carries the tool.
  */
-export const contextKey = (toolId: string, hostApp: string | null) => `${toolId}|${hostApp ?? '-'}`;
+const contextKey = (toolId: string, hostApp: string | null) => `${toolId}|${hostApp ?? '-'}`;
 
 /** About six half-lives of the 30-day count decay, and of the 14-day frecency τ. */
 const COUNT_DAYS = 180;

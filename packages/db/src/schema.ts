@@ -250,7 +250,7 @@ export const catalogItems = pgTable(
     card: jsonb('card').notNull(),
     updatedAt: updatedAt(),
   },
-  (t) => [check('catalog_items_kind', oneOf('kind', ['tool', 'family']))],
+  () => [check('catalog_items_kind', oneOf('kind', ['tool', 'family']))],
 ).enableRLS();
 
 /** Cited documentation chunks for coach Q&A, searched with Postgres full-text search. */

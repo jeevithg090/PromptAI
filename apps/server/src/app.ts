@@ -1,5 +1,5 @@
 import { Hono, type Context } from 'hono';
-import { requestId, type RequestIdVariables } from 'hono/request-id';
+import { requestId } from 'hono/request-id';
 import { and, eq } from 'drizzle-orm';
 import {
   eventBatchSchema,
@@ -9,28 +9,17 @@ import {
   guestTokenRequestSchema,
   reportRequestSchema,
   type EventBatchResponse,
-  type ForgeRequestParsed,
   type ForgeResponse,
 } from '@promptai/contract';
-import { artifacts, decisions, reports, type Db } from '@promptai/db';
-import type { AuthAdmin, Authenticate, Caller, Guests, Quota } from './auth.ts';
-import { isTransientDbError, type EventStore, type StoredEvent } from './event-store.ts';
-import { applyOutcomes, loadForgeContext, pidOf, recordDecision, type ForgeContext } from './learning.ts';
+import { artifacts, decisions, reports } from '@promptai/db';
+import { isTransientDbError, type StoredEvent } from './event-store.ts';
+import { applyOutcomes, loadForgeContext, pidOf, recordDecision } from './learning.ts';
 import { meRoutes } from './me.ts';
-import { tokenBuckets, type Bucket } from './rate-limit.ts';
+import { tokenBuckets } from './rate-limit.ts';
+import type { AppDeps, AppEnv, Limits, Log } from './types.ts';
 import { addUsage, nextUtcMidnight, refundForge, remaining, reserveForge, usageToday, utcDay } from './usage.ts';
 
-/** One structured log line. Never put request or response content in it. */
-export type Log = (entry: { level: 'info' | 'warn' | 'error'; msg: string; [key: string]: unknown }) => void;
-
-export interface Limits {
-  /** Daily quotas (B6: ~10 forges and 10 dictated minutes per guest device). Null is no limit. */
-  quota: { guest: { forgesPerDay: number; dictationMinutesPerDay: number }; account: Quota };
-  /** Daily model spend per caller, in USD, past which new forges are refused (blueprint §11). */
-  costCeilingUsd: Record<Caller['kind'], number>;
-  /** api: every /v1 call per caller; report: /v1/report per caller; guest: guest issuance per IP. */
-  rate: { api: Bucket; report: Bucket; guest: Bucket };
-}
+export type { AppDeps, AppEnv, Limits, Log } from './types.ts';
 
 export const DEFAULT_LIMITS: Limits = {
   quota: { guest: { forgesPerDay: 10, dictationMinutesPerDay: 10 }, account: { forgesPerDay: null, dictationMinutesPerDay: null } },
@@ -41,25 +30,6 @@ export const DEFAULT_LIMITS: Limits = {
     guest: { capacity: 20, perSecond: 1 / 30 },
   },
 };
-
-export interface AppDeps {
-  /** The forge pipeline (@promptai/core). `ctx` carries the caller's L1 counts, memories and frecency rows. */
-  forge: (req: ForgeRequestParsed, ctx: ForgeContext) => Promise<ForgeResponse>;
-  events: EventStore;
-  db: Db;
-  auth: Authenticate;
-  /** Guest issuance (ALTCHA); without it the /v1/guest routes answer 404. */
-  guests?: Guests;
-  /** Supabase admin API; without it DELETE /v1/me skips deleting the auth user (local dev, tests). */
-  authAdmin?: AuthAdmin;
-  limits?: Limits;
-  /** The client address for per-IP limits. Behind a proxy, read the header it sets. */
-  clientIp?: (c: Context) => string;
-  now?: () => Date;
-  log?: Log;
-}
-
-export type AppEnv = { Variables: RequestIdVariables & { caller: Caller } };
 
 /** Hard limit on one forge request (blueprint §11 budgets forge itself at 20 s). */
 export const FORGE_TIMEOUT_MS = 25_000;

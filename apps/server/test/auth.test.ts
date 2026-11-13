@@ -119,6 +119,7 @@ describe('guest mode (ALTCHA proof of work)', () => {
 
   it('refuses a wrong solution, a tampered challenge, an expired challenge and garbage', async () => {
     const w = await world();
+    // biome-ignore lint/suspicious/noExplicitAny: the test tampers with arbitrary fields of the decoded payload.
     const decode = (altcha: string) => JSON.parse(Buffer.from(altcha, 'base64').toString()) as any;
     const encode = (p: unknown) => Buffer.from(JSON.stringify(p)).toString('base64');
 
