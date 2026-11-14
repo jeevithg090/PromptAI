@@ -497,13 +497,13 @@ function BuildContent() {
       {/* Result — node editor */}
       {phase === 'result' && designedResponse && (
         <div className="mt-8">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-lg font-semibold text-gray-900">Result</h2>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <SavePromptButton response={designedResponse} />
               <button
                 onClick={handleDraftAgain}
-                className="text-sm text-blue-600 hover:text-blue-800"
+                className="text-sm text-ember-700 hover:text-ember-800 hover:underline"
               >
                 {strings.resultDraftAnother}
               </button>
