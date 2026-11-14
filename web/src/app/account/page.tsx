@@ -227,7 +227,7 @@ export default function AccountPage() {
                 <option key={code} value={code}>{l.label}</option>
               ))}
             </select>
-            <span className="text-xs text-gray-400">{strings.locale.note}</span>
+            <span className="text-xs text-stone-500">{strings.locale.note}</span>
           </div>
           <button onClick={() => launchTour()} className="mt-3 text-sm text-emerald-600 hover:underline">
             {strings.tour.relaunch}
@@ -246,11 +246,11 @@ export default function AccountPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
               />
               <button
                 onClick={handleSaveName}
-                className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-gray-700"
+                className="rounded-md bg-accent px-3 py-2 text-sm text-white hover:bg-accent-hover"
               >
                 {strings.accountSave}
               </button>
@@ -303,12 +303,12 @@ export default function AccountPage() {
                   value={newApiKey}
                   onChange={(e) => setNewApiKey(e.target.value)}
                   placeholder={strings.accountConnectionsApiKeyPlaceholder}
-                  className="block flex-1 rounded-md border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                  className="block flex-1 rounded-md border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
                 />
                 <button
                   onClick={handleAddConnection}
                   disabled={adding || !newApiKey.trim()}
-                  className="rounded-md bg-gray-900 px-3 py-1 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+                  className="rounded-md bg-accent px-3 py-1 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
                 >
                   {adding ? strings.loading : strings.accountConnectionsAdd}
                 </button>
@@ -318,9 +318,9 @@ export default function AccountPage() {
           )}
 
           {connectionsLoading ? (
-            <p className="mt-2 text-sm text-gray-400">{strings.loading}</p>
+            <p className="mt-2 text-sm text-stone-500">{strings.loading}</p>
           ) : connections.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-400">{strings.accountConnectionsNone}</p>
+            <p className="mt-2 text-sm text-stone-500">{strings.accountConnectionsNone}</p>
           ) : (
             <div className="mt-2 space-y-2">
               {connections.map((conn) => (
@@ -332,7 +332,7 @@ export default function AccountPage() {
                     }`}>
                       {conn.status}
                     </span>
-                    <span className="ml-2 text-xs text-gray-400">
+                    <span className="ml-2 text-xs text-stone-500">
                       {new Date(conn.created_at).toLocaleDateString()}
                     </span>
                   </div>
@@ -389,16 +389,16 @@ export default function AccountPage() {
           )}
 
           {memoryLoading ? (
-            <p className="mt-2 text-sm text-gray-400">{strings.loading}</p>
+            <p className="mt-2 text-sm text-stone-500">{strings.loading}</p>
           ) : memory.length === 0 ? (
-            <p className="mt-2 text-sm text-gray-400">{strings.accountMemoryNone}</p>
+            <p className="mt-2 text-sm text-stone-500">{strings.accountMemoryNone}</p>
           ) : (
             <div className="mt-2 space-y-2">
               {memory.map((entry) => (
                 <div key={entry.id} className="flex items-center justify-between rounded-md border border-gray-200 px-3 py-2">
                   <div className="flex-1">
                     <p className="text-sm text-gray-900">{entry.statement ?? '🔒 encrypted'}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-stone-500">
                       {entry.task_type ?? 'general'} · {entry.status} · {new Date(entry.created_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -420,12 +420,12 @@ export default function AccountPage() {
                 value={newMemoryText}
                 onChange={(e) => setNewMemoryText(e.target.value)}
                 placeholder={strings.accountMemoryAddPlaceholder}
-                className="block flex-1 rounded-md border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+                className="block flex-1 rounded-md border border-gray-300 px-3 py-1 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
               />
               <button
                 onClick={handleAddMemory}
                 disabled={addingMemory || !newMemoryText.trim()}
-                className="rounded-md bg-gray-900 px-3 py-1 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+                className="rounded-md bg-accent px-3 py-1 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 {addingMemory ? strings.loading : strings.accountMemoryAdd}
               </button>

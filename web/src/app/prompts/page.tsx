@@ -23,7 +23,7 @@ export default function PromptsPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="text-2xl font-bold text-gray-900">{strings.prompts.listTitle}</h1>
-      <p className="mt-2 text-xs text-gray-400">{strings.prompts.interimNote}</p>
+      <p className="mt-2 text-xs text-stone-500">{strings.prompts.interimNote}</p>
 
       {loading ? (
         <p className="mt-8 text-gray-500">Loading…</p>

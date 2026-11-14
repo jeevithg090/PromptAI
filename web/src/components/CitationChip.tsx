@@ -32,7 +32,7 @@ export function CitationChip({ source }: { source: GroundingSource }) {
         {source.ref}
       </button>
       {open && (
-        <span className="absolute bottom-full left-0 z-20 mb-1 block w-64 rounded-lg border border-gray-200 bg-white p-3 shadow-lg">
+        <span className="absolute bottom-full left-0 z-20 mb-1 block w-64 rounded-lg border border-gray-200 bg-surface p-3 shadow-lg">
           <span className="block text-xs text-gray-700">{source.snippet}…</span>
           <a
             href={source.url}

@@ -15,7 +15,7 @@ function ProductMock() {
         <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
         <span className="h-2.5 w-2.5 rounded-full bg-stone-300" />
-        <span className="ml-2 font-mono text-[11px] text-stone-400">PromptForge — Midjourney</span>
+        <span className="ml-2 font-mono text-[11px] text-stone-500">PromptForge — Midjourney</span>
       </div>
       <div className="p-6">
         <div className="flex items-center gap-4">
@@ -24,7 +24,7 @@ function ProductMock() {
           </div>
           <div>
             <p className="font-display text-lg font-semibold text-ink">Excellent</p>
-            <p className="text-xs text-stone-400">Grounded in 5 doc passages</p>
+            <p className="text-xs text-stone-500">Grounded in 5 doc passages</p>
           </div>
           <span className="pf-badge ml-auto">Forged</span>
         </div>

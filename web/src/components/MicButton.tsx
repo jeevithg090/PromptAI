@@ -40,7 +40,7 @@ export default function MicButton({ onText, className }: MicButtonProps) {
           `inline-flex h-9 w-9 items-center justify-center rounded-full border transition ${
             active
               ? 'border-red-400 bg-red-50 text-red-600 motion-safe:animate-pulse'
-              : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50'
+              : 'border-gray-300 bg-surface text-gray-600 hover:bg-gray-50'
           } disabled:opacity-50`
         }
       >

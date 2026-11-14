@@ -93,7 +93,7 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white">
+    <div className="rounded-lg border border-gray-200 bg-surface">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
@@ -102,7 +102,7 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
       >
         {strings.recommendation.title}
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-stone-500 transition-transform ${expanded ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           strokeWidth={1.5}
@@ -123,8 +123,8 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
                   type="button"
                   onClick={() => { setModality(m.id); setModalityTouched(true); }}
                   aria-pressed={modality === m.id}
-                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 ${
-                    modality === m.id ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  className={`rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 ${
+                    modality === m.id ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {m.label}
@@ -176,7 +176,7 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
             type="button"
             onClick={handleFind}
             disabled={!idea.trim() || loading}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {strings.recommendation.findButton}
           </button>

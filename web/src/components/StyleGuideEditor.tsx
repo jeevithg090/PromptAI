@@ -41,10 +41,10 @@ export default function StyleGuideEditor() {
   return (
     <div>
       <label className="block text-sm font-medium text-stone-700">{strings.styleGuide.title}</label>
-      <p className="mt-0.5 text-xs text-stone-400">{strings.styleGuide.subtitle}</p>
+      <p className="mt-0.5 text-xs text-stone-500">{strings.styleGuide.subtitle}</p>
 
       <div className="mt-3 flex flex-wrap items-end gap-2">
-        <select value={kind} onChange={(e) => setKind(e.target.value)} className="rounded-md border border-stone-300 px-2.5 py-1.5 text-sm focus:border-stone-900 focus:outline-none">
+        <select value={kind} onChange={(e) => setKind(e.target.value)} className="rounded-md border border-stone-300 px-2.5 py-1.5 text-sm focus:border-ember-500 focus:outline-none">
           {KINDS.map((k) => <option key={k.id} value={k.id}>{k.label}</option>)}
         </select>
         <input
@@ -52,17 +52,17 @@ export default function StyleGuideEditor() {
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') add(); }}
           placeholder={KINDS.find((k) => k.id === kind)?.placeholder}
-          className="w-56 rounded-md border border-stone-300 px-3 py-1.5 text-sm focus:border-stone-900 focus:outline-none"
+          className="w-56 rounded-md border border-stone-300 px-3 py-1.5 text-sm focus:border-ember-500 focus:outline-none"
         />
-        <button onClick={add} className="rounded-md bg-stone-900 px-3 py-1.5 text-sm text-white hover:bg-stone-700">{strings.styleGuide.add}</button>
+        <button onClick={add} className="rounded-md bg-accent px-3 py-1.5 text-sm text-white hover:bg-accent-hover">{strings.styleGuide.add}</button>
       </div>
 
       {rules.length > 0 && (
         <ul className="mt-3 space-y-1.5">
           {rules.map((r, i) => (
-            <li key={i} className="flex items-center justify-between rounded-md border border-stone-200 bg-white px-3 py-1.5 text-xs">
+            <li key={i} className="flex items-center justify-between rounded-md border border-stone-200 bg-surface px-3 py-1.5 text-xs">
               <span className="text-stone-700"><span className="font-medium">{KINDS.find((k) => k.id === r.kind)?.label ?? r.kind}:</span> {r.value}</span>
-              <button onClick={() => persist(rules.filter((_, j) => j !== i))} aria-label="Remove" className="text-stone-400 hover:text-stone-700">×</button>
+              <button onClick={() => persist(rules.filter((_, j) => j !== i))} aria-label="Remove" className="text-stone-500 hover:text-stone-700">×</button>
             </li>
           ))}
         </ul>

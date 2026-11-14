@@ -60,7 +60,7 @@ export default function LibrarySubmit() {
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4">
+    <div className="mt-4 rounded-xl border border-gray-200 bg-surface p-4">
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-gray-800">Contribute a prompt</h2>
         <button onClick={() => setOpen(false)} className="text-xs text-gray-500 hover:underline">Close</button>
@@ -106,7 +106,7 @@ export default function LibrarySubmit() {
           <button
             onClick={submit}
             disabled={busy || !title.trim() || !description.trim() || !template.trim()}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {busy ? 'Submitting…' : 'Submit to library'}
           </button>

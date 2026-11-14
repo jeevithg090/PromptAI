@@ -38,7 +38,7 @@ function GuideContent() {
       {/* Hero */}
       <div>
         <div className="flex items-center gap-4">
-          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-gray-900 text-xl font-bold text-white">
+          <span className="flex h-14 w-14 items-center justify-center rounded-xl bg-accent text-xl font-bold text-white">
             {platform.display_name.slice(0, 1)}
           </span>
           <div>
@@ -47,7 +47,7 @@ function GuideContent() {
               {platform.modalities.map((m) => (
                 <span key={m} className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">{m}</span>
               ))}
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-stone-500">
                 {strings.platformGuide.contextLine(new Intl.NumberFormat().format(platform.max_prompt_tokens))}
               </span>
             </div>
@@ -56,7 +56,7 @@ function GuideContent() {
         <div className="mt-3 flex gap-3">
           <Link
             href={`/build?platform=${platform.platform_id}`}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
           >
             {strings.platformGuide.cta(platform.display_name)}
           </Link>
@@ -76,7 +76,7 @@ function GuideContent() {
         <h2 className="text-lg font-semibold text-gray-900">{strings.platformGuide.howTitle}</h2>
         <ol className="mt-3 space-y-2">
           {platform.syntax_rules.map((rule, i) => (
-            <li key={i} className="flex gap-3 rounded-lg border border-gray-200 bg-white px-4 py-3">
+            <li key={i} className="flex gap-3 rounded-lg border border-gray-200 bg-surface px-4 py-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-xs font-semibold text-emerald-700">
                 {i + 1}
               </span>
@@ -106,7 +106,7 @@ function GuideContent() {
           <h2 className="text-lg font-semibold text-gray-900">{strings.platformGuide.modesTitle}</h2>
           <div className="mt-3 space-y-3">
             {modes.map((m) => (
-              <div key={m.mode_id} className="rounded-lg border border-gray-200 bg-white p-4">
+              <div key={m.mode_id} className="rounded-lg border border-gray-200 bg-surface p-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-gray-900">{m.name}</h3>
                   {m.docs_url && (
@@ -141,7 +141,7 @@ function GuideContent() {
               let domain = '';
               try { domain = new URL(l.source_url).hostname; } catch { domain = l.source_url; }
               return (
-                <div key={i} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+                <div key={i} className="rounded-lg border border-gray-200 bg-surface px-4 py-3">
                   <p className="text-sm text-gray-700">{l.content}</p>
                   {l.source_url && (
                     <a href={l.source_url} target="_blank" rel="noreferrer" className="mt-1.5 inline-block rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700 hover:bg-emerald-100">
@@ -161,10 +161,10 @@ function GuideContent() {
           <h2 className="text-lg font-semibold text-gray-900">{strings.platformGuide.startersTitle}</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             {starter_prompts.map((s) => (
-              <div key={s.id} className="rounded-lg border border-gray-200 bg-white p-4">
+              <div key={s.id} className="rounded-lg border border-gray-200 bg-surface p-4">
                 <h3 className="text-sm font-semibold text-gray-900">{s.title}</h3>
                 <p className="mt-1 text-xs text-gray-500">{s.description}</p>
-                <p className="mt-2 font-mono text-xs text-gray-400 line-clamp-2">{s.template}</p>
+                <p className="mt-2 font-mono text-xs text-stone-500 line-clamp-2">{s.template}</p>
                 <Link
                   href={`/build?idea=${encodeURIComponent(s.idea)}&platform=${platform.platform_id}`}
                   className="mt-3 inline-block text-xs font-medium text-emerald-700 hover:underline"

@@ -99,7 +99,7 @@ export default function ChatRefine({ platformId, taskType, nodes, onApply }: Cha
               <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div
                   className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
-                    m.role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-800'
+                    m.role === 'user' ? 'bg-accent text-white' : 'bg-gray-100 text-gray-800'
                   }`}
                 >
                   {m.content}
@@ -129,13 +129,13 @@ export default function ChatRefine({ platformId, taskType, nodes, onApply }: Cha
               onKeyDown={handleKeyDown}
               placeholder={strings.chatRefinePlaceholder}
               disabled={sending}
-              className="block w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+              className="block w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
             />
             <button
               type="button"
               onClick={() => void send()}
               disabled={sending || !input.trim()}
-              className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+              className="rounded-md bg-accent px-3 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
             >
               {strings.chatRefineSend}
             </button>

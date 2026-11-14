@@ -34,7 +34,7 @@ export default function TokenMeter({ governor, estimated = false }: TokenMeterPr
   const textColor = over ? 'text-red-700' : nearLimit || pct >= 80 ? 'text-amber-700' : 'text-gray-500';
 
   return (
-    <div className="rounded-md border border-gray-200 bg-white px-3 py-2">
+    <div className="rounded-md border border-gray-200 bg-surface px-3 py-2">
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs font-medium text-gray-600">{strings.tokenMeter.label}</span>
         <span className={`text-xs font-medium tabular-nums ${textColor}`}>

@@ -65,7 +65,7 @@ export default function CommandPalette() {
       role="presentation"
     >
       <div
-        className="w-full max-w-lg overflow-hidden rounded-xl bg-white shadow-2xl"
+        className="w-full max-w-lg overflow-hidden rounded-xl bg-surface shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-label={strings.palette.title}
@@ -81,7 +81,7 @@ export default function CommandPalette() {
           aria-activedescendant={`palette-${active}`}
         />
         <ul className="max-h-80 overflow-y-auto py-2">
-          {ranked.length === 0 && <li className="px-4 py-3 text-sm text-gray-400">{strings.palette.empty}</li>}
+          {ranked.length === 0 && <li className="px-4 py-3 text-sm text-stone-500">{strings.palette.empty}</li>}
           {ranked.map((a, i) => (
             <li key={a.id} id={`palette-${i}`}>
               <button

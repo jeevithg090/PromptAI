@@ -17,7 +17,7 @@
   --color-ember-300: #fba86e;
   --color-ember-400: #f67c37;
   --color-ember-500: #ef5f14;
-  --color-ember-600: #d9480f; /* primary CTA */
+  --color-ember-600: #c2410c; /* primary CTA — 5.2:1 with white text (WCAG AA) */
   --color-ember-700: #b23809; /* hover */
   --color-ember-800: #8f2d0d;
   --color-ember-900: #74260f;
@@ -41,7 +41,7 @@
   --color-stone-200: #e7e3d9;
   --color-stone-300: #d5cfc1;
   --color-stone-400: #a8a091;
-  --color-stone-500: #7c7568;
+  --color-stone-500: #6f685c;
   --color-stone-600: #5c564c;
   --color-stone-700: #423d35;
   --color-stone-800: #2a2620;
@@ -54,7 +54,7 @@
   --color-gray-200: #e7e3d9;
   --color-gray-300: #d5cfc1;
   --color-gray-400: #a8a091;
-  --color-gray-500: #7c7568;
+  --color-gray-500: #6f685c;
   --color-gray-600: #5c564c;
   --color-gray-700: #423d35;
   --color-gray-800: #2a2620;
@@ -64,7 +64,7 @@
   --color-neutral-200: #e7e3d9;
   --color-neutral-300: #d5cfc1;
   --color-neutral-400: #a8a091;
-  --color-neutral-500: #7c7568;
+  --color-neutral-500: #6f685c;
   --color-neutral-600: #5c564c;
   --color-neutral-700: #423d35;
   --color-neutral-800: #2a2620;
@@ -100,7 +100,203 @@
   --shadow-sm: 0 1px 2px rgba(26, 23, 18, 0.05);
   --shadow-md: 0 4px 16px -4px rgba(26, 23, 18, 0.10), 0 1px 2px rgba(26, 23, 18, 0.04);
   --shadow-lg: 0 18px 48px -12px rgba(26, 23, 18, 0.18), 0 2px 6px rgba(26, 23, 18, 0.05);
-  --shadow-ember: 0 8px 24px -8px rgba(217, 72, 15, 0.35);
+  --shadow-ember: 0 8px 24px -8px rgba(194, 65, 12, 0.35);
+}
+
+
+/*
+ * ── Dark theme ──
+ * Follows the OS setting unless the user picks one explicitly
+ * (<html data-theme="light|dark">, set by ThemeToggle). Utilities read these
+ * variables, so the whole app re-skins without per-component `dark:` classes:
+ * the neutral ramp is inverted, tints become low-luminance washes and
+ * text-weight shades become light. Solid fills that carry white text use
+ * --color-accent, which stays the AA-safe ember in both themes.
+ */
+:root { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-paper: #14120e;
+  --color-surface: #1d1a15;
+  --color-ink: #f3efe6;
+  --color-ink-soft: #c4bcad;
+  --color-line: #34302a;
+  --color-accent: #c2410c;
+  --color-accent-hover: #b23809;
+  --color-accent-soft: #2a1a10;
+  --color-stone-50: #211e19;
+  --color-stone-100: #2a2620;
+  --color-stone-200: #36322b;
+  --color-stone-300: #4a453c;
+  --color-stone-400: #7a7366;
+  --color-stone-500: #a39b8c;
+  --color-stone-600: #c4bcad;
+  --color-stone-700: #d9d2c4;
+  --color-stone-800: #ebe5d9;
+  --color-stone-900: #f6f2ea;
+  --color-gray-50: #211e19;
+  --color-gray-100: #2a2620;
+  --color-gray-200: #36322b;
+  --color-gray-300: #4a453c;
+  --color-gray-400: #7a7366;
+  --color-gray-500: #a39b8c;
+  --color-gray-600: #c4bcad;
+  --color-gray-700: #d9d2c4;
+  --color-gray-800: #ebe5d9;
+  --color-gray-900: #f6f2ea;
+  --color-neutral-50: #211e19;
+  --color-neutral-100: #2a2620;
+  --color-neutral-200: #36322b;
+  --color-neutral-300: #4a453c;
+  --color-neutral-400: #7a7366;
+  --color-neutral-500: #a39b8c;
+  --color-neutral-600: #c4bcad;
+  --color-neutral-700: #d9d2c4;
+  --color-neutral-800: #ebe5d9;
+  --color-neutral-900: #f6f2ea;
+  --color-ember-50: #2a1a10;
+  --color-ember-100: #3a2214;
+  --color-ember-200: #5a3018;
+  --color-ember-300: #8a4720;
+  --color-ember-400: #e0773a;
+  --color-ember-500: #ef7a3a;
+  --color-ember-600: #f08a4b;
+  --color-ember-700: #fb9a5c;
+  --color-ember-800: #fdb07e;
+  --color-ember-900: #fdc9a4;
+  --color-emerald-50: #2a1a10;
+  --color-emerald-100: #3a2214;
+  --color-emerald-200: #5a3018;
+  --color-emerald-300: #8a4720;
+  --color-emerald-400: #e0773a;
+  --color-emerald-500: #ef7a3a;
+  --color-emerald-600: #f08a4b;
+  --color-emerald-700: #fb9a5c;
+  --color-emerald-800: #fdb07e;
+  --color-emerald-900: #fdc9a4;
+  --color-red-50: #2c1513;
+  --color-red-100: #3d1a17;
+  --color-red-200: #5c2420;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #f26b6b;
+  --color-red-700: #f58a8a;
+  --color-red-800: #f8a5a5;
+  --color-red-900: #fbc4c4;
+  --color-amber-50: #2a2010;
+  --color-amber-100: #3a2c12;
+  --color-amber-200: #5a4318;
+  --color-amber-300: #7a5a1c;
+  --color-amber-500: #e0a526;
+  --color-amber-600: #f0b53a;
+  --color-amber-700: #f5c55e;
+  --color-amber-800: #f8d27e;
+  --color-amber-900: #fbe3a8;
+  --color-green-50: #13241a;
+  --color-green-100: #173020;
+  --color-green-700: #6fd39b;
+  --color-blue-50: #131c2c;
+  --color-blue-100: #17233a;
+  --color-blue-200: #22345a;
+  --color-blue-600: #6ea8ff;
+  --color-blue-800: #9cc3ff;
+  --color-blue-900: #c2dbff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 18px 48px -12px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+  color-scheme: dark;
+  --color-paper: #14120e;
+  --color-surface: #1d1a15;
+  --color-ink: #f3efe6;
+  --color-ink-soft: #c4bcad;
+  --color-line: #34302a;
+  --color-accent: #c2410c;
+  --color-accent-hover: #b23809;
+  --color-accent-soft: #2a1a10;
+  --color-stone-50: #211e19;
+  --color-stone-100: #2a2620;
+  --color-stone-200: #36322b;
+  --color-stone-300: #4a453c;
+  --color-stone-400: #7a7366;
+  --color-stone-500: #a39b8c;
+  --color-stone-600: #c4bcad;
+  --color-stone-700: #d9d2c4;
+  --color-stone-800: #ebe5d9;
+  --color-stone-900: #f6f2ea;
+  --color-gray-50: #211e19;
+  --color-gray-100: #2a2620;
+  --color-gray-200: #36322b;
+  --color-gray-300: #4a453c;
+  --color-gray-400: #7a7366;
+  --color-gray-500: #a39b8c;
+  --color-gray-600: #c4bcad;
+  --color-gray-700: #d9d2c4;
+  --color-gray-800: #ebe5d9;
+  --color-gray-900: #f6f2ea;
+  --color-neutral-50: #211e19;
+  --color-neutral-100: #2a2620;
+  --color-neutral-200: #36322b;
+  --color-neutral-300: #4a453c;
+  --color-neutral-400: #7a7366;
+  --color-neutral-500: #a39b8c;
+  --color-neutral-600: #c4bcad;
+  --color-neutral-700: #d9d2c4;
+  --color-neutral-800: #ebe5d9;
+  --color-neutral-900: #f6f2ea;
+  --color-ember-50: #2a1a10;
+  --color-ember-100: #3a2214;
+  --color-ember-200: #5a3018;
+  --color-ember-300: #8a4720;
+  --color-ember-400: #e0773a;
+  --color-ember-500: #ef7a3a;
+  --color-ember-600: #f08a4b;
+  --color-ember-700: #fb9a5c;
+  --color-ember-800: #fdb07e;
+  --color-ember-900: #fdc9a4;
+  --color-emerald-50: #2a1a10;
+  --color-emerald-100: #3a2214;
+  --color-emerald-200: #5a3018;
+  --color-emerald-300: #8a4720;
+  --color-emerald-400: #e0773a;
+  --color-emerald-500: #ef7a3a;
+  --color-emerald-600: #f08a4b;
+  --color-emerald-700: #fb9a5c;
+  --color-emerald-800: #fdb07e;
+  --color-emerald-900: #fdc9a4;
+  --color-red-50: #2c1513;
+  --color-red-100: #3d1a17;
+  --color-red-200: #5c2420;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #f26b6b;
+  --color-red-700: #f58a8a;
+  --color-red-800: #f8a5a5;
+  --color-red-900: #fbc4c4;
+  --color-amber-50: #2a2010;
+  --color-amber-100: #3a2c12;
+  --color-amber-200: #5a4318;
+  --color-amber-300: #7a5a1c;
+  --color-amber-500: #e0a526;
+  --color-amber-600: #f0b53a;
+  --color-amber-700: #f5c55e;
+  --color-amber-800: #f8d27e;
+  --color-amber-900: #fbe3a8;
+  --color-green-50: #13241a;
+  --color-green-100: #173020;
+  --color-green-700: #6fd39b;
+  --color-blue-50: #131c2c;
+  --color-blue-100: #17233a;
+  --color-blue-200: #22345a;
+  --color-blue-600: #6ea8ff;
+  --color-blue-800: #9cc3ff;
+  --color-blue-900: #c2dbff;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 16px -4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 18px 48px -12px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
 }
 
 /* ── Base ── */
@@ -144,13 +340,13 @@ h1, h2, h3, .font-display {
 
 /* ── Textures (CSS patterns, not gradient fills) ── */
 .dot-grid {
-  background-image: radial-gradient(circle, rgba(26, 23, 18, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(circle, color-mix(in srgb, var(--color-ink) 6%, transparent) 1px, transparent 1px);
   background-size: 22px 22px;
 }
 /* A faint warm "heat haze" wash behind the hero — a radial tint, kept very subtle. */
 .hero-wash {
   background:
-    radial-gradient(60% 50% at 50% -10%, rgba(217, 72, 15, 0.06), transparent 70%),
+    radial-gradient(60% 50% at 50% -10%, rgba(194, 65, 12, 0.08), transparent 70%),
     var(--color-paper);
 }
 
@@ -166,6 +362,7 @@ h1, h2, h3, .font-display {
     cursor: pointer; border: 1px solid transparent;
   }
   .pf-btn:active { transform: translateY(0.5px); }
+  .pf-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
   .pf-btn-primary {
     background: var(--color-accent); color: #fff;
     box-shadow: var(--shadow-ember);
@@ -228,3 +425,22 @@ h1, h2, h3, .font-display {
   to { opacity: 1; transform: translateY(0); }
 }
 .pf-rise { animation: pf-rise .5s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Skip link: hidden until focused by keyboard. */
+.pf-skip {
+  position: absolute; left: 1rem; top: -4rem; z-index: 100;
+  padding: 0.6rem 1rem; border-radius: var(--radius-sm);
+  background: var(--color-accent); color: #fff; font-weight: 600; font-size: 0.875rem;
+  transition: top .15s ease;
+}
+.pf-skip:focus { top: 0.75rem; }
+
+/* Respect the OS "reduce motion" setting. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

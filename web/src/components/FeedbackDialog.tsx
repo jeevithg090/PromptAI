@@ -37,7 +37,7 @@ export default function FeedbackDialog({ taskType, platformId, rubricScores }: F
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div className="rounded-lg border border-gray-200 bg-surface p-4">
       <h3 className="text-sm font-medium text-gray-900">{strings.feedbackDialogTitle}</h3>
 
       {submitted ? (
@@ -48,7 +48,7 @@ export default function FeedbackDialog({ taskType, platformId, rubricScores }: F
             type="button"
             onClick={() => handleSubmit('worked')}
             disabled={outcome !== null}
-            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
+            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
               outcome === 'worked'
                 ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
                 : 'border-gray-300 text-gray-600 hover:border-gray-400'
@@ -60,7 +60,7 @@ export default function FeedbackDialog({ taskType, platformId, rubricScores }: F
             type="button"
             onClick={() => handleSubmit('didnt_work')}
             disabled={outcome !== null}
-            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
+            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
               outcome === 'didnt_work'
                 ? 'border-red-500 bg-red-50 text-red-700'
                 : 'border-gray-300 text-gray-600 hover:border-gray-400'
@@ -72,7 +72,7 @@ export default function FeedbackDialog({ taskType, platformId, rubricScores }: F
             type="button"
             onClick={() => handleSubmit('mixed')}
             disabled={outcome !== null}
-            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
+            className={`rounded-full border px-4 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
               outcome === 'mixed'
                 ? 'border-amber-500 bg-amber-50 text-amber-700'
                 : 'border-gray-300 text-gray-600 hover:border-gray-400'

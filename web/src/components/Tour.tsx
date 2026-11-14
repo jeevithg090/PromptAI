@@ -84,18 +84,18 @@ export default function Tour() {
             : { inset: 0, boxShadow: 'inset 0 0 0 9999px rgba(0,0,0,0.55)' }
         }
       />
-      <div className="absolute w-[320px] rounded-xl bg-white p-4 shadow-2xl" style={cardStyle}>
+      <div className="absolute w-[320px] rounded-xl bg-surface p-4 shadow-2xl" style={cardStyle}>
         <p className="sr-only" aria-live="polite">{`${step + 1} / ${STEPS.length}: ${s.title}`}</p>
         <h3 className="text-sm font-semibold text-gray-900">{s.title}</h3>
         <p className="mt-1 text-sm text-gray-600">{s.body}</p>
         <div className="mt-4 flex items-center justify-between">
-          <button onClick={finish} className="text-xs text-gray-400 hover:underline">{strings.tour.skip}</button>
+          <button onClick={finish} className="text-xs text-stone-500 hover:underline">{strings.tour.skip}</button>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-400">{step + 1}/{STEPS.length}</span>
+            <span className="text-xs text-stone-500">{step + 1}/{STEPS.length}</span>
             {step > 0 && <button onClick={() => setStep((x) => x - 1)} className="rounded border border-gray-300 px-3 py-1 text-xs">{strings.tour.back}</button>}
             <button
               onClick={() => (step < STEPS.length - 1 ? setStep((x) => x + 1) : finish())}
-              className="rounded bg-emerald-600 px-3 py-1 text-xs font-medium text-white hover:bg-emerald-700"
+              className="rounded bg-accent px-3 py-1 text-xs font-medium text-white hover:bg-accent-hover"
               autoFocus
             >
               {step < STEPS.length - 1 ? strings.tour.next : strings.tour.done}

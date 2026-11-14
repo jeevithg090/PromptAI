@@ -61,7 +61,7 @@ export default function NodeCard({
   };
 
   return (
-    <div className={`rounded-lg border p-4 transition ${node.locked ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-white'}`}>
+    <div className={`rounded-lg border p-4 transition ${node.locked ? 'border-amber-300 bg-amber-50' : 'border-gray-200 bg-surface'}`}>
       {/* Header: badge + label + lock */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export default function NodeCard({
 
         <div className="flex items-center gap-1">
           {node.value.length > 0 && (
-            <span className="mr-1 text-[10px] tabular-nums text-gray-400" title={strings.tokenMeter.label}>
+            <span className="mr-1 text-[10px] tabular-nums text-stone-500" title={strings.tokenMeter.label}>
               {strings.tokenMeter.perNode(formatTokens(estimateTokens(node.value)))}
             </span>
           )}
@@ -90,10 +90,10 @@ export default function NodeCard({
             onClick={() => onToggleLock(node.type)}
             aria-label={node.locked ? strings.nodeUnlock : strings.nodeLock}
             aria-pressed={node.locked}
-            className={`rounded p-1.5 text-xs transition focus:outline-none focus:ring-2 focus:ring-gray-900 ${
+            className={`rounded p-1.5 text-xs transition focus:outline-none focus:ring-2 focus:ring-ember-500 ${
               node.locked
                 ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                : 'text-stone-500 hover:bg-gray-100 hover:text-gray-600'
             }`}
           >
             {node.locked ? (
@@ -122,13 +122,13 @@ export default function NodeCard({
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
           />
           <div className="mt-1.5 flex gap-2">
             <button
               type="button"
               onClick={handleSaveEdit}
-              className="rounded bg-gray-900 px-2.5 py-1 text-xs text-white hover:bg-gray-700"
+              className="rounded bg-accent px-2.5 py-1 text-xs text-white hover:bg-accent-hover"
             >
               {strings.nodeEditSave}
             </button>
@@ -143,13 +143,13 @@ export default function NodeCard({
         </div>
       ) : (
         <p className="mt-2 text-sm text-gray-700">
-          {node.value || <span className="italic text-gray-400">{strings.nodeValueEmpty}</span>}
+          {node.value || <span className="italic text-stone-500">{strings.nodeValueEmpty}</span>}
         </p>
       )}
 
       {/* Rationale (collapsed) — [P1]/[M2] tokens resolve to doc citations (V1.6) */}
       {node.rationale && !isEditing && (
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-stone-500">
           <RationaleWithCitations text={node.rationale} sources={sources} />
         </p>
       )}
@@ -191,7 +191,7 @@ export default function NodeCard({
       {showAlts && !isEditing && (
         <div className="mt-2 space-y-1">
           {node.alternatives.length === 0 ? (
-            <p className="text-xs text-gray-400">{strings.nodeAlternativesNone}</p>
+            <p className="text-xs text-stone-500">{strings.nodeAlternativesNone}</p>
           ) : (
             node.alternatives.map((alt) => (
               <button
@@ -206,7 +206,7 @@ export default function NodeCard({
                 <span className="font-medium text-gray-700">#{alt.rank}</span>
                 <span className="ml-2 text-gray-600">{alt.value}</span>
                 {alt.rationale && (
-                  <span className="mt-0.5 block text-[10px] text-gray-400">
+                  <span className="mt-0.5 block text-[10px] text-stone-500">
                     {strings.nodeAlternativesRationale}: {alt.rationale}
                   </span>
                 )}

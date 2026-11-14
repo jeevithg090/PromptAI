@@ -56,7 +56,7 @@ export default function BillingSection() {
       ) : error ? (
         <p className="mt-2 text-sm text-red-700">{error}</p>
       ) : usage ? (
-        <div className="mt-2 rounded-lg border border-gray-200 bg-white p-4">
+        <div className="mt-2 rounded-lg border border-gray-200 bg-surface p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-900">
@@ -72,7 +72,7 @@ export default function BillingSection() {
               <button
                 onClick={upgrade}
                 disabled={upgrading}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
               >
                 {upgrading ? 'Starting…' : 'Upgrade to Pro'}
               </button>

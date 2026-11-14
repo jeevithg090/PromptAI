@@ -70,7 +70,7 @@ export default function ProjectsPage() {
 
       {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+      <div className="mt-6 rounded-xl border border-gray-200 bg-surface p-4">
         <h2 className="text-sm font-semibold text-gray-800">New project</h2>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
@@ -89,7 +89,7 @@ export default function ProjectsPage() {
           <button
             onClick={create}
             disabled={!name.trim() || busy}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {busy ? 'Creating…' : 'Create'}
           </button>
@@ -103,7 +103,7 @@ export default function ProjectsPage() {
       ) : (
         <ul className="mt-6 space-y-2">
           {projects.map((p) => (
-            <li key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
+            <li key={p.id} className="flex items-center justify-between rounded-lg border border-gray-200 bg-surface px-4 py-3">
               <div className="min-w-0 flex-1">
                 {editingId === p.id ? (
                   <input

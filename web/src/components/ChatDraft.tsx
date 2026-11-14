@@ -109,7 +109,7 @@ export default function ChatDraft({ platformId, onOpenDraft }: ChatDraftProps) {
             <div className={`max-w-[85%] ${t.role === 'user' ? '' : 'w-full'}`}>
               <div
                 className={`rounded-lg px-3 py-2 text-sm ${
-                  t.role === 'user' ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-800'
+                  t.role === 'user' ? 'bg-accent text-white' : 'bg-gray-100 text-gray-800'
                 }`}
               >
                 {t.content}
@@ -124,13 +124,13 @@ export default function ChatDraft({ platformId, onOpenDraft }: ChatDraftProps) {
                       <span className="text-sm font-bold text-emerald-700">{t.draft.strength.score}</span>
                     )}
                   </div>
-                  <pre className="mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap rounded border border-emerald-100 bg-white px-2 py-1.5 font-mono text-xs text-gray-700">
+                  <pre className="mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap rounded border border-emerald-100 bg-surface px-2 py-1.5 font-mono text-xs text-gray-700">
                     {t.draft.assembled}
                   </pre>
                   <button
                     type="button"
                     onClick={() => onOpenDraft(t.draft!)}
-                    className="mt-2 rounded-md bg-gray-900 px-3 py-1.5 text-xs text-white hover:bg-gray-700"
+                    className="mt-2 rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover"
                   >
                     {strings.chatDraft.openInEditor}
                   </button>
@@ -156,7 +156,7 @@ export default function ChatDraft({ platformId, onOpenDraft }: ChatDraftProps) {
                 type="button"
                 onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
                 aria-label="Remove"
-                className="text-gray-400 hover:text-gray-700"
+                className="text-stone-500 hover:text-gray-700"
               >
                 ×
               </button>
@@ -190,13 +190,13 @@ export default function ChatDraft({ platformId, onOpenDraft }: ChatDraftProps) {
           onKeyDown={handleKeyDown}
           placeholder={strings.chatDraft.placeholder}
           disabled={sending}
-          className="block w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+          className="block w-full resize-none rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
         />
         <button
           type="button"
           onClick={() => void send()}
           disabled={sending || !input.trim()}
-          className="rounded-md bg-gray-900 px-3 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-3 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
         >
           {strings.chatDraft.send}
         </button>
