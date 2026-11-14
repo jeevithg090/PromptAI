@@ -8,7 +8,7 @@ const display = Space_Grotesk({ subsets: ["latin"], variable: "--font-display", 
 const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-mono-code", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "PromptForge — Forge great AI prompts",
+  title: { default: "PromptForge — Forge great AI prompts", template: "%s · PromptForge" },
   description: "Turn rough ideas into excellent, platform-tailored prompts for Midjourney, ChatGPT, Claude, Gemini, and more.",
   manifest: "/manifest.json",
   appleWebApp: { capable: true, title: "PromptForge", statusBarStyle: "default" },

@@ -76,7 +76,7 @@ export default function HomePage() {
               {strings.landingHero}
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-stone-600">{strings.landingSubtitle}</p>
-            <div className="mt-9 flex items-center justify-center gap-3">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
               <Link href="/try" className="pf-btn pf-btn-primary !px-6 !py-3 text-[0.95rem]">
                 {strings.landingCta}
               </Link>
