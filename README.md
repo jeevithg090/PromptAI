@@ -358,6 +358,8 @@ macos-sdk/    Swift Package — embeddable client
 admin/        Separate Hono deployable — moderation, flags, traces, kill switch
 config/       11 JSON files — the config-over-code surface
 docs/         Rubric, taxonomy, data model, security reviews, compliance
+  planning/     original build plans and task breakdowns (historical)
+eslint.config.mjs   shared lint config for the non-web TypeScript packages
 ```
 
 ### Configuration surface
@@ -477,45 +479,87 @@ across 8 niches, remixable in the builder.
 
 ## Quickstart
 
+**Prerequisites:** Node.js 22 (npm 10+). Postgres with `pgvector` (a Supabase project
+works) for anything that persists. At least one LLM provider key (Groq is the default)
+for drafting. Xcode 16+ only for the Swift targets.
+
+Every surface is its own npm project with its own lockfile; there is no workspace
+install. The repo root only holds shared lint tooling.
+
 ```bash
-# Backend — local server on :3001, auth bypassed for curl testing
-cd backend && npm install && npm run dev
+# Backend API on :3001 — DEV_AUTH_BYPASS lets you curl it without Supabase
+cd backend
+cp .env.example .env          # fill in what you have; see Environment below
+npm ci
+npm run build && npm run migrate   # needs DATABASE_URL
+DEV_AUTH_BYPASS=true npm run dev
+curl localhost:3001/health    # {"ok":true,"service":"pf-backend"}
 
-# Web — Next.js dev server on :3000
-cd web && npm install && npm run dev
+# Web app on :3000 (talks to NEXT_PUBLIC_API_URL, default http://localhost:3001)
+cd web && cp .env.example .env.local && npm ci && npm run dev
 
-# Chrome extension — build, then load extension/dist unpacked
-cd extension && npm install && npm run build
+# Chrome extension — build, then "Load unpacked" extension/dist
+cd extension && npm ci && npm run build
 
-# Desktop — Electron shell
-cd desktop && npm install && npm run dev
+# Firefox extension — build, then load firefox-extension/dist as a temporary add-on
+cd firefox-extension && npm ci && npm run build
+
+# Desktop (Electron) — the renderer has its own lockfile
+cd desktop && npm ci && (cd renderer && npm ci) && npm run dev
+
+# Admin control plane on :3002
+cd admin && cp .env.example .env && npm ci && npm run dev
 
 # macOS native app / SDK — Xcode 16+
 cd macos && swift build
 cd macos-sdk && swift build
-
-# Admin control plane on :3002
-cd admin && npm install && npm run dev
 ```
 
-Copy `backend/.env.example` → `backend/.env` and fill it in. Production secrets live in
-AWS SSM Parameter Store as SecureStrings — never in files. The default LLM provider is Groq
-(no-card free tier); Cerebras, Gemini, and OpenCode Zen are drop-in alternatives via config.
+Without provider keys the backend still boots and serves the registry, library and
+health routes; drafting endpoints return a clean `generation unavailable` error rather
+than crashing. Without a database, routes that persist (keys, prompts, usage) return 500.
+
+Production secrets live in AWS SSM Parameter Store as SecureStrings — never in files.
+The default LLM provider is Groq (no-card free tier); Cerebras, Gemini, and OpenCode
+Zen are drop-in alternatives via config.
 
 ### Environment
 
+Each deployable documents its variables in its own `.env.example`:
+[`backend/.env.example`](backend/.env.example), [`admin/.env.example`](admin/.env.example),
+[`web/.env.example`](web/.env.example). Never commit the filled-in copies (`.env*` is
+gitignored).
+
+**Backend**
+
 | Variable | Purpose |
 |---|---|
+| `DATABASE_URL` | Postgres connection string (migrations and runtime) |
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` | Database and auth |
 | `SUPABASE_JWKS_URL` *or* `SUPABASE_JWT_SECRET` | JWT verification — JWKS preferred |
 | `GROQ_API_KEY` | Default provider; also Whisper transcription |
 | `GEMINI_API_KEY` | Large-context steps, embeddings, image preview |
 | `CEREBRAS_API_KEY` | Analysis steps — note the 8,192-token free-tier context cap |
 | `CLOUDFLARE_*` | R2 for encrypted blobs, KV for registry edge cache |
+| `ALLOWED_ORIGINS` | Comma-separated CORS allowlist for the web app |
 | `CONTENT_SAFETY_ENABLED` | Safety classifier toggle — leave on |
 | `CLARIFY_MAX_QUESTIONS`, `CRITIC_MAX_REFINEMENTS` | Pipeline bounds (default 4, 2) |
 | `MAX_TOKENS_PER_SESSION`, `RATE_LIMIT_REQUESTS_PER_MINUTE` | Budget and throttle |
 | `DEV_AUTH_BYPASS` | Local-only. Refuses to start when `NODE_ENV=production` |
+
+**Admin**
+
+| Variable | Purpose |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_SERVICE_KEY` | Service-role access for moderation and flags |
+| `ADMIN_ALLOWED_EMAILS` | Comma-separated admin emails. Empty means *nobody* by email. An `admin_roles` table (`user_id`), if present, also grants access; no migration creates it yet |
+
+**Web** (public, inlined into the bundle at build time)
+
+| Variable | Purpose |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend base URL |
+| `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Sign-in; leave empty to run without auth |
 
 `DEV_AUTH_BYPASS` is worth calling out: it lets you `curl` the API without Supabase
 credentials during development, and the process hard-refuses to boot with it enabled in
@@ -531,39 +575,55 @@ npm run crawl:pkb         # refresh PKB from live platform docs
 npm run refresh:models    # refresh the model capability matrix
 npm run retention         # run the data-retention sweep
 npm run analyze:outcomes  # aggregate outcome signals into tuning recommendations
-npm run smoke             # end-to-end smoke test
+npm run smoke             # end-to-end smoke test against a running backend
 ```
 
 ---
 
-## Testing & CI
+## Testing, linting & CI
 
-Every service, agent, and route has tests. Provider adapters are tested against
-recorded fixtures rather than live APIs, so the suite runs offline and
-deterministically.
+Provider adapters are tested against recorded fixtures rather than live APIs, so the
+suites run offline and deterministically — no keys or database needed.
+
+| Surface | Lint | Typecheck | Test | Build |
+|---|---|---|---|---|
+| `backend` | root `npm run lint` | `npm run typecheck` | `npm test` (Jest) | `npm run build` |
+| `admin` | root `npm run lint` | `npm run typecheck` | `npm test` (Jest) | `npm run build` |
+| `extension` | root `npm run lint` | `npm run typecheck` | `npm test` (Vitest) | `npm run build` |
+| `firefox-extension` | root `npm run lint` | `npm run typecheck` | — | `npm run build` |
+| `desktop` | root `npm run lint` | `npm run typecheck` | `npm test` (Jest) | `npm run build` |
+| `web` | `npm run lint` (eslint-config-next) | `npx tsc --noEmit` | — | `npm run build` |
+| `macos`, `macos-sdk` | — | — | — | `swift build` |
+
+The root lint covers every TypeScript package except `web/`:
 
 ```bash
-cd backend && npm test          # jest
-cd backend && npm run typecheck # tsc --noEmit, strict
+npm ci && npm run lint     # from the repo root
 ```
 
-Per-surface checks:
+[`ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
 
-| Surface | Command |
+```
+gitleaks secret scan  ·  root lint  ·  per package: install → lint → typecheck → audit (high+) → test → build
+```
+
+The secret scan and the dependency audit are gates, not reports. Other workflows in
+[`.github/workflows/`](.github/workflows/) cover scheduled PKB crawls, production
+promotion, rollback, and desktop packaging.
+
+---
+
+## Deployment
+
+| Surface | How it ships |
 |---|---|
-| `backend`, `admin`, `extension`, `desktop` | `npm run typecheck && npm test` |
-| `web` | `npx tsc --noEmit && npm run build` |
-| `macos`, `macos-sdk` | `swift build` |
+| **Backend** | Pushes to `main` build a Lambda zip (`backend/dist` + prod `node_modules` + `config/`), run migrations, deploy to the staging Lambda and smoke-test `/health` ([`ci.yml`](.github/workflows/ci.yml)). Production is a manual, confirmed promotion that publishes an immutable version and moves the `prod` alias ([`deploy-prod.yml`](.github/workflows/deploy-prod.yml)); [`rollback-prod.yml`](.github/workflows/rollback-prod.yml) repoints it. Details in [`backend/README.md`](backend/README.md). |
+| **Web** | Static export (`output: "export"`) deployed to Cloudflare Pages: `cd web && npm run deploy` (uses [`wrangler.toml`](web/wrangler.toml)). |
+| **Desktop** | `desktop-v*` tags build and publish installers via electron-builder ([`desktop.yml`](.github/workflows/desktop.yml)). |
+| **Extensions** | `npm run build` produces `dist/`, zipped and submitted to the Chrome Web Store / AMO by hand. |
+| **Admin** | Separate deployable exporting a Lambda-style `handler`; no automated pipeline in this repo. |
 
-CI runs on every push and pull request:
-
-```
-install → typecheck → gitleaks secret scan → dependency audit → test
-```
-
-The secret scan is a gate, not a report — a leaked credential fails the build before
-review. Workflows live in [`.github/workflows/`](.github/workflows/) and also cover
-scheduled PKB crawls, production deploy, rollback, and desktop builds.
+CI secrets used by the deploy jobs: `DATABASE_URL`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`.
 
 ---
 
@@ -723,6 +783,8 @@ never included this), are specified in [`docs/api-contracts.md`](docs/api-contra
 | [`docs/incident-response.md`](docs/incident-response.md) | IR plan |
 | [`docs/retention-policy.md`](docs/retention-policy.md) | Retention schedules |
 | [`docs/acceptable-use-policy.md`](docs/acceptable-use-policy.md) | What's blocked and what isn't |
+| [`docs/prompt-assistant-technical-architecture.md`](docs/prompt-assistant-technical-architecture.md) | The full technical spec the code cites as `§N` |
+| [`docs/planning/`](docs/planning/) | Phase-by-phase build plans and task lists |
 
 ---
 
