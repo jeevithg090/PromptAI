@@ -9,10 +9,9 @@ interface FeedbackDialogProps {
   platformId: string;
   /** The draft's rubric scores; outcome analytics ignore feedback rows without them. */
   rubricScores?: Record<string, 1 | 2 | 3>;
-  onClose: () => void;
 }
 
-export default function FeedbackDialog({ taskType, platformId, rubricScores, onClose }: FeedbackDialogProps) {
+export default function FeedbackDialog({ taskType, platformId, rubricScores }: FeedbackDialogProps) {
   const [outcome, setOutcome] = useState<'worked' | 'didnt_work' | 'mixed' | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');

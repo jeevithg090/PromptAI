@@ -19,13 +19,6 @@ function scoreColor(score: number): string {
   return 'text-signal-low';
 }
 
-function scoreBg(score: number): string {
-  if (score >= 90) return 'bg-signal-good';
-  if (score >= 70) return 'bg-blue-500';
-  if (score >= 40) return 'bg-signal-mid';
-  return 'bg-signal-low';
-}
-
 function dimBarWidth(dimScore: 1 | 2 | 3): string {
   if (dimScore === 3) return 'w-full';
   if (dimScore === 2) return 'w-2/3';

@@ -5,7 +5,7 @@
  */
 import type {
   DraftResponse, DesignedResponse, DesignedNode, Recommendation, Platform,
-  ClarifyingQuestion, PreviewResponse, PreviewBody, AgainBody,
+  PreviewResponse, PreviewBody, AgainBody,
   VisualPreviewResponse, VisualPreviewBody, EnhanceResponse,
   ChatRefineMessage, ChatRefineResponse, ChatDraftResponse, ModeRecommendation,
   TaskType,

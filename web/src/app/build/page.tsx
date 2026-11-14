@@ -54,7 +54,6 @@ function BuildContent() {
   // Every answer in this session, across rounds: the server keeps no answers between calls.
   const [answers, setAnswers] = useState<Record<string, string>>({});
 
-  const [result, setResult] = useState<DraftResponse | null>(null);
   const [designedResponse, setDesignedResponse] = useState<DesignedResponse | null>(null);
   const [error, setError] = useState('');
   const [carriedPreferences, setCarriedPreferences] = useState<Record<string, string>>({});
@@ -148,7 +147,6 @@ function BuildContent() {
       setQuestions(clarifying.questions);
       setPhase('clarifying');
     } else if (status === 'ok' && 'response' in res) {
-      setResult(res);
       setDesignedResponse(res.response);
       setPhase('result');
     } else if (status === 'blocked') {
@@ -219,7 +217,6 @@ function BuildContent() {
     setIdea('');
     setQuestions([]);
     setAnswers({});
-    setResult(null);
     setDesignedResponse(null);
     setError('');
   };
@@ -230,7 +227,6 @@ function BuildContent() {
     setTaskType(null);
     setQuestions([]);
     setAnswers({});
-    setResult(null);
     setDesignedResponse(null);
     setError('');
   };
@@ -289,7 +285,6 @@ function BuildContent() {
             platformId={selectedPlatform === ADD_CUSTOM ? '' : selectedPlatform}
             onOpenDraft={(response) => {
               setDesignedResponse(response);
-              setResult({ status: 'ok' } as DraftResponse);
               setPhase('result');
             }}
           />
@@ -563,7 +558,6 @@ function BuildContent() {
                 designedResponse.strength &&
                 Object.fromEntries(designedResponse.strength.dimensions.map((d) => [d.dimension, d.score]))
               }
-              onClose={() => {}}
             />
           </div>
         </div>
