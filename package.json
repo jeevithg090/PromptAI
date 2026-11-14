@@ -1,0 +1,17 @@
+{
+  "name": "promptforge",
+  "private": true,
+  "description": "Repo-level tooling: ESLint for every TypeScript package except web/ (which uses eslint-config-next).",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.14.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.2"
+  }
+}
