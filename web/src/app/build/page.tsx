@@ -5,7 +5,9 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
-import type { Platform, DraftResponse, ClarifyingQuestion, TaskType, DesignedResponse } from '@/lib/api-types';
+import { usePlatforms } from '@/lib/usePlatforms';
+import LoadError from '@/components/LoadError';
+import type { DraftResponse, ClarifyingQuestion, TaskType, DesignedResponse } from '@/lib/api-types';
 import QuestionCard from '@/components/QuestionCard';
 import MicButton from '@/components/MicButton';
 import NodeEditor from '@/components/NodeEditor';
@@ -43,7 +45,7 @@ function looksLikeFinishedPrompt(text: string): boolean {
 function BuildContent() {
   const searchParams = useSearchParams();
   const [idea, setIdea] = useState(searchParams.get('idea') ?? '');
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const { platforms, status: platformsStatus, retry: retryPlatforms } = usePlatforms();
   const [selectedPlatform, setSelectedPlatform] = useState(searchParams.get('platform') ?? '');
   const [phase, setPhase] = useState<Phase>('input');
 
@@ -64,7 +66,6 @@ function BuildContent() {
   const [buildMode, setBuildMode] = useState<'guided' | 'chat'>('guided');
 
   useEffect(() => {
-    api.platforms().then((res) => setPlatforms(res.platforms)).catch(() => {});
     setCustomPlatforms(listCustomPlatforms());
     if (typeof localStorage !== 'undefined') {
       const saved = localStorage.getItem('pf_build_mode');
@@ -247,7 +248,7 @@ function BuildContent() {
                 aria-selected={buildMode === m}
                 onClick={() => switchMode(m)}
                 className={`rounded-md px-3 py-1.5 text-sm font-medium transition ${
-                  buildMode === m ? 'bg-gray-900 text-white' : 'text-gray-600 hover:bg-gray-100'
+                  buildMode === m ? 'bg-accent text-white' : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
                 {m === 'guided' ? strings.chatDraft.modeGuided : strings.chatDraft.modeChat}
@@ -268,7 +269,7 @@ function BuildContent() {
               id="platform-chat"
               value={selectedPlatform}
               onChange={(e) => setSelectedPlatform(e.target.value)}
-              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
             >
               <option value="">Select…</option>
               {platforms.map((p) => (
@@ -280,6 +281,7 @@ function BuildContent() {
                 </option>
               ))}
             </select>
+            {platformsStatus === 'error' && <LoadError className="mt-2" message={strings.platformsLoadError} onRetry={retryPlatforms} />}
           </div>
           <ChatDraft
             platformId={selectedPlatform === ADD_CUSTOM ? '' : selectedPlatform}
@@ -310,7 +312,7 @@ function BuildContent() {
                 setAnswers({});
               }}
               disabled={phase === 'clarifying'}
-              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+              className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
             >
               <option value="">Select…</option>
               {platforms.map((p) => (
@@ -355,7 +357,7 @@ function BuildContent() {
               onChange={(e) => setIdea(e.target.value)}
               placeholder={strings.buildIdeaPlaceholder}
               disabled={phase === 'clarifying'}
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
             />
           </div>
 
@@ -395,7 +397,7 @@ function BuildContent() {
                 <button
                   onClick={() => handleInitialDraft(false)}
                   disabled={!canSubmit}
-                  className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+                  className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
                 >
                   {strings.buildHelpRefine}
                 </button>
@@ -463,7 +465,7 @@ function BuildContent() {
             <button
               onClick={() => submitClarifications(false)}
               disabled={!hasAnswers}
-              className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+              className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
             >
               {strings.buildClarifySubmit}
             </button>

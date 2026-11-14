@@ -20,16 +20,25 @@ export default function TryPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
+  const [examplesState, setExamplesState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
 
-  // Load the demo examples once on mount.
+  // Load the demo examples on mount (and again on "Try again").
   useEffect(() => {
+    let cancelled = false;
     fetch(`${api.baseUrl}/demo/examples`)
-      .then((r) => r.json())
-      .then((d: { examples?: DemoExample[] }) => {
-        if (d.examples) setExamples(d.examples);
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json();
       })
-      .catch(() => {});
-  }, []);
+      .then((d: { examples?: DemoExample[] }) => {
+        if (cancelled) return;
+        setExamples(d.examples ?? []);
+        setExamplesState('ready');
+      })
+      .catch(() => { if (!cancelled) setExamplesState('error'); });
+    return () => { cancelled = true; };
+  }, [attempt]);
 
   const handleSelect = async (id: string) => {
     if (loading) return;
@@ -65,36 +74,57 @@ export default function TryPage() {
       <h1 className="text-2xl font-bold text-gray-900">{strings.tryTitle}</h1>
       <p className="mt-2 text-sm text-gray-600">{strings.tryDescription}</p>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {examplesState === 'error' && (
+        <div role="alert" className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 p-4">
+          <p className="text-sm text-red-700">{strings.tryExamplesError}</p>
+          <button type="button" onClick={() => { setExamplesState('loading'); setAttempt((n) => n + 1); }} className="pf-btn pf-btn-secondary !py-2">
+            {strings.tryRetry}
+          </button>
+        </div>
+      )}
+      {examplesState === 'ready' && examples.length === 0 && (
+        <p className="mt-6 rounded-lg border border-dashed border-stone-300 p-6 text-center text-sm text-stone-500">{strings.tryExamplesEmpty}</p>
+      )}
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2" aria-busy={examplesState === 'loading'}>
+        {examplesState === 'loading' && Array.from({ length: 6 }, (_, i) => (
+          <div key={i} className="h-[54px] animate-pulse rounded-lg border border-line bg-stone-100" aria-hidden />
+        ))}
         {examples.map((ex) => (
           <button
             key={ex.example_id}
             onClick={() => handleSelect(ex.example_id)}
             disabled={loading}
-            className={`rounded-lg border p-4 text-left text-sm transition hover:border-gray-400 ${
-              selected === ex.example_id ? 'border-gray-900 bg-gray-50' : 'border-gray-200'
+            aria-pressed={selected === ex.example_id}
+            className={`rounded-lg border bg-surface p-4 text-left text-sm transition hover:border-ember-300 disabled:cursor-wait ${
+              selected === ex.example_id ? 'border-ember-500 ring-1 ring-ember-500' : 'border-gray-200'
             }`}
           >
-            <span className="text-gray-900">{ex.example_id.replace(/-/g, ' ')}</span>
+            <span className="font-medium capitalize text-gray-900">{ex.example_id.replace(/-/g, ' ')}</span>
             <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">{ex.modality}</span>
           </button>
         ))}
       </div>
 
-      {loading && <p className="mt-8 text-sm text-gray-600">{strings.buildGenerating}</p>}
+      {loading && (
+        <p role="status" className="mt-8 flex items-center gap-2 text-sm text-gray-600">
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-stone-300 border-t-ember-600" aria-hidden />
+          {strings.buildGenerating}
+        </p>
+      )}
 
       {error && !rateLimited && (
-        <div className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4">
+        <div role="alert" className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
       {rateLimited && (
-        <div className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div role="alert" className="mt-8 rounded-lg border border-amber-200 bg-amber-50 p-4">
           <p className="text-sm text-amber-800">{strings.tryRateLimited}</p>
           <Link
             href="/auth/signup"
-            className="mt-2 inline-block rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+            className="mt-2 inline-block rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
           >
             {strings.navSignUp}
           </Link>
@@ -135,17 +165,17 @@ export default function TryPage() {
                 }
               });
             }}
-            className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+            className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
           >
             {strings.resultCopy}
           </button>
 
           {/* Signup banner */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-            <p className="text-sm text-blue-800">{strings.trySignupBanner}</p>
+          <div className="rounded-lg border border-ember-200 bg-ember-50 p-4">
+            <p className="text-sm text-ember-800">{strings.trySignupBanner}</p>
             <Link
               href="/auth/signup"
-              className="mt-2 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-500"
+              className="mt-2 inline-block rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
             >
               {strings.navSignUp}
             </Link>

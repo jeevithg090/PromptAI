@@ -82,23 +82,23 @@ export default function WorkflowsPage() {
       <p className="mt-1 text-sm text-stone-500">{strings.workflows.subtitle}</p>
 
       <div className="mt-6 space-y-4">
-        <input value={name} onChange={(e) => { setName(e.target.value); persist({ name: e.target.value }); }} className="w-full max-w-sm rounded-md border border-stone-300 px-3 py-2 text-sm font-medium focus:border-stone-900 focus:outline-none" />
+        <input aria-label={strings.a11y.workflowName} value={name} onChange={(e) => { setName(e.target.value); persist({ name: e.target.value }); }} className="w-full max-w-sm rounded-md border border-stone-300 px-3 py-2 text-sm font-medium focus:border-ember-500 focus:outline-none" />
         <div>
-          <label className="block text-sm font-medium text-stone-700">{strings.workflows.inputsLabel}</label>
-          <textarea rows={2} value={inputs} onChange={(e) => { setInputs(e.target.value); persist({ inputs: e.target.value }); }} placeholder={strings.workflows.inputsPlaceholder} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-stone-900 focus:outline-none" />
+          <label htmlFor="workflow-inputs" className="block text-sm font-medium text-stone-700">{strings.workflows.inputsLabel}</label>
+          <textarea id="workflow-inputs" rows={2} value={inputs} onChange={(e) => { setInputs(e.target.value); persist({ inputs: e.target.value }); }} placeholder={strings.workflows.inputsPlaceholder} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-ember-500 focus:outline-none" />
         </div>
 
         {steps.map((step, i) => (
-          <div key={i} className="rounded-lg border border-stone-200 bg-white p-4">
+          <div key={i} className="rounded-lg border border-stone-200 bg-surface p-4">
             <div className="flex items-center justify-between">
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-stone-900 text-xs font-semibold text-white">{i + 1}</span>
-              {steps.length > 1 && <button onClick={() => { const next = steps.filter((_, j) => j !== i); setSteps(next); persist({ steps: next }); }} className="text-xs text-stone-400 hover:text-stone-700">{strings.workflows.removeStep}</button>}
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-accent text-xs font-semibold text-white">{i + 1}</span>
+              {steps.length > 1 && <button onClick={() => { const next = steps.filter((_, j) => j !== i); setSteps(next); persist({ steps: next }); }} className="text-xs text-stone-500 hover:text-stone-700">{strings.workflows.removeStep}</button>}
             </div>
-            <input value={step.name} onChange={(e) => setStep(i, { name: e.target.value })} placeholder={strings.workflows.stepName} className="mt-2 w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm focus:border-stone-900 focus:outline-none" />
-            <textarea rows={3} value={step.prompt} onChange={(e) => setStep(i, { prompt: e.target.value })} placeholder={strings.workflows.stepPrompt} className="mt-2 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-stone-900 focus:outline-none" />
+            <input aria-label={strings.workflows.stepName} value={step.name} onChange={(e) => setStep(i, { name: e.target.value })} placeholder={strings.workflows.stepName} className="mt-2 w-full rounded-md border border-stone-300 px-3 py-1.5 text-sm focus:border-ember-500 focus:outline-none" />
+            <textarea aria-label={strings.workflows.stepPrompt} rows={3} value={step.prompt} onChange={(e) => setStep(i, { prompt: e.target.value })} placeholder={strings.workflows.stepPrompt} className="mt-2 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-ember-500 focus:outline-none" />
             <div className="mt-2 flex items-center gap-2">
               <span className="text-xs text-stone-500">{strings.workflows.outputVar}</span>
-              <input value={step.output_var} onChange={(e) => setStep(i, { output_var: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} className="w-40 rounded-md border border-stone-300 px-2 py-1 font-mono text-xs focus:border-stone-900 focus:outline-none" />
+              <input aria-label={strings.workflows.outputVar} value={step.output_var} onChange={(e) => setStep(i, { output_var: e.target.value.replace(/[^a-zA-Z0-9_]/g, '') })} className="w-40 rounded-md border border-stone-300 px-2 py-1 font-mono text-xs focus:border-ember-500 focus:outline-none" />
             </div>
           </div>
         ))}
@@ -106,7 +106,7 @@ export default function WorkflowsPage() {
         <div className="flex flex-wrap gap-2">
           <button onClick={() => { const next = [...steps, { name: `Step ${steps.length + 1}`, prompt: '', output_var: `out${steps.length + 1}` }]; setSteps(next); persist({ steps: next }); }} className="rounded-md border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50">{strings.workflows.addStep}</button>
           <button onClick={exportJson} className="rounded-md border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50">{strings.workflows.exportJson}</button>
-          <button onClick={() => void run()} disabled={busy} className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{busy ? strings.workflows.running : strings.workflows.run}</button>
+          <button onClick={() => void run()} disabled={busy} className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50">{busy ? strings.workflows.running : strings.workflows.run}</button>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>
@@ -115,13 +115,13 @@ export default function WorkflowsPage() {
         <div className="mt-8">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-stone-900">Run</h2>
-            <span className="text-xs text-stone-400">{strings.workflows.totalTokens(totalTokens)}</span>
+            <span className="text-xs text-stone-500">{strings.workflows.totalTokens(totalTokens)}</span>
           </div>
           <div className="space-y-3">
             {results.map((r, i) => (
-              <details key={i} className="rounded-lg border border-stone-200 bg-white" open>
+              <details key={i} className="rounded-lg border border-stone-200 bg-surface" open>
                 <summary className="cursor-pointer px-4 py-2 text-sm font-medium text-stone-700">
-                  {i + 1}. {r.name} <span className="ml-1 text-xs text-stone-400">→ {r.output_var} · {formatTokens(r.tokens_used)} tok</span>
+                  {i + 1}. {r.name} <span className="ml-1 text-xs text-stone-500">→ {r.output_var} · {formatTokens(r.tokens_used)} tok</span>
                 </summary>
                 <pre className="whitespace-pre-wrap border-t border-stone-100 px-4 py-3 font-mono text-xs text-stone-700">{r.output}</pre>
               </details>
