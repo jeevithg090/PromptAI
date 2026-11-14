@@ -143,6 +143,7 @@ export default function LibraryPage() {
         </select>
         <input
           type="search"
+          aria-label={strings.librarySearchPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={strings.librarySearchPlaceholder}
