@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { api } from '@/lib/api';
 
 interface VisualPreviewProps {
@@ -16,7 +16,7 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
   const [disclaimer, setDisclaimer] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const lastAssembledRef = useRef('');
+  const [lastAssembled, setLastAssembled] = useState('');
 
   const handleToggle = async () => {
     const next = !enabled;
@@ -31,7 +31,7 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
   };
 
   const generatePreview = useCallback(async () => {
-    if (!assembled || assembled === lastAssembledRef.current) return;
+    if (!assembled || assembled === lastAssembled) return;
     setLoading(true);
     setError('');
     try {
@@ -39,7 +39,7 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
       setImageBase64(res.imageBase64);
       setMime(res.mime);
       setDisclaimer(res.disclaimer);
-      lastAssembledRef.current = assembled;
+      setLastAssembled(assembled);
     } catch (e: unknown) {
       const err = e as { message?: string; status?: number };
       if (err.status === 429) {
@@ -52,9 +52,9 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
     } finally {
       setLoading(false);
     }
-  }, [assembled, platformId, sessionId]);
+  }, [assembled, lastAssembled, platformId, sessionId]);
 
-  const unchanged = assembled === lastAssembledRef.current;
+  const unchanged = assembled === lastAssembled;
   const hasPreview = imageBase64 && disclaimer;
 
   return (
@@ -82,6 +82,8 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
 
       {enabled && hasPreview && (
         <div className="mt-2 space-y-1">
+          {/* A base64 data URL from the API: nothing for next/image to optimise. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`data:${mime};base64,${imageBase64}`}
             alt="Visual preview"

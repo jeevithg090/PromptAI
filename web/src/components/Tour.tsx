@@ -57,7 +57,10 @@ export default function Tour() {
 
   const onKey = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Escape') finish();
-    if (e.key === 'ArrowRight' || e.key === 'Enter') { step < STEPS.length - 1 ? setStep((s) => s + 1) : finish(); }
+    if (e.key === 'ArrowRight' || e.key === 'Enter') {
+      if (step < STEPS.length - 1) setStep((s) => s + 1);
+      else finish();
+    }
     if (e.key === 'ArrowLeft') setStep((s) => Math.max(0, s - 1));
   }, [step, finish]);
 

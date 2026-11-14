@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { strings } from '@/lib/strings';
 import { api } from '@/lib/api';
@@ -21,15 +21,15 @@ export default function TryPage() {
   const [loading, setLoading] = useState(false);
   const [rateLimited, setRateLimited] = useState(false);
 
-  // Load examples on mount
-  useState(() => {
-    api.platforms().then((p) => {
-      // Fetch demo examples from backend
-      fetch(`${api.baseUrl}/demo/examples`).then(r => r.json()).then(d => {
+  // Load the demo examples once on mount.
+  useEffect(() => {
+    fetch(`${api.baseUrl}/demo/examples`)
+      .then((r) => r.json())
+      .then((d: { examples?: DemoExample[] }) => {
         if (d.examples) setExamples(d.examples);
-      }).catch(() => {});
-    }).catch(() => {});
-  });
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSelect = async (id: string) => {
     if (loading) return;
@@ -48,7 +48,7 @@ export default function TryPage() {
       } else if (res.status === 'error' && 'message' in res) {
         setError(res.message);
       } else if (res.status === 'blocked') {
-        setError((res as any).reason ?? strings.error);
+        setError((res as { reason?: string }).reason ?? strings.error);
       } else {
         setError(strings.errorServer);
       }
