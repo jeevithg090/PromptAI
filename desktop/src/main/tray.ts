@@ -37,8 +37,8 @@ export function buildTrayMenu(appState: { isQuitting: boolean }): Menu {
     { label: 'New Draft', accelerator: 'CmdOrCtrl+Shift+P', click: () => sendDeepAction({ kind: 'new-draft' }) },
     {
       label: 'Enhance Clipboard',
-      click: () => {
-        const text = clipboard.readText(); // explicit user action
+      click: async () => {
+        const text = await clipboard.readText(); // explicit user action
         if (text.trim()) sendDeepAction({ kind: 'enhance-clipboard', text });
       },
     },

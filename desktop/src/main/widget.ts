@@ -129,7 +129,7 @@ export function initWidget(appState: { isQuitting: boolean }): void {
     const s = readSettings();
     return { skin: s.widgetSkin, size: s.widgetSize, opacity: s.widgetOpacity, hotkey: s.widgetHotkey };
   });
-  ipcMain.on(IPC.widgetAction, (_e, action: WidgetAction) => handleWidgetAction(action));
+  ipcMain.on(IPC.widgetAction, (_e, action: WidgetAction) => { void handleWidgetAction(action); });
 
   // Clamp back into a visible display if monitors change / unplug.
   screen.on('display-metrics-changed', () => reclamp());
@@ -148,7 +148,7 @@ function reclamp(): void {
   persistPosition(pos.x, pos.y);
 }
 
-function handleWidgetAction(action: WidgetAction): void {
+async function handleWidgetAction(action: WidgetAction): Promise<void> {
   const toMain = (deep: DeepAction) => {
     const win = getMainWindow() ?? createMainWindow();
     win.show();
@@ -158,7 +158,7 @@ function handleWidgetAction(action: WidgetAction): void {
   else if (action.kind === 'draft') toMain({ kind: 'new-draft' });
   else if (action.kind === 'dictate') toMain({ kind: 'dictate' });
   else if (action.kind === 'enhance-clipboard') {
-    const text = clipboard.readText(); // explicit user action inside the panel
+    const text = await clipboard.readText(); // explicit user action inside the panel
     if (text.trim()) toMain({ kind: 'enhance-clipboard', text });
   }
   collapse();
