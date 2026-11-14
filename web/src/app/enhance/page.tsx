@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { api, type ApiError } from '@/lib/api';
 import { strings } from '@/lib/strings';
-import type { Platform, EnhanceResponse, DesignedResponse, RubricDimension } from '@/lib/api-types';
+import { usePlatforms } from '@/lib/usePlatforms';
+import LoadError from '@/components/LoadError';
+import type { EnhanceResponse, DesignedResponse, RubricDimension } from '@/lib/api-types';
 import NodeEditor from '@/components/NodeEditor';
 import StrengthPanel from '@/components/StrengthPanel';
 import MicButton from '@/components/MicButton';
@@ -20,7 +22,7 @@ function fmt(template: string, vars: Record<string, string | number>): string {
 function EnhanceContent() {
   const searchParams = useSearchParams();
   const [text, setText] = useState(searchParams.get('text') ?? '');
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const { platforms, status: platformsStatus, retry: retryPlatforms } = usePlatforms();
   const [selectedPlatform, setSelectedPlatform] = useState(searchParams.get('platform') ?? '');
   const [phase, setPhase] = useState<Phase>('input');
   const [result, setResult] = useState<EnhanceResponse | null>(null);
@@ -28,7 +30,6 @@ function EnhanceContent() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    api.platforms().then((res) => setPlatforms(res.platforms)).catch(() => {});
   }, []);
 
   const runEnhance = useCallback(
@@ -100,6 +101,7 @@ function EnhanceContent() {
                 </option>
               ))}
             </select>
+            {platformsStatus === 'error' && <LoadError className="mt-2" message={strings.platformsLoadError} onRetry={retryPlatforms} />}
           </div>
           {phase === 'error' && (
             <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -110,7 +112,7 @@ function EnhanceContent() {
             type="button"
             onClick={() => runEnhance()}
             disabled={text.trim().length < 10}
-            className="rounded-lg bg-emerald-600 px-5 py-2.5 font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-accent px-5 py-2.5 font-medium text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {strings.enhance.button}
           </button>
@@ -127,7 +129,7 @@ function EnhanceContent() {
       {phase === 'result' && result && (
         <div className="mt-8 space-y-8">
           {/* Improvement headline */}
-          <div className="rounded-lg border border-gray-200 bg-white p-5">
+          <div className="rounded-lg border border-gray-200 bg-surface p-5">
             {result.improvement.note === 'improved' ? (
               <p className="text-lg font-semibold text-green-700">
                 {fmt(strings.enhance.improvedBy, { before: result.improvement.before, after: result.improvement.after })}

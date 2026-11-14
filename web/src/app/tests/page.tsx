@@ -54,25 +54,25 @@ export default function TestsPage() {
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-stone-700">Prompt (with {'{{'}variables{'}}'}) </label>
-          <textarea rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-stone-900 focus:outline-none" />
+          <label htmlFor="tests-prompt" className="block text-sm font-medium text-stone-700">Prompt (with {'{{'}variables{'}}'}) </label>
+          <textarea id="tests-prompt" rows={3} value={prompt} onChange={(e) => setPrompt(e.target.value)} className="mt-1 w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-ember-500 focus:outline-none" />
         </div>
 
         {cases.map((c, i) => (
-          <div key={i} className="rounded-lg border border-stone-200 bg-white p-4">
+          <div key={i} className="rounded-lg border border-stone-200 bg-surface p-4">
             <div className="flex items-center justify-between">
-              <input value={c.name} onChange={(e) => setCase(i, { name: e.target.value })} placeholder={strings.regression.caseName} className="w-56 rounded-md border border-stone-300 px-2 py-1 text-sm font-medium focus:border-stone-900 focus:outline-none" />
-              {cases.length > 1 && <button onClick={() => setCases(cases.filter((_, j) => j !== i))} className="text-xs text-stone-400 hover:text-stone-700">Remove</button>}
+              <input aria-label={strings.regression.caseName} value={c.name} onChange={(e) => setCase(i, { name: e.target.value })} placeholder={strings.regression.caseName} className="w-full max-w-56 rounded-md border border-stone-300 px-2 py-1 text-sm font-medium focus:border-ember-500 focus:outline-none" />
+              {cases.length > 1 && <button onClick={() => setCases(cases.filter((_, j) => j !== i))} className="text-xs text-stone-500 hover:text-stone-700">Remove</button>}
             </div>
-            <textarea rows={1} value={c.var_values} onChange={(e) => setCase(i, { var_values: e.target.value })} placeholder="question = capital of France" className="mt-2 w-full rounded-md border border-stone-300 px-3 py-1.5 font-mono text-xs focus:border-stone-900 focus:outline-none" />
+            <textarea aria-label={strings.a11y.caseVars} rows={1} value={c.var_values} onChange={(e) => setCase(i, { var_values: e.target.value })} placeholder="question = capital of France" className="mt-2 w-full rounded-md border border-stone-300 px-3 py-1.5 font-mono text-xs focus:border-ember-500 focus:outline-none" />
             <div className="mt-2 space-y-1.5">
               {c.assertions.map((a, ai) => (
                 <div key={ai} className="flex items-center gap-2">
-                  <select value={a.kind} onChange={(e) => setCase(i, { assertions: c.assertions.map((x, j) => (j === ai ? { ...x, kind: e.target.value } : x)) })} className="rounded-md border border-stone-300 px-2 py-1 text-xs focus:border-stone-900 focus:outline-none">
+                  <select aria-label={strings.a11y.assertionKind} value={a.kind} onChange={(e) => setCase(i, { assertions: c.assertions.map((x, j) => (j === ai ? { ...x, kind: e.target.value } : x)) })} className="rounded-md border border-stone-300 px-2 py-1 text-xs focus:border-ember-500 focus:outline-none">
                     {ASSERTION_KINDS.map((k) => <option key={k} value={k}>{k}</option>)}
                   </select>
-                  <input value={a.value} onChange={(e) => setCase(i, { assertions: c.assertions.map((x, j) => (j === ai ? { ...x, value: e.target.value } : x)) })} className="flex-1 rounded-md border border-stone-300 px-2 py-1 text-xs focus:border-stone-900 focus:outline-none" />
-                  {c.assertions.length > 1 && <button onClick={() => setCase(i, { assertions: c.assertions.filter((_, j) => j !== ai) })} className="text-stone-400 hover:text-stone-700">×</button>}
+                  <input aria-label={strings.a11y.assertionValue} value={a.value} onChange={(e) => setCase(i, { assertions: c.assertions.map((x, j) => (j === ai ? { ...x, value: e.target.value } : x)) })} className="flex-1 rounded-md border border-stone-300 px-2 py-1 text-xs focus:border-ember-500 focus:outline-none" />
+                  {c.assertions.length > 1 && <button onClick={() => setCase(i, { assertions: c.assertions.filter((_, j) => j !== ai) })} aria-label={strings.a11y.removeAssertion} className="text-stone-500 hover:text-stone-700">×</button>}
                 </div>
               ))}
               <button onClick={() => setCase(i, { assertions: [...c.assertions, { kind: 'contains', value: '' }] })} className="text-xs text-emerald-700 hover:underline">{strings.regression.addAssertion}</button>
@@ -82,7 +82,7 @@ export default function TestsPage() {
 
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setCases([...cases, { name: `Case ${cases.length + 1}`, var_values: '', assertions: [{ kind: 'contains', value: '' }] }])} className="rounded-md border border-stone-300 px-3 py-1.5 text-sm text-stone-700 hover:bg-stone-50">{strings.regression.addCase}</button>
-          <button onClick={() => void run()} disabled={busy} className="rounded-md bg-emerald-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">{busy ? strings.regression.running : strings.regression.run}</button>
+          <button onClick={() => void run()} disabled={busy} className="rounded-md bg-accent px-4 py-1.5 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50">{busy ? strings.regression.running : strings.regression.run}</button>
         </div>
         {error && <p className="text-sm text-red-600">{error}</p>}
       </div>

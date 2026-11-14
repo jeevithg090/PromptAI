@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
+import { usePlatforms } from '@/lib/usePlatforms';
+import LoadError from '@/components/LoadError';
 import NodeEditor from '@/components/NodeEditor';
 import { toDesignedResponse } from '@/lib/nodes';
-import type { Platform, DesignedNode, DesignedResponse } from '@/lib/api-types';
+import type { DesignedNode, DesignedResponse } from '@/lib/api-types';
 
 type Diagnosis = { node_type: string; fault: string; evidence: string; severity: 'high' | 'medium' | 'low' };
 
@@ -16,7 +18,7 @@ const SEV_STYLE: Record<string, string> = {
 };
 
 export default function DebugPage() {
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const { platforms, status: platformsStatus, retry: retryPlatforms } = usePlatforms();
   const [platformId, setPlatformId] = useState('');
   const [prompt, setPrompt] = useState('');
   const [actual, setActual] = useState('');
@@ -27,7 +29,6 @@ export default function DebugPage() {
   const [patched, setPatched] = useState<DesignedResponse | null>(null);
 
   useEffect(() => {
-    api.platforms().then((r) => setPlatforms(r.platforms)).catch(() => {});
   }, []);
 
   const run = async () => {
@@ -59,28 +60,31 @@ export default function DebugPage() {
 
       <div className="mt-6 space-y-4">
         <select
+          aria-label={strings.a11y.platform}
           value={platformId}
           onChange={(e) => setPlatformId(e.target.value)}
-          className="block w-full max-w-xs rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+          className="block w-full max-w-xs rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
         >
           <option value="">Platform (optional)</option>
           {platforms.map((p) => <option key={p.platform_id} value={p.platform_id}>{p.display_name}</option>)}
         </select>
+        {platformsStatus === 'error' && <LoadError className="mt-2" message={strings.platformsLoadError} onRetry={retryPlatforms} />}
         {([[strings.tools.debugPrompt, prompt, setPrompt], [strings.tools.debugActual, actual, setActual], [strings.tools.debugExpected, expected, setExpected]] as const).map(([label, val, set], i) => (
           <div key={i}>
-            <label className="block text-sm font-medium text-stone-700">{label}</label>
+            <label htmlFor={`debug-field-${i}`} className="block text-sm font-medium text-stone-700">{label}</label>
             <textarea
+              id={`debug-field-${i}`}
               rows={i === 2 ? 2 : 4}
               value={val}
               onChange={(e) => set(e.target.value)}
-              className="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+              className="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 font-mono text-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
             />
           </div>
         ))}
         <button
           onClick={() => void run()}
           disabled={busy || !prompt.trim() || !actual.trim() || !expected.trim()}
-          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
         >
           {busy ? strings.tools.debugRunning : strings.tools.debugRun}
         </button>
@@ -116,7 +120,7 @@ export default function DebugPage() {
                 <pre className="mt-2 whitespace-pre-wrap rounded-lg border border-stone-200 bg-stone-50 px-3 py-2 font-mono text-xs text-stone-800">
                   {result.patched_nodes.map((n) => n.value).join(', ')}
                 </pre>
-                <button onClick={() => void openPatched()} className="mt-3 rounded-md bg-stone-900 px-4 py-2 text-sm text-white hover:bg-stone-700">
+                <button onClick={() => void openPatched()} className="mt-3 rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover">
                   {strings.tools.debugOpenEditor}
                 </button>
               </>

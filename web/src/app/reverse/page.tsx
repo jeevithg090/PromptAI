@@ -1,23 +1,23 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { api } from '@/lib/api';
 import { strings } from '@/lib/strings';
+import { usePlatforms } from '@/lib/usePlatforms';
+import LoadError from '@/components/LoadError';
 import StrengthPanel from '@/components/StrengthPanel';
 import NodeEditor from '@/components/NodeEditor';
-import type { Platform, DesignedResponse } from '@/lib/api-types';
+import type { DesignedResponse } from '@/lib/api-types';
 
 export default function ReversePage() {
-  const [platforms, setPlatforms] = useState<Platform[]>([]);
-  const [platformId, setPlatformId] = useState('');
+  const { platforms, status: platformsStatus, retry: retryPlatforms } = usePlatforms();
+  const [chosenId, setPlatformId] = useState('');
+  // Default to the first platform until the user picks one.
+  const platformId = chosenId || platforms[0]?.platform_id || '';
   const [output, setOutput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [response, setResponse] = useState<DesignedResponse | null>(null);
-
-  useEffect(() => {
-    api.platforms().then((r) => { setPlatforms(r.platforms); if (r.platforms[0]) setPlatformId(r.platforms[0].platform_id); }).catch(() => {});
-  }, []);
 
   const run = async () => {
     if (!output.trim() || !platformId || busy) return;
@@ -41,25 +41,28 @@ export default function ReversePage() {
 
       <div className="mt-6 space-y-4">
         <select
+          aria-label={strings.a11y.platform}
           value={platformId}
           onChange={(e) => setPlatformId(e.target.value)}
-          className="block w-full max-w-xs rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+          className="block w-full max-w-xs rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
         >
           {platforms.map((p) => <option key={p.platform_id} value={p.platform_id}>{p.display_name}</option>)}
         </select>
+        {platformsStatus === 'error' && <LoadError className="mt-2" message={strings.platformsLoadError} onRetry={retryPlatforms} />}
         <div>
-          <label className="block text-sm font-medium text-stone-700">{strings.tools.reverseOutput}</label>
+          <label htmlFor="reverse-output" className="block text-sm font-medium text-stone-700">{strings.tools.reverseOutput}</label>
           <textarea
+            id="reverse-output"
             rows={8}
             value={output}
             onChange={(e) => setOutput(e.target.value)}
-            className="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-stone-900 focus:outline-none focus:ring-1 focus:ring-stone-900"
+            className="mt-1 block w-full rounded-md border border-stone-300 px-3 py-2 text-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
           />
         </div>
         <button
           onClick={() => void run()}
           disabled={busy || !output.trim() || !platformId}
-          className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-semibold text-white hover:bg-accent-hover disabled:opacity-50"
         >
           {busy ? strings.tools.reverseRunning : strings.tools.reverseRun}
         </button>
