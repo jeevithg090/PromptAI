@@ -10,7 +10,7 @@ declare module 'hono' {
   }
 }
 
-export const adminAuth = createMiddleware<{ Bindings: {} }>(async (c, next) => {
+export const adminAuth = createMiddleware(async (c, next) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return c.json({ error: 'Missing or invalid Authorization header' }, 401);
@@ -40,7 +40,9 @@ export const adminAuth = createMiddleware<{ Bindings: {} }>(async (c, next) => {
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean);
 
-  const emailOk = allowedEmails.length === 0 || allowedEmails.includes(user.email.toLowerCase());
+  // Deny by default: an empty allowlist grants nobody access by email; admins
+  // then come only from the admin_roles table.
+  const emailOk = user.email !== '' && allowedEmails.includes(user.email.toLowerCase());
   const roleOk = await isAdminByRole(db, user.id);
 
   if (!emailOk && !roleOk) {
