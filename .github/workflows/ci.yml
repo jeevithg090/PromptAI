@@ -1,9 +1,9 @@
 name: CI
 
-# spec §27.3 (Secure Development Lifecycle) + §31.4 Step 26 (T3.6 CI/CD).
-# PR / push gate: install -> typecheck -> secret-scan -> dependency-audit -> test.
-# On push to main (only): build an artifact, run migrations, deploy to the
-# staging Lambda ($LATEST), and smoke-test /health.
+# PR / push gate for every package: install -> lint -> typecheck -> test -> build,
+# plus a repo-wide secret scan and a high-severity dependency audit.
+# On push to main (only): build the backend Lambda artifact, run migrations,
+# deploy to the staging Lambda ($LATEST), and smoke-test /health.
 # Production is a manual promotion (deploy-prod.yml); rollback is rollback-prod.yml.
 
 on:
@@ -14,39 +14,94 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  # ---- PR / push gate -------------------------------------------------------
-  test:
+  # ---- repo-wide checks -------------------------------------------------------
+  secret-scan:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # gitleaks needs full history
-
       - name: Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: backend/package-lock.json
-
+          cache-dependency-path: package-lock.json
       - run: npm ci
+      # Lints backend/, admin/, desktop/, extension/ and firefox-extension/.
+      - run: npm run lint
+
+  # ---- per-package gate -------------------------------------------------------
+  package:
+    name: ${{ matrix.package }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: backend
+            test: true
+          - package: admin
+            test: true
+          - package: web
+            lint: true
+          - package: extension
+            test: true
+          - package: firefox-extension
+          - package: desktop
+            test: true
+            renderer: true
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            ${{ matrix.package }}/package-lock.json
+            desktop/renderer/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Install renderer
+        if: matrix.renderer
+        working-directory: desktop/renderer
+        run: npm ci
+
+      - name: Lint
+        if: matrix.lint
+        run: npm run lint
 
       - name: Typecheck
-        run: npm run typecheck
+        run: ${{ matrix.package == 'web' && 'npx tsc --noEmit' || 'npm run typecheck' }}
 
       - name: Dependency audit (fails on high+)
         run: npm audit --audit-level=high
 
       - name: Test
+        if: matrix.test
         run: npm test
+
+      - name: Build
+        run: npm run build
 
   # ---- build the deployable artifact ---------------------------------------
   build:
@@ -80,7 +135,7 @@ jobs:
 
   # ---- staging deploy: main pushes only ------------------------------------
   deploy-staging:
-    needs: [test, build]
+    needs: [secret-scan, lint, package, build]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     concurrency:
