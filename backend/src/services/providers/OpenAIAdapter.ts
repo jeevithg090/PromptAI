@@ -1,4 +1,3 @@
-import { config } from '../../config/env';
 import { callOpenAICompatibleChat } from './openAICompatible';
 import type { ProviderAdapter, ProviderGenerateRequest, ProviderGenerateResponse } from '../../types/Provider';
 

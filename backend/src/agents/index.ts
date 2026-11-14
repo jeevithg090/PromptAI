@@ -9,9 +9,6 @@ import { MemoryExtractionAgent as MemoryExtractionAgentClass } from './MemoryExt
 import { CurationAgent as CurationAgentClass } from './CurationAgent';
 import { PromptImportAgent as PromptImportAgentClass } from './PromptImportAgent';
 
-export * from './placeholders';
-
-/** Real agents replace placeholders one by one (T2.5–T2.11); the registry in routes.ts never changes shape. */
 export { IntentClassificationAgentClass, DocRetrievalAgentClass, ClarifyingQuestionAgentClass, DraftingAgentClass, CriticAgentClass, AlternativesAgentClass, MemoryExtractionAgentClass, CurationAgentClass, PromptImportAgentClass };
 export const IntentClassificationAgent = new IntentClassificationAgentClass();
 export const DocRetrievalAgent = new DocRetrievalAgentClass();

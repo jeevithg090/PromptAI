@@ -30,7 +30,7 @@ async function smoke(): Promise<void> {
   });
 
   // Smoke output goes to stdout deliberately — it's a dev tool, not app logging.
-  // eslint-disable-next-line no-console
+   
   console.log(JSON.stringify(result, null, 2));
   if (result.status !== 'success' || result.data?.task_type !== 'text_to_image') {
     process.exitCode = 1;
@@ -38,7 +38,7 @@ async function smoke(): Promise<void> {
 }
 
 smoke().catch((err) => {
-  // eslint-disable-next-line no-console
+   
   console.error(err);
   process.exitCode = 1;
 });

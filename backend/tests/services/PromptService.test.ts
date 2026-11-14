@@ -108,7 +108,7 @@ describe('PromptService (§29.1, T3.4)', () => {
   }
 
   it('creates a version chain: save → edit → edit → list shows 1,2,3', async () => {
-    const store = fakePoolWithStore();
+    fakePoolWithStore();
     const promptId = await savePrompt('u1', {
       platformId: 'google_gemini',
       taskType: 'text_to_image',
@@ -125,7 +125,7 @@ describe('PromptService (§29.1, T3.4)', () => {
   });
 
   it('restore v1 → creates v4 with v1\'s nodes', async () => {
-    const store = fakePoolWithStore();
+    fakePoolWithStore();
     const promptId = await savePrompt('u1', {
       platformId: 'google_gemini',
       taskType: 'text_to_image',

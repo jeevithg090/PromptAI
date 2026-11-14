@@ -17,8 +17,6 @@ interface RecommendationPanelProps {
   onSelectPlatform?: (platformId: string) => void;
 }
 
-const MODALITY_OPTIONS = ['text', 'code', 'image', 'video'];
-
 export function RecommendationPanel({ modality, onSelectPlatform }: RecommendationPanelProps) {
   const [open, setOpen] = useState(false);
   const [capabilities, setCapabilities] = useState<CapabilityEntry[]>([]);

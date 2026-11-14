@@ -13,23 +13,6 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const WORKED_RATE_FLOOR = 0.6;
 const MIN_SAMPLES = 20;
 
-const DIMENSION_TO_MPKB: Record<string, string> = {
-  platform_fit: 'syntax/phrasing',
-  technique_fit: 'technique_fit',
-  constraint_completeness: 'constraints',
-  specificity: 'specificity',
-};
-
-interface AnalysisRow {
-  task_type: string;
-  platform_id: string;
-  worked_count: number;
-  total_count: number;
-  avg_score_when_worked: number;
-  avg_score_when_not: number;
-  top_underperforming_dimension: string | null;
-}
-
 async function analyze(): Promise<void> {
   // outcome_signals stores the outcome in `feedback` and has no strength_score;
   // use each row's mean rubric score (1–3), ignoring rows without scores.

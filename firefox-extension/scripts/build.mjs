@@ -1,6 +1,6 @@
 import { build, defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { copyFileSync, existsSync, mkdirSync, readdirSync } from 'fs';
+import { copyFileSync } from 'fs';
 import { resolve } from 'path';
 
 const srcDir = resolve(import.meta.dirname, '..', 'src');

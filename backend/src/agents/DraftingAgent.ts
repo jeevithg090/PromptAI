@@ -3,7 +3,6 @@ import path from 'node:path';
 import { z } from 'zod';
 import { config } from '../config/env';
 import { generate } from '../services/providers';
-import { serializeNodes } from '../services/PromptSerializer';
 import { NODE_TYPES, type PromptNode, type TaskType } from '../types/Prompt';
 import { logger } from '../utils/logger';
 import { extractJson } from '../utils/json';

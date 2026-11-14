@@ -17,7 +17,6 @@ import { compare } from '../services/CompareService';
 import { classifyOrFailClosed, ContentSafetyClassifier } from '../guardrails/ContentSafetyClassifier';
 import {
   savePrompt,
-  saveVersion,
   listVersions,
   getVersion,
   restoreVersion,
@@ -49,7 +48,7 @@ import { PKBService, loadSeedChunksByPlatform } from '../services/PKBService';
 import { getPool } from '../utils/db';
 import { logger } from '../utils/logger';
 import { config } from '../config/env';
-import { MODALITIES, type RecommendationRequest, type TaskRecommendationRequest } from '../types/Recommendation';
+import { MODALITIES, type RecommendationRequest } from '../types/Recommendation';
 import { feedbackSchema, type FeedbackBody } from '../types/Feedback';
 import { underperformingDimensions } from '../services/OutcomeAnalytics';
 import { analyzeImprovements } from '../services/ContinuousImprovement';
@@ -76,9 +75,8 @@ import { type AppEnv, draftBodySchema, clarifyBodySchema, enhanceBodySchema, com
 import { generatePreview } from '../services/PreviewService';
 import { GeminiImageAdapter } from '../services/providers/GeminiImageAdapter';
 import { GroqSTTAdapter } from '../services/providers/GroqSTTAdapter';
-import { getProvider } from '../services/providers/ProviderRegistry';
 import { storeKey, resolveKey, revokeKey } from '../services/KeyCustody';
-import { getEntitlements, checkGate, getPlanConfig } from '../services/PlanService';
+import { getEntitlements } from '../services/PlanService';
 import { resolveRoute } from '../services/ModelRouter';
 import { authAdminConfigured, deleteAuthUser } from '../services/AuthAdmin';
 import type { ModelComplexity } from '../types/Provider';

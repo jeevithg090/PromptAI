@@ -2,7 +2,6 @@ import crypto from 'node:crypto';
 import { Client } from 'pg';
 import { GeminiEmbeddingAdapter } from './providers/GeminiEmbeddingAdapter';
 import { estimateTokens } from '../utils/token-estimator';
-import { logger } from '../utils/logger';
 import type { EmbeddingProvider } from '../types/Provider';
 
 /**

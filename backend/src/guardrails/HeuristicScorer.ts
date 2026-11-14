@@ -1,5 +1,4 @@
 import {
-  RUBRIC_DIMENSIONS,
   computeStrength,
   type DraftPrompt,
   type NodeType,

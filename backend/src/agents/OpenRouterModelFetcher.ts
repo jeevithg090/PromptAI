@@ -40,15 +40,6 @@ export interface OpenRouterModel {
   knowledge_cutoff: string;
 }
 
-function readCache(): OpenRouterModel[] {
-  try {
-    if (fs.existsSync(CACHE_PATH)) {
-      return JSON.parse(fs.readFileSync(CACHE_PATH, 'utf-8'));
-    }
-  } catch { /* ignore */ }
-  return [];
-}
-
 function writeCache(models: OpenRouterModel[]): void {
   const dir = path.dirname(CACHE_PATH);
   if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
@@ -58,7 +49,7 @@ function writeCache(models: OpenRouterModel[]): void {
 export class OpenRouterModelFetcher implements Agent {
   name = 'OpenRouterModelFetcher';
 
-  async execute(input: AgentInput): Promise<AgentOutput> {
+  async execute(_input: AgentInput): Promise<AgentOutput> {
     logger.info({ type: 'openrouter:fetch_start', url: OPENROUTER_API });
 
     const res = await fetch(OPENROUTER_API, {
@@ -110,8 +101,8 @@ export class OpenRouterModelFetcher implements Agent {
 
     // Update model-capabilities.json with fresh reasoning effort data
     let reasoningUpdated = 0;
-    let pricingUpdated = 0;
-    let modelsAdded = 0;
+    const pricingUpdated = 0;
+    const modelsAdded = 0;
 
     const matrix = loadCapabilityMatrix();
 
@@ -120,7 +111,6 @@ export class OpenRouterModelFetcher implements Agent {
       if (!existing) continue;
 
       if (orm.reasoning?.supported_efforts) {
-        const platformId = orm.id.split('/')[0]!;
         const isPro = orm.id.includes('-pro') || orm.id.includes('pro');
 
         if (!existing.reasoning_efforts) {

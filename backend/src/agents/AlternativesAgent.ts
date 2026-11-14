@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { generate } from '../services/providers';
-import { NODE_TYPES, nodeAlternativeSchema, type DraftPrompt, type PromptNode, type NodeAlternative } from '../types/Prompt';
+import { nodeAlternativeSchema, type DraftPrompt, type PromptNode, type NodeAlternative } from '../types/Prompt';
 import { extractJson } from '../utils/json';
 import { logger } from '../utils/logger';
 import type { Agent, AgentInput, AgentOutput } from '../types/Agent';

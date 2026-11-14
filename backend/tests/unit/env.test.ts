@@ -24,7 +24,7 @@ describe('env config (§32.3)', () => {
     process.env.PORT = '';
     process.env.DEV_AUTH_BYPASS = '';
 
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { config } = require('../../src/config/env');
     expect(config.SUPABASE_JWKS_URL).toBeUndefined();
     expect(config.SUPABASE_URL).toBeUndefined();
@@ -35,7 +35,7 @@ describe('env config (§32.3)', () => {
 
   it('still validates a genuinely malformed URL', () => {
     process.env.SUPABASE_JWKS_URL = 'not-a-url';
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     expect(() => require('../../src/config/env')).toThrow();
   });
 
@@ -44,14 +44,14 @@ describe('env config (§32.3)', () => {
     process.env.NODE_ENV = 'production';
     process.env.DEV_AUTH_BYPASS = 'false'; // test setup sets this true; the DEV_AUTH_BYPASS guard would fire first
     process.env.PROVIDER_FORCE_MOCK = 'true';
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     expect(() => require('../../src/config/env')).toThrow(/PROVIDER_FORCE_MOCK.*production/);
   });
 
   it('allows PROVIDER_FORCE_MOCK=true outside production', () => {
     process.env.NODE_ENV = 'development';
     process.env.PROVIDER_FORCE_MOCK = 'true';
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+     
     const { config } = require('../../src/config/env');
     expect(config.PROVIDER_FORCE_MOCK).toBe(true);
   });
