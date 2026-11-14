@@ -47,7 +47,7 @@ export default function SavePromptButton({ response }: { response: DesignedRespo
       type="button"
       onClick={() => void save()}
       disabled={state === 'saving'}
-      className="rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+      className="whitespace-nowrap rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
     >
       {strings.prompts.save}
     </button>

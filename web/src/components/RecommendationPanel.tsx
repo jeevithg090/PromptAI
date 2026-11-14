@@ -233,7 +233,7 @@ export default function RecommendationPanel({ idea, platforms, onSelectPlatform 
                     <button
                       type="button"
                       onClick={() => onSelectPlatform(platformId)}
-                      className="text-xs font-medium text-blue-600 hover:text-blue-800"
+                      className="text-xs font-medium text-ember-700 hover:text-ember-800 hover:underline"
                     >
                       {strings.recommendation.draftFor.replace('{platform}', rec.model.provider)}
                     </button>

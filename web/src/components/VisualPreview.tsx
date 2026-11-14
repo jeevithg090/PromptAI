@@ -94,7 +94,7 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
             <button
               onClick={generatePreview}
               disabled={loading}
-              className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50"
+              className="text-xs text-ember-700 hover:text-ember-800 hover:underline disabled:opacity-50"
             >
               Regenerate preview
             </button>
