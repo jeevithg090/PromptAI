@@ -49,7 +49,7 @@ export default function PreviewLine({ platformId, taskType, known, sessionId }: 
 
   if (loading) {
     return (
-      <div className="mt-3 text-xs text-gray-400 italic">
+      <div className="mt-3 text-xs text-stone-500 italic">
         {strings.previewLoading}
       </div>
     );

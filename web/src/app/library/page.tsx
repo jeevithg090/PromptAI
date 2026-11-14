@@ -120,8 +120,8 @@ export default function LibraryPage() {
             type="button"
             onClick={() => setNiche(n)}
             aria-pressed={niche === n}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
-              niche === n ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            className={`rounded-full px-3 py-1.5 text-xs font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
+              niche === n ? 'bg-accent text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             }`}
           >
             {strings.libraryNiches[n] ?? n}
@@ -135,7 +135,7 @@ export default function LibraryPage() {
           value={modality}
           onChange={(e) => setModality(e.target.value)}
           aria-label="Modality"
-          className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+          className="rounded-md border border-gray-300 px-2.5 py-1.5 text-xs shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
         >
           {MODALITIES.map((m) => (
             <option key={m} value={m}>{m === 'all' ? strings.libraryFilterAll : m}</option>
@@ -147,9 +147,9 @@ export default function LibraryPage() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={strings.librarySearchPlaceholder}
-          className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-1.5 text-xs shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+          className="w-full max-w-xs rounded-md border border-gray-300 px-3 py-1.5 text-xs shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
         />
-        <span className="text-xs text-gray-400">{items.length} prompts</span>
+        <span className="text-xs text-stone-500">{items.length} prompts</span>
       </div>
 
       {items.length === 0 ? (
@@ -161,7 +161,7 @@ export default function LibraryPage() {
               key={item.id}
               type="button"
               onClick={() => setSelected(item)}
-              className="rounded-lg border border-gray-200 bg-white p-4 text-left shadow-sm transition hover:border-gray-400 hover:shadow"
+              className="rounded-lg border border-gray-200 bg-surface p-4 text-left shadow-sm transition hover:border-gray-400 hover:shadow"
             >
               <div className="flex items-start justify-between gap-2">
                 <h2 className="text-sm font-semibold text-gray-900">{item.title}</h2>
@@ -177,9 +177,9 @@ export default function LibraryPage() {
                 </div>
               </div>
               <p className="mt-1 text-xs text-gray-500">{item.description}</p>
-              <p className="mt-3 font-mono text-xs text-gray-400 line-clamp-2">{item.template}</p>
+              <p className="mt-3 font-mono text-xs text-stone-500 line-clamp-2">{item.template}</p>
               <div className="mt-3 flex items-center justify-between">
-                <span className="text-[10px] text-gray-400">{item.platform_id.replace(/_/g, ' ')}</span>
+                <span className="text-[10px] text-stone-500">{item.platform_id.replace(/_/g, ' ')}</span>
                 <span className="text-xs font-medium text-emerald-700">{strings.libraryViewPrompt} →</span>
               </div>
             </button>
@@ -190,8 +190,8 @@ export default function LibraryPage() {
       {/* Detail drawer */}
       {selected && (
         <div className="fixed inset-0 z-40" role="dialog" aria-modal="true" aria-label={selected.title}>
-          <div className="absolute inset-0 bg-gray-900/40" onClick={() => setSelected(null)} />
-          <div className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col overflow-y-auto bg-white shadow-xl">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setSelected(null)} />
+          <div className="absolute inset-y-0 right-0 flex w-full max-w-lg flex-col overflow-y-auto bg-surface shadow-xl">
             <div className="flex items-start justify-between border-b border-gray-200 px-5 py-4">
               <div>
                 <h2 className="text-base font-semibold text-gray-900">{selected.title}</h2>
@@ -210,7 +210,7 @@ export default function LibraryPage() {
                 type="button"
                 onClick={() => setSelected(null)}
                 aria-label={strings.close}
-                className="rounded p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="rounded p-1.5 text-stone-500 hover:bg-gray-100 hover:text-gray-600"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
@@ -225,7 +225,7 @@ export default function LibraryPage() {
             <div className="flex flex-wrap gap-2 border-t border-gray-200 px-5 py-4">
               <Link
                 href={`/build?idea=${encodeURIComponent(selected.idea)}&platform=${selected.platform_id}`}
-                className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+                className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
               >
                 {strings.libraryUseThis}
               </Link>

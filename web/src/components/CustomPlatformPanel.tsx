@@ -43,7 +43,7 @@ export default function CustomPlatformPanel({ onCreated }: CustomPlatformPanelPr
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
+    <div className="rounded-lg border border-gray-200 bg-surface p-4">
       <h3 className="text-sm font-semibold text-gray-900">{strings.customPlatform.title}</h3>
       <p className="mt-0.5 text-xs text-gray-500">{strings.customPlatform.subtitle}</p>
 
@@ -59,7 +59,7 @@ export default function CustomPlatformPanel({ onCreated }: CustomPlatformPanelPr
             onChange={(e) => setUrl(e.target.value)}
             placeholder={strings.customPlatform.urlPlaceholder}
             disabled={busy}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
           />
         </div>
         <div>
@@ -73,7 +73,7 @@ export default function CustomPlatformPanel({ onCreated }: CustomPlatformPanelPr
             onChange={(e) => setName(e.target.value)}
             placeholder={strings.customPlatform.namePlaceholder}
             disabled={busy}
-            className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900 disabled:opacity-60"
+            className="mt-1 block w-full max-w-xs rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500 disabled:opacity-60"
           />
         </div>
 
@@ -81,7 +81,7 @@ export default function CustomPlatformPanel({ onCreated }: CustomPlatformPanelPr
           type="button"
           onClick={() => void analyze()}
           disabled={busy || !url.trim()}
-          className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700 disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover disabled:opacity-50"
         >
           {strings.customPlatform.analyze}
         </button>

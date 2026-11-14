@@ -64,7 +64,7 @@ export default function ComparePanel({ platformId, taskType, promptA, promptB }:
   return (
     <div className="mt-6 rounded-lg border border-gray-200 p-4">
       {state === 'idle' && (
-        <button onClick={() => void run()} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+        <button onClick={() => void run()} className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover">
           {strings.compare.button}
         </button>
       )}
@@ -99,7 +99,7 @@ function OutputPane({ title, text, latency, highlight }: { title: string; text: 
     <div className={`rounded-lg border p-3 ${highlight ? 'border-emerald-200 bg-emerald-50/40' : 'border-gray-200 bg-gray-50'}`}>
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-gray-500">{title}</span>
-        <span className="text-xs text-gray-400">{strings.compare.latency.replace('{ms}', String(latency))}</span>
+        <span className="text-xs text-stone-500">{strings.compare.latency.replace('{ms}', String(latency))}</span>
       </div>
       <pre className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap text-sm text-gray-800">{text}</pre>
     </div>

@@ -65,7 +65,7 @@ function ShareView() {
       <div className="mt-4 flex gap-3">
         <button
           onClick={async () => { await navigator.clipboard.writeText(filled); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+          className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover"
         >
           {copied ? strings.share.copied : strings.share.copyLink}
         </button>

@@ -64,13 +64,13 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
           type="checkbox"
           checked={enabled}
           onChange={handleToggle}
-          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-900"
+          className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-ember-500"
         />
         <span className="text-xs text-gray-500">Enable visual preview (uses extra quota)</span>
       </label>
 
       {enabled && loading && (
-        <div className="mt-2 flex items-center gap-2 text-xs text-gray-400">
+        <div className="mt-2 flex items-center gap-2 text-xs text-stone-500">
           <span className="h-3 w-3 animate-spin rounded-full border-2 border-gray-300 border-t-gray-900" />
           Generating visual preview…
         </div>
@@ -89,7 +89,7 @@ export function VisualPreview({ platformId, assembled, sessionId }: VisualPrevie
             alt="Visual preview"
             className="max-w-full rounded border border-gray-200"
           />
-          <p className="text-xs text-gray-400 italic">{disclaimer}</p>
+          <p className="text-xs text-stone-500 italic">{disclaimer}</p>
           {!unchanged && (
             <button
               onClick={generatePreview}

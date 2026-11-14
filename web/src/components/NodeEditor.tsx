@@ -153,7 +153,7 @@ export default function NodeEditor({ response, onUpdate }: NodeEditorProps) {
 
       <button
         onClick={handleCopy}
-        className="rounded-md bg-gray-900 px-4 py-2 text-sm text-white hover:bg-gray-700"
+        className="rounded-md bg-accent px-4 py-2 text-sm text-white hover:bg-accent-hover"
       >
         {strings.resultCopy}
       </button>

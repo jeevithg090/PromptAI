@@ -63,7 +63,7 @@ export default function TeamsPage() {
       {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
       {notice && <p className="mt-4 rounded-lg bg-emerald-50 p-3 text-sm text-emerald-700">{notice}</p>}
 
-      <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
+      <div className="mt-6 rounded-xl border border-gray-200 bg-surface p-4">
         <h2 className="text-sm font-semibold text-gray-800">New team</h2>
         <div className="mt-3 flex flex-col gap-2 sm:flex-row">
           <input
@@ -76,7 +76,7 @@ export default function TeamsPage() {
           <button
             onClick={create}
             disabled={!name.trim() || busy}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+            className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
           >
             {busy ? 'Creating…' : 'Create'}
           </button>
@@ -90,9 +90,9 @@ export default function TeamsPage() {
       ) : (
         <ul className="mt-6 space-y-3">
           {teams.map((t) => (
-            <li key={t.id} className="rounded-lg border border-gray-200 bg-white px-4 py-3">
+            <li key={t.id} className="rounded-lg border border-gray-200 bg-surface px-4 py-3">
               <p className="text-sm font-medium text-gray-900">{t.name}</p>
-              <p className="mt-0.5 text-xs text-gray-400">Team ID: {t.id}</p>
+              <p className="mt-0.5 text-xs text-stone-500">Team ID: {t.id}</p>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <input
                   value={memberInputs[t.id] ?? ''}

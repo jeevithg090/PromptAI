@@ -93,7 +93,7 @@ function PromptDetail() {
                   }`}
                 >
                   <span>{strings.prompts.version.replace('{n}', String(v.version))}</span>
-                  {v.strength_score != null && <span className="text-xs text-gray-400">{v.strength_score}</span>}
+                  {v.strength_score != null && <span className="text-xs text-stone-500">{v.strength_score}</span>}
                 </button>
               </li>
             ))}
@@ -112,7 +112,7 @@ function PromptDetail() {
                   </button>
                 )}
               </div>
-              <p className="mt-1 text-xs text-gray-400">{strings.prompts.restoreNote}</p>
+              <p className="mt-1 text-xs text-stone-500">{strings.prompts.restoreNote}</p>
 
               {/* Share controls (F2.4) */}
               <div className="mt-3 flex items-center gap-3 text-sm">
@@ -120,7 +120,7 @@ function PromptDetail() {
                   <>
                     <button
                       onClick={async () => { await navigator.clipboard.writeText(`${window.location.origin}${shareUrl}`); setShareCopied(true); setTimeout(() => setShareCopied(false), 1500); }}
-                      className="rounded-md bg-emerald-600 px-3 py-1.5 text-white hover:bg-emerald-700"
+                      className="rounded-md bg-accent px-3 py-1.5 text-white hover:bg-accent-hover"
                     >
                       {shareCopied ? strings.share.copied : strings.share.copyLink}
                     </button>
@@ -141,7 +141,7 @@ function PromptDetail() {
               <div className="mt-4 space-y-1.5">
                 {selected.nodes_json?.map((n) => (
                   <div key={n.type} className="flex gap-3 text-sm">
-                    <span className="min-w-[130px] text-gray-400">{n.type}</span>
+                    <span className="min-w-[130px] text-stone-500">{n.type}</span>
                     <span className="text-gray-800">{n.value}</span>
                   </div>
                 ))}
@@ -163,7 +163,7 @@ function PromptDetail() {
                     {versions.map((v) => <option key={v.id} value={v.version}>v{v.version}</option>)}
                   </select>
                 </label>
-                <button onClick={() => void runDiff()} className="rounded-md bg-gray-900 px-3 py-1.5 text-white hover:bg-gray-700">Compare</button>
+                <button onClick={() => void runDiff()} className="rounded-md bg-accent px-3 py-1.5 text-white hover:bg-accent-hover">Compare</button>
               </div>
               {diff && (
                 <div className="mt-4 space-y-2 text-sm">

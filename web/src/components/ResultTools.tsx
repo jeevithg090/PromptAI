@@ -27,7 +27,7 @@ const RISK_COLOR: Record<string, string> = {
 function Tool({ title, children }: { title: string; children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-lg border border-stone-200 bg-white">
+    <div className="rounded-lg border border-stone-200 bg-surface">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -35,7 +35,7 @@ function Tool({ title, children }: { title: string; children: React.ReactNode })
         className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-stone-700 hover:bg-stone-50"
       >
         {title}
-        <svg className={`h-4 w-4 text-stone-400 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+        <svg className={`h-4 w-4 text-stone-500 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
         </svg>
       </button>
@@ -73,14 +73,14 @@ function SimulatePanel({ assembled }: { assembled: string }) {
 
   return (
     <Tool title={strings.tools.simulateTitle}>
-      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-700 disabled:opacity-50">
+      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover disabled:opacity-50">
         {busy ? strings.tools.simulateRunning : strings.tools.simulateRun}
       </button>
       {rows && (
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="text-left text-stone-400">
+              <tr className="text-left text-stone-500">
                 <th className="py-1 pr-3">Model</th><th className="pr-3">Est. cost</th><th className="pr-3">Speed</th><th className="pr-3">Context fit</th>
               </tr>
             </thead>
@@ -157,7 +157,7 @@ function AmbiguityPanel({ response, onReplace }: { response: DesignedResponse; o
 
   return (
     <Tool title={strings.tools.ambiguityTitle}>
-      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-700 disabled:opacity-50">
+      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover disabled:opacity-50">
         {busy ? strings.tools.ambiguityRunning : strings.tools.ambiguityRun}
       </button>
       {render()}
@@ -194,11 +194,11 @@ function MigratePanel({ response, platforms, onReplace }: { response: DesignedRe
   return (
     <Tool title={strings.tools.migrateTitle}>
       <div className="flex items-center gap-2">
-        <select value={target} onChange={(e) => setTarget(e.target.value)} className="rounded-md border border-stone-300 px-2 py-1.5 text-xs focus:border-stone-900 focus:outline-none">
+        <select value={target} onChange={(e) => setTarget(e.target.value)} className="rounded-md border border-stone-300 px-2 py-1.5 text-xs focus:border-ember-500 focus:outline-none">
           <option value="">Target platform…</option>
           {platforms.filter((p) => p.platform_id !== response.platformId).map((p) => <option key={p.platform_id} value={p.platform_id}>{p.display_name}</option>)}
         </select>
-        <button onClick={() => void run()} disabled={busy || !target} className="rounded-md bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-700 disabled:opacity-50">
+        <button onClick={() => void run()} disabled={busy || !target} className="rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover disabled:opacity-50">
           {busy ? strings.tools.migrateRunning : strings.tools.migrateRun}
         </button>
       </div>
@@ -215,14 +215,14 @@ function MigratePanel({ response, platforms, onReplace }: { response: DesignedRe
             </div>
           )}
           <div>
-            <p className="text-[10px] font-semibold uppercase text-stone-400">{strings.tools.migrateChanges}</p>
+            <p className="text-[10px] font-semibold uppercase text-stone-500">{strings.tools.migrateChanges}</p>
             <ul className="mt-1 space-y-0.5 text-xs text-stone-600">
               {result.change_report.map((c, i) => (
                 <li key={i}><span className="font-medium">{c.node_type.replace(/_/g, ' ')}</span> — <span className="text-emerald-700">{c.action}</span>: {c.reason}</li>
               ))}
             </ul>
           </div>
-          <button onClick={() => void openPorted()} className="rounded-md bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-700">{strings.tools.migrateOpen}</button>
+          <button onClick={() => void openPorted()} className="rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover">{strings.tools.migrateOpen}</button>
         </div>
       )}
     </Tool>
@@ -247,7 +247,7 @@ function LintPanel({ response }: { response: DesignedResponse }) {
 
   return (
     <Tool title={strings.tools.lintTitle}>
-      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-stone-900 px-3 py-1.5 text-xs text-white hover:bg-stone-700 disabled:opacity-50">
+      <button onClick={() => void run()} disabled={busy} className="rounded-md bg-accent px-3 py-1.5 text-xs text-white hover:bg-accent-hover disabled:opacity-50">
         {busy ? '…' : 'Check style guide'}
       </button>
       {violations && (violations.length === 0 ? (
@@ -261,7 +261,7 @@ function LintPanel({ response }: { response: DesignedResponse }) {
           ))}
         </ul>
       ))}
-      <p className="mt-2 text-[10px] text-stone-400">Edit rules in Account → Style Guide.</p>
+      <p className="mt-2 text-[10px] text-stone-500">Edit rules in Account → Style Guide.</p>
     </Tool>
   );
 }

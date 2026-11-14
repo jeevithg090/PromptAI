@@ -43,7 +43,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
       <div className="flex items-center gap-4">
         <div className="relative h-20 w-20 flex-shrink-0">
           <svg className="h-20 w-20 -rotate-90" viewBox="0 0 80 80">
-            <circle cx="40" cy="40" r="34" fill="none" stroke="#e5e7eb" strokeWidth="6" />
+            <circle cx="40" cy="40" r="34" fill="none" className="stroke-line" strokeWidth="6" />
             <circle
               cx="40"
               cy="40"
@@ -61,7 +61,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
         </div>
         <div>
           <p className={`text-lg font-semibold ${scoreColor(strength.score)}`}>{strength.band}</p>
-          <p className="text-xs text-gray-400">{strings.resultStrength}</p>
+          <p className="text-xs text-stone-500">{strings.resultStrength}</p>
           {grounding && grounding.sources.length > 0 && (
             <p className="mt-1 text-xs text-gray-500">
               {strings.grounding.summary(grounding.sources.length, groundedDomains.slice(0, 2).join(', '))}
@@ -85,7 +85,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
                 </div>
               </div>
               <span className="w-6 text-center text-xs font-medium text-gray-700">{d.score}</span>
-              <span className="w-10 text-right text-[10px] text-gray-400">{d.weight}%</span>
+              <span className="w-10 text-right text-[10px] text-stone-500">{d.weight}%</span>
             </div>
           ))}
         </div>
@@ -101,7 +101,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
             className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             {strings.strengthWhyWorks}
-            <svg className={`h-4 w-4 text-gray-400 transition-transform ${showWhy ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className={`h-4 w-4 text-stone-500 transition-transform ${showWhy ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
@@ -137,7 +137,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
             className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             {strings.strengthWhyWorks}
-            <svg className={`h-4 w-4 text-gray-400 transition-transform ${showWhy ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className={`h-4 w-4 text-stone-500 transition-transform ${showWhy ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>
@@ -163,7 +163,7 @@ export default function StrengthPanel({ strength, whyThisWorks = [], improvement
             className="flex w-full items-center justify-between px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50"
           >
             {strings.strengthHowToImprove}
-            <svg className={`h-4 w-4 text-gray-400 transition-transform ${showImprove ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+            <svg className={`h-4 w-4 text-stone-500 transition-transform ${showImprove ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
             </svg>
           </button>

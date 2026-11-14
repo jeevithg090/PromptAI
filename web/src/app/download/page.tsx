@@ -27,7 +27,7 @@ export default function DownloadPage() {
       <div className="mt-8 flex flex-col gap-3">
         <a
           href={RELEASES}
-          className="rounded-lg bg-emerald-600 px-6 py-3 text-center font-medium text-white hover:bg-emerald-700"
+          className="rounded-lg bg-accent px-6 py-3 text-center font-medium text-white hover:bg-accent-hover"
         >
           {os === 'mac' ? strings.download.mac : os === 'windows' ? strings.download.windows : strings.download.generic}
         </a>

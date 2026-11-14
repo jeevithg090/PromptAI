@@ -56,7 +56,7 @@ export default function QuestionCard({ question, value, onChange, index }: Quest
 
   return (
     <div
-      className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm"
+      className="rounded-lg border border-gray-200 bg-surface p-5 shadow-sm"
       role="group"
       aria-labelledby={`question-${question.id}-label`}
     >
@@ -83,10 +83,10 @@ export default function QuestionCard({ question, value, onChange, index }: Quest
                 role="radio"
                 aria-checked={isSelected}
                 onClick={() => handleChipSelect(option)}
-                className={`rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
+                className={`rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
                   isSelected
-                    ? 'border-gray-900 bg-gray-900 text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                    ? 'border-gray-900 bg-accent text-white'
+                    : 'border-gray-300 bg-surface text-gray-700 hover:border-gray-400 hover:bg-gray-50'
                 }`}
               >
                 {option}
@@ -100,10 +100,10 @@ export default function QuestionCard({ question, value, onChange, index }: Quest
               role="radio"
               aria-checked={isOtherSelected}
               onClick={handleOtherSelect}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-1 ${
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-ember-500 focus:ring-offset-1 ${
                 isOtherSelected
-                  ? 'border-gray-900 bg-gray-900 text-white'
-                  : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                  ? 'border-gray-900 bg-accent text-white'
+                  : 'border-gray-300 bg-surface text-gray-700 hover:border-gray-400 hover:bg-gray-50'
               }`}
             >
               {strings.buildClarifyOther}
@@ -126,7 +126,7 @@ export default function QuestionCard({ question, value, onChange, index }: Quest
             onKeyDown={handleKeyDown}
             onBlur={handleOtherSubmit}
             placeholder={strings.buildClarifyOtherPlaceholder}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
           />
         </div>
       )}
@@ -143,7 +143,7 @@ export default function QuestionCard({ question, value, onChange, index }: Quest
             value={value}
             onChange={handleFreeTextChange}
             placeholder={strings.buildClarifyOtherPlaceholder}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-ember-500 focus:outline-none focus:ring-1 focus:ring-ember-500"
           />
         </div>
       )}
