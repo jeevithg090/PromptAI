@@ -92,7 +92,7 @@ describe('ContentSafetyClassifier v1', () => {
     const falsePositives = BENIGN.filter((_, i) => !results[i]!.safe);
     if (falsePositives.length > 0) {
       // Surface which ones tripped, to make tuning obvious.
-      // eslint-disable-next-line no-console
+       
       console.warn('false positives:', falsePositives);
     }
     expect(falsePositives.length / BENIGN.length).toBeLessThan(0.05);

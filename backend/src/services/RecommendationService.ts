@@ -5,7 +5,6 @@ import {
   capabilityMatrixSchema,
   type CapabilityMatrix,
   type ModelCapability,
-  type ReasoningEffort,
   type ReasoningEffortSuggestion,
   type Recommendation,
   type RecommendationRequest,
@@ -290,14 +289,11 @@ export function recommendForTask(req: TaskRecommendationRequest): TaskRecommenda
 
   // Explicit task_type takes priority over auto-detection
   let profile: string;
-  let confidence: number;
   if (req.task_type) {
     profile = req.task_type;
-    confidence = 100;
   } else {
     const detected = detectTaskType(req.task);
     profile = detected.profile;
-    confidence = detected.confidence;
   }
   const taskProfile = matrix.task_profiles?.[profile];
 
@@ -366,8 +362,6 @@ export function recommendForTask(req: TaskRecommendationRequest): TaskRecommenda
 
   const best = top3[0]!;
 
-  const explanation = buildExplanation(profile, taskProfile, best, top3, req.task);
-
   const reasoningEffort = suggestReasoningEffort(best.model, profile, req.task);
 
   // Enrich with platform mode and PKB guidance
@@ -390,7 +384,7 @@ export function recommendForTask(req: TaskRecommendationRequest): TaskRecommenda
       docs_url: platformMode.docs_url,
     } : null,
     pkb_guidance: pkbGuidance,
-    explanation: buildExplanation(profile, taskProfile, best, top3, req.task) + reasoningEffort.description_suffix,
+    explanation: buildExplanation(profile, taskProfile, best, top3) + reasoningEffort.description_suffix,
   };
 }
 
@@ -411,7 +405,6 @@ const TASK_EFFORT_MAP: Record<string, string> = {
 };
 
 const HIGH_EFFORT_TASKS = new Set(['reasoning', 'coding', 'agentic_coding', 'research']);
-const LOW_EFFORT_TASKS = new Set(['classification', 'extraction', 'simple_chat', 'cost_sensitive_production']);
 
 /**
  * Given a model and task, suggests the optimal reasoning effort level
@@ -503,7 +496,6 @@ function buildExplanation(
   taskProfile: any,
   best: Recommendation,
   top3: Recommendation[],
-  task: string
 ): string {
   const parts: string[] = [];
 

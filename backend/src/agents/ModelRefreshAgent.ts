@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { Agent, AgentInput, AgentOutput } from '../types/Agent';
 import { fetchDocs } from '../services/DocFetchService';
-import { loadCapabilityMatrix, matrixPath } from '../services/RecommendationService';
+import { loadCapabilityMatrix } from '../services/RecommendationService';
 import type { ReasoningEffort } from '../types/Recommendation';
 import { logger } from '../utils/logger';
 
@@ -53,7 +53,6 @@ function parseReasoningEfforts(text: string, provider: string): Record<string, R
   const result: Record<string, ReasoningEffort> = {};
 
   if (provider === 'openai') {
-    const effortPattern = /(gpt-5\.6-sol|gpt-5\.6-terra|gpt-5\.6-luna|o4-mini|o3|gpt-5-mini)[\s\S]{0,200}?reasoning\.effort/i;
     const gpt56Scale = /supports\s+(`)?(none)(`)?\s*[,\s]+(`)?(low)(`)?\s*[,\s]+(`)?(medium)(`)?\s*[,\s]+(`)?(high)(`)?\s*[,\s]+(`)?(xhigh)(`)?\s*[,\s]+(`)?(max)/i;
     const oScale = /supports\s+(`)?(low)(`)?\s*[,\s]+(`)?(medium)(`)?\s*[,\s]+(`)?(high)(`)?[,\s]+(`)?(xhigh)?/i;
     const proModePattern = /pro\s*mode/i;
@@ -144,8 +143,6 @@ function parseReasoningEfforts(text: string, provider: string): Record<string, R
   }
 
   if (provider === 'google') {
-    const thinkingLevelPattern = /thinkingLevel/i;
-    const thinkingBudgetPattern = /thinkingBudget/i;
     const levelTable = /(MINIMAL|LOW|MEDIUM|HIGH)/g;
 
     if (text.includes('3.1 Pro') || text.includes('gemini-3.1-pro') || text.includes('gemini-3.5-flash') || text.includes('gemini-3.1-flash-lite')) {
@@ -184,7 +181,6 @@ function parseReasoningEfforts(text: string, provider: string): Record<string, R
     }
 
     if (text.includes('2.5 Pro') || text.includes('2.5 Flash')) {
-      const budgetMatch = text.match(/(\d+,\d+|\d+)/g);
       if (text.includes('2.5 Pro') || text.includes('gemini-2.5-pro')) {
         result['gemini-2.5-pro'] = {
           supported_levels: ['budget'],
@@ -360,11 +356,11 @@ function extractPricing(text: string): Record<string, { input: number; output: n
 export class ModelRefreshAgent implements Agent {
   name = 'ModelRefreshAgent';
 
-  async execute(input: AgentInput): Promise<AgentOutput> {
+  async execute(_input: AgentInput): Promise<AgentOutput> {
     const freshModels: Map<string, any> = new Map();
     const freshReasoningEfforts: Map<string, ReasoningEffort> = new Map();
     const freshPricing: Map<string, { input: number; output: number }> = new Map();
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     for (const { provider, urls, reasoning_urls } of PROVIDER_DOCS) {
       for (const url of urls) {

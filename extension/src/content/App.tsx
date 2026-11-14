@@ -85,6 +85,46 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
     [],
   );
 
+  const handleDraftResult = useCallback(
+    (data: BackendDraftResponse) => {
+      if (data.status === 'clarifying') {
+        setStep({
+          phase: 'clarifying',
+          sessionId: data.session_id,
+          questions: (data.questions ?? []) as ClarifyingQuestion[],
+          taskType: data.task_type ?? 'text',
+          entities: data.entities ?? {},
+        });
+      } else if (data.status === 'ok') {
+        setStep({
+          phase: 'result',
+          sessionId: data.session_id,
+          response: data.response as DesignedResponse,
+        });
+      } else if (data.status === 'error') {
+        setStep({ phase: 'error', message: data.message ?? 'Pipeline error' });
+        if (data.degraded && (data as BackendDraftResponse & { response?: DesignedResponse }).response) {
+          setStep({
+            phase: 'result',
+            sessionId: data.session_id,
+            response: (data as BackendDraftResponse & { response: DesignedResponse }).response,
+          });
+        }
+      } else if (data.status === 'blocked') {
+        setStep({ phase: 'error', message: data.reason ?? 'Request blocked' });
+      } else if (data.status === 'budget_exceeded') {
+        setStep({ phase: 'error', message: data.message ?? 'Budget exceeded' });
+      } else if (data.status === 'plan_restricted') {
+        setStep({ phase: 'error', message: data.message ?? 'This platform requires a paid plan.' });
+      } else if (data.status === 'rate_limited') {
+        setStep({ phase: 'error', message: data.message ?? 'Rate limited' });
+      } else {
+        setStep({ phase: 'error', message: 'Unexpected response from server' });
+      }
+    },
+    [],
+  );
+
   const handleStart = useCallback(async () => {
     if (!idea.trim()) return;
     setStep({ phase: 'drafting' });
@@ -104,7 +144,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
     } catch (err) {
       setStep({ phase: 'error', message: String(err) });
     }
-  }, [idea, platformId, callApi]);
+  }, [idea, platformId, callApi, handleDraftResult]);
 
   /**
    * Enhance the current input (F1.1) — treat the box's contents as a FINISHED
@@ -169,47 +209,7 @@ export function App({ onClose, initialEnhanceText }: AppProps) {
         setStep({ phase: 'error', message: String(err) });
       }
     },
-    [step, answers, platformId, idea, callApi],
-  );
-
-  const handleDraftResult = useCallback(
-    (data: BackendDraftResponse) => {
-      if (data.status === 'clarifying') {
-        setStep({
-          phase: 'clarifying',
-          sessionId: data.session_id,
-          questions: (data.questions ?? []) as ClarifyingQuestion[],
-          taskType: data.task_type ?? 'text',
-          entities: data.entities ?? {},
-        });
-      } else if (data.status === 'ok') {
-        setStep({
-          phase: 'result',
-          sessionId: data.session_id,
-          response: data.response as DesignedResponse,
-        });
-      } else if (data.status === 'error') {
-        setStep({ phase: 'error', message: data.message ?? 'Pipeline error' });
-        if (data.degraded && (data as BackendDraftResponse & { response?: DesignedResponse }).response) {
-          setStep({
-            phase: 'result',
-            sessionId: data.session_id,
-            response: (data as BackendDraftResponse & { response: DesignedResponse }).response,
-          });
-        }
-      } else if (data.status === 'blocked') {
-        setStep({ phase: 'error', message: data.reason ?? 'Request blocked' });
-      } else if (data.status === 'budget_exceeded') {
-        setStep({ phase: 'error', message: data.message ?? 'Budget exceeded' });
-      } else if (data.status === 'plan_restricted') {
-        setStep({ phase: 'error', message: data.message ?? 'This platform requires a paid plan.' });
-      } else if (data.status === 'rate_limited') {
-        setStep({ phase: 'error', message: data.message ?? 'Rate limited' });
-      } else {
-        setStep({ phase: 'error', message: 'Unexpected response from server' });
-      }
-    },
-    [],
+    [step, answers, platformId, idea, callApi, handleDraftResult],
   );
 
   const handleRetry = useCallback(() => {

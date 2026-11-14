@@ -54,9 +54,3 @@ export async function generatePreview(
 
   return { preview, tokensUsed: result.tokensUsed.output };
 }
-
-export async function generateVisualPreview(
-  assembled: string
-): Promise<{ imageBase64: string | null; mime: string; disclaimer: string } | { error: string }> {
-  return { error: 'visual preview not yet implemented in PreviewService' };
-}
