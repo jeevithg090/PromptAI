@@ -15,7 +15,6 @@ interface CacheEntry {
 }
 
 const cache = new Map<string, CacheEntry>();
-let allCache: { entries: Record<string, boolean>; fetchedAt: number } | null = null;
 
 async function fetchAll(): Promise<Record<string, boolean>> {
   try {
@@ -50,7 +49,11 @@ export async function isEnabled(key: string): Promise<boolean> {
   for (const [k, v] of Object.entries(all)) {
     cache.set(k, { value: v, fetchedAt: now });
   }
-  return all[key] ?? true;
+  // Cache the default for flags absent from the table too, or every check of
+  // an unset flag would query the DB.
+  const value = all[key] ?? true;
+  cache.set(key, { value, fetchedAt: now });
+  return value;
 }
 
 /**
@@ -62,7 +65,6 @@ export async function warmCache(): Promise<void> {
   for (const [k, v] of Object.entries(all)) {
     cache.set(k, { value: v, fetchedAt: now });
   }
-  allCache = { entries: all, fetchedAt: now };
 }
 
 /**
@@ -70,5 +72,4 @@ export async function warmCache(): Promise<void> {
  */
 export function invalidateCache(): void {
   cache.clear();
-  allCache = null;
 }
